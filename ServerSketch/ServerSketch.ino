@@ -160,6 +160,8 @@ static int callback_http(struct libwebsocket_context *context,
 		enum libwebsocket_callback_reasons reason, void *user,
 							   void *in, size_t len)
 {
+          Serial.println("callback_http()");
+  
 	char buf[256];
 	int n;
 
@@ -205,6 +207,9 @@ callback_lyt_protocol(struct libwebsocket_context *context,
 			enum libwebsocket_callback_reasons reason,
 					       void *user, void *in, size_t len)
 {
+  
+        Serial.println("callback_lyt_protocol()");
+  
 	int n;
 	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 +
 						  LWS_SEND_BUFFER_POST_PADDING];

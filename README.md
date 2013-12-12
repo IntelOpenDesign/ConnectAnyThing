@@ -64,3 +64,7 @@ Communication from phone clients to server is made through websockets.
 5) On your mobile device or computer, connect to the ConnectAnyThing network.
 6) Start a browser and go to "cat.com" or "192.168.0.10".
 7) Control the output pin D13 and read data in from pin A0.
+
+## How To Edit the HTML5 Website
+Copy the file index.html from: ~/srv to /media/mmcblk0p1/srv_card/home/root/srv/ use the following command on the Linux command line:
+cp -r /media/mmcblk0p1/srv_card/home/root/srv/* ./srv/

@@ -74,7 +74,9 @@
 	function parseMessage(data){
 		ledStateCurrent = data.substr(0,1);
 		voltageValue = data.substring(2);
+		console.info(voltageValue);
 		voltageValue = (voltageValue/1024)*5;
+		voltageValue = voltageValue.toPrecision(3);
 		writeVoltage();
 		if(ledStateCurrent != ledStateOld){
 			changeImage();
