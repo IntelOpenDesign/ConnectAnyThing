@@ -26,13 +26,8 @@
 #include <string.h>
 #include <sys/time.h>
 #include <assert.h>
-
-
 #include <syslog.h>
-
-
 #include <signal.h>
-
 
 #define N_PANNEL 3
 IPAddress ip[N_PANNEL]; 
@@ -44,13 +39,16 @@ boolean currentLED = false;
 int sensor1 = 0;
 int sensor1Pin = A0;    // select the input pin for the potentiometer
 
+// HW declaration
+#define TOTAL_NUM_PINS 20
+int aiPinStates[TOTAL_NUM_PINS];
 
 EthernetUDP _udpIn;
 //char colors[8*N_PANNEL] = "#000000,#000000,#000000";
 char  retMessage[(1+1+4+1)]="0,1023";
 
 //-----------------------------------------------------------
-// Process recieved message here.... 
+// Process recieved message from the webpage here.... 
 //------------------------------------------------------------
 void processTouch(char* in) {
 
@@ -66,7 +64,6 @@ void processTouch(char* in) {
       digitalWrite(led, HIGH);
       currentLED = true;
     } 
-    //delay(500);
   }
 
 }
@@ -93,45 +90,45 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"   }
+    "/favicon.ico", "image/x-icon"       }
   ,
   { 
-    "/img/2s.png", "image/png"   }
+    "/img/2s.png", "image/png"       }
   ,
   { 
-    "/img/splash.png", "image/png"   }
+    "/img/splash.png", "image/png"       }
   ,
   { 
-    "/img/splash2.png", "image/png"   }
+    "/img/splash2.png", "image/png"       }
   ,
   { 
-    "/img/placeholder.png", "image/png"   }
+    "/img/placeholder.png", "image/png"       }
   ,
   { 
-    "/img/placeholder-on.png", "image/png"   }
+    "/img/placeholder-on.png", "image/png"       }
   ,
   { 
-    "/css/phone.css", "text/css"   }
+    "/css/phone.css", "text/css"       }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"   }
+    "/js/jquery-2.0.3.min.js", "application/javascript"       }
   ,
   { 
-    "/js/phone.js", "application/javascript"   }
+    "/js/phone.js", "application/javascript"       }
   ,
   { 
-    "/js/pixel.js", "application/javascript"   }
+    "/js/pixel.js", "application/javascript"       }
   ,
   { 
-    "/js/pixelView.js", "application/javascript"   }
+    "/js/pixelView.js", "application/javascript"       }
   ,
   { 
-    "/js/socketController.js", "application/javascript"   }
+    "/js/socketController.js", "application/javascript"       }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"   }
+    "/index.html", "text/html"       }
   ,
 };
 
@@ -186,29 +183,41 @@ void *in, size_t len)
 /* lyt_protocol*/
 static int
 callback_lyt_protocol(struct libwebsocket_context *context,
-struct libwebsocket *wsi,
-enum libwebsocket_callback_reasons reason,
-void *user, void *in, size_t len)
+                      struct libwebsocket *wsi,
+                      enum libwebsocket_callback_reasons reason,
+                      void *user,
+                      void *in, size_t len)
 {
 
   //Serial.println("callback_lyt_protocol()");
   // WE ARE ALWAYS HITTING THIS POINT
 
-  int n;
-  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+ // int n;
+//  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+ // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
-  switch (reason) {
+  int iNumBytes = -1;
 
+  switch (reason)
+  {
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
+    
+    // **********************************
+    // Send Data to Website    
+    // **********************************
+    iNumBytes = sendStatusToWebsite(wsi);
+    /*
     sensor1 = analogRead(sensor1Pin);
-    n = sprintf((char *)p, "%d,%d", currentLED, sensor1);//colors);
+    n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
     Serial.print("Output Message:");
     Serial.println(n);
     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
-    if (n < 0) {
-      lwsl_err("ERROR %d writing to socket\n", n);
+    */
+    
+    if (iNumBytes < 0) 
+    {
+      lwsl_err("ERROR %d writing to socket\n", iNumBytes);
       return 1;
     }
 
@@ -218,9 +227,7 @@ void *user, void *in, size_t len)
 
     processTouch((char*) in); 		
 
-
     break;
-
 
   default:
     break;
@@ -229,6 +236,24 @@ void *user, void *in, size_t len)
   return 0;
 }
 
+// **********************************
+// Send pin status to the Website    
+// **********************************
+int  sendStatusToWebsite(struct libwebsocket *wsi)
+{
+  int n;
+  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+  
+
+  sensor1 = analogRead(sensor1Pin);
+  n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
+  Serial.print("Output Message [sendStatusToWebsite()]:");
+  Serial.println(n);
+  n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+  
+  return n;
+}
 
 
 /* list of supported protocols and callbacks */
@@ -252,7 +277,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0   } /* terminator */
+    NULL, NULL, 0, 0       } /* terminator */
 };
 
 void sighandler(int sig)
@@ -263,7 +288,7 @@ void sighandler(int sig)
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0   }
+    NULL, 0, 0, 0       }
 };
 
 int initWebsocket()
@@ -328,44 +353,32 @@ int initWebsocket()
 
     loop(); // call  Arduino loop as we have taken over the execution flow :[
 
-
   }
   libwebsocket_context_destroy(context);
   closelog();
   return 0;
 }
 
-
-
-
-
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println("Starting WebServer");
   system("/home/root/startAP");
-  //delay(5000);  
-  //ip[0] = IPAddress(192, 168, 0, 11);
-  //ip[1] = IPAddress(192, 168, 0, 12);
-  //ip[2] = IPAddress(192, 168, 0, 13) ;
 
+  // Init Galileo HW
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
-  //for (int i=0; i < N_PANNEL; i++)
-  //{
-  //  udp[i].begin(8888+i);
-  // 
-  //}
+
+  // Init pin state variables
+  for(int i=0; i<TOTAL_NUM_PINS; i++)
+    aiPinStates[i] = 0;
 
 
   _udpIn.begin(3333);
   _udpIn.listen();
 
-  //pthread magic !
-//  pthread_t oscThread;
-//  pthread_create(&oscThread,NULL,osc_loop,0);
 
-  //pthread magic end
 
   Serial.println("Starting WebSocket");
   initWebsocket();  
@@ -373,109 +386,12 @@ void setup() {
 
 }
 
-/*
-int getNextMessage(OSCBundle &b, int* from)
-{
-
-  int bytes  = _udpIn.parsePacket();
-  if (bytes)
-  {
-    unsigned char *buffer = new unsigned char[bytes];
-    bytes = _udpIn.read(buffer,bytes);
-    //Serial.println(bytes);
-    if (bytes > 1024) { 
-      Serial.println("Overload warning !");
-      Serial.println(bytes);
-    }
-
-    *from = -1;
-
-    for (int i=0; i < N_PANNEL; i++)
-    {
-      if (ip[i] == _udpIn.remoteIP()) { 
-        *from = i; 
-        break; 
-      }
-    }
-
-    if (bytes >0) 
-    {
-      if (buffer[0] == '#') b.fill(buffer,bytes);
-      else 
-      {
-        OSCMessage *m = new OSCMessage(); 
-        //Serial.print(bytes);
-        m->fill(buffer,bytes);
-        if (!m->hasError()) b.add(*m);
-        else { 
-          Serial.println("OSC Message seems to have Error ");
-          delete m;
-          delete[] buffer;
-          return 0;
-        }
-
-      }
-    }
-
-    delete[] buffer;
-    delay(10);
-    if (!b.hasError()) 
-    { 
-
-      return 1;
-    }
-
-    Serial.println("OSC Message seems to have Error ");
-    return 0;
-
-  }
-  return 0;
-}
-*/
-
-//This is an hackish way of processing OSC Message
-// There is no synchronization between the main thread and this one
-// So... If it looks bad on the phone, don't use it :)
-/*
-void *osc_loop(void *dummy)
-{
-
-  while (!force_exit) {
-    //OSCBundle b;
-    //OSCMessage *m;
-
-//    int from = -1;
-//     while (getNextMessage(b,&from))
-//     {
-//     if (m = b.getOSCMessage(0))
-//     {
-//     from = m->getInt(0);
-//     if (from != -1) { 
-//     
-//     int index = 8*from;
-//     sprintf(colors + index+1,"%06x",m->getInt(1));
-//     if (from != N_PANNEL -1) colors[index+7] = ',';
-//     // sleep(5);
-//     
-//     }
-//     }
-//     b.empty();
-//     }
-     
-    sensor1 = analogRead(sensor1Pin);
-
-    sleep(500);
-  }
-
-  return 0;
-}
-*/
-
 void loop()
 {
 
 
-
 }
+
+
 
 
