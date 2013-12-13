@@ -18,7 +18,7 @@ This documents describes the system's hardware and software architecture, which 
 
 ## How To Run ConnectAnyThing
 
-1) Checkout or download the project's zip file.
+1) Clone or download the project's zip file.
 2) In the SD_Card directory, unzip the image-full-clanton.zip file (it should contain the image-full-clanton.ext3 file).
 3) Copy the entire content of this directory to the root directory of the Galileo Micro SD card, keeping its structure intact ( remove the image-full-clanton.zip if needed ).
 4) Put the Micro SD card back in the Galileo board and power up.
@@ -30,8 +30,8 @@ This documents describes the system's hardware and software architecture, which 
 
 ### Hardware description
 
-* Our setup uses 1 Galileo board as a web server/WiFi hotspot.
-* The board uses a half PCI-E Intel N-135 Wifi card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* Our set up uses 1 Galileo board as a web server/WiFi hotspot.
+* The board uses a half PCI-E Intel N-135 WiFi card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
 * One external 5V (3A) power supply.
 
 ### Software description
@@ -47,9 +47,10 @@ Finally the board runs an arduino sketch (compiled against the libwebsockets lib
 
 ### Networking description
 
-The server board creates an open wifi network called "ConnectAnyThing".
+The server board creates an open WiFi network called "ConnectAnyThing".
 Clients will connect to the WiFi, request the http://cat.com/ webpage and will be delivered with a UI to control Galileo's pins.
 Communication from phone clients to server is made through websockets.
+If you wish to change the name of the hotspot network, change the SSID name in the file hostapd.conf located in /etc/hostapd/.
 
 ####Network setting
  
@@ -58,12 +59,19 @@ Communication from phone clients to server is made through websockets.
 ## How To Run ConnectAnyThing
 
 1) Checkout or download the project's zip file.
+
 2) In the SD_Card directory, unzip the image-full-clanton.zip file (it should contain the image-full-clanton.ext3 file).
+
 3) Copy the entire content of this directory to the root directory of the Galileo Micro SD card, keeping its structure intact ( remove the image-full-clanton.zip if needed ).
+
 4) Put the Micro SD card back in the Galileo board and power up.
+
 5) On your mobile device or computer, connect to the ConnectAnyThing network.
+
 6) Start a browser and go to "cat.com" or "192.168.0.10".
+
 7) Control the output pin D13 and read data in from pin A0.
+
 
 ## How To Edit the HTML5 Website
 Copy the file index.html from: ~/srv to /media/mmcblk0p1/srv_card/home/root/srv/ use the following command on the Linux command line:
