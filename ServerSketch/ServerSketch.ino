@@ -40,8 +40,20 @@ int sensor1 = 0;
 int sensor1Pin = A0;    // select the input pin for the potentiometer
 
 // HW declaration
-#define TOTAL_NUM_PINS 20
-int aiPinStates[TOTAL_NUM_PINS];
+#define TOTAL_NUM_Dx 14 
+#define TOTAL_NUM_Px 12
+boolean g_abD[TOTAL_NUM_Dx];
+int g_aiP[TOTAL_NUM_Px];
+
+// Serial Interface
+int g_iByte = 0;
+int g_iNewCode = 0;
+
+#define UP 119 // w
+#define DOWN 115 // s
+#define LEFT 97 // a
+#define RIGHT 100 // d
+#define SPACE 32 // space 
 
 EthernetUDP _udpIn;
 //char colors[8*N_PANNEL] = "#000000,#000000,#000000";
@@ -90,45 +102,45 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"       }
+    "/favicon.ico", "image/x-icon"           }
   ,
   { 
-    "/img/2s.png", "image/png"       }
+    "/img/2s.png", "image/png"           }
   ,
   { 
-    "/img/splash.png", "image/png"       }
+    "/img/splash.png", "image/png"           }
   ,
   { 
-    "/img/splash2.png", "image/png"       }
+    "/img/splash2.png", "image/png"           }
   ,
   { 
-    "/img/placeholder.png", "image/png"       }
+    "/img/placeholder.png", "image/png"           }
   ,
   { 
-    "/img/placeholder-on.png", "image/png"       }
+    "/img/placeholder-on.png", "image/png"           }
   ,
   { 
-    "/css/phone.css", "text/css"       }
+    "/css/phone.css", "text/css"           }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"       }
+    "/js/jquery-2.0.3.min.js", "application/javascript"           }
   ,
   { 
-    "/js/phone.js", "application/javascript"       }
+    "/js/phone.js", "application/javascript"           }
   ,
   { 
-    "/js/pixel.js", "application/javascript"       }
+    "/js/pixel.js", "application/javascript"           }
   ,
   { 
-    "/js/pixelView.js", "application/javascript"       }
+    "/js/pixelView.js", "application/javascript"           }
   ,
   { 
-    "/js/socketController.js", "application/javascript"       }
+    "/js/socketController.js", "application/javascript"           }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"       }
+    "/index.html", "text/html"           }
   ,
 };
 
@@ -183,18 +195,14 @@ void *in, size_t len)
 /* lyt_protocol*/
 static int
 callback_lyt_protocol(struct libwebsocket_context *context,
-                      struct libwebsocket *wsi,
-                      enum libwebsocket_callback_reasons reason,
-                      void *user,
-                      void *in, size_t len)
+struct libwebsocket *wsi,
+enum libwebsocket_callback_reasons reason,
+void *user,
+void *in, size_t len)
 {
 
   //Serial.println("callback_lyt_protocol()");
   // WE ARE ALWAYS HITTING THIS POINT
-
- // int n;
-//  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
- // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
   int iNumBytes = -1;
 
@@ -202,19 +210,11 @@ callback_lyt_protocol(struct libwebsocket_context *context,
   {
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
-    
+
     // **********************************
     // Send Data to Website    
     // **********************************
     iNumBytes = sendStatusToWebsite(wsi);
-    /*
-    sensor1 = analogRead(sensor1Pin);
-    n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
-    Serial.print("Output Message:");
-    Serial.println(n);
-    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
-    */
-    
     if (iNumBytes < 0) 
     {
       lwsl_err("ERROR %d writing to socket\n", iNumBytes);
@@ -244,14 +244,50 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   int n;
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-  
 
-  sensor1 = analogRead(sensor1Pin);
-  n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
+  getSerialCommand(); 
+  if( g_iNewCode )
+  {
+    // NEW CODE
+    Serial.println("NEW CODE");
+    // Read pin state HW
+
+    // Send HW status to website
+    n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+    g_abD[0],
+    g_abD[1],
+    g_abD[2],
+    g_aiP[3],   // Px
+    g_abD[4],
+    g_aiP[5],   // Px
+    g_aiP[6],   // Px
+    g_abD[7],
+    g_abD[8],
+    g_aiP[9],   // Px
+    g_aiP[10],  // Px
+    g_aiP[11],  // Px
+    g_abD[12],
+    g_abD[13],
+    analogRead(A0),
+    analogRead(A1),
+    analogRead(A2),
+    analogRead(A3),
+    analogRead(A4),
+    analogRead(A5)
+    );
+  }
+  else
+  {
+    // OLD CODE
+    Serial.println("OLD CODE");
+    sensor1 = analogRead(sensor1Pin);
+    n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
+  }
+
   Serial.print("Output Message [sendStatusToWebsite()]:");
   Serial.println(n);
   n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-  
+
   return n;
 }
 
@@ -277,7 +313,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0       } /* terminator */
+    NULL, NULL, 0, 0           } /* terminator */
 };
 
 void sighandler(int sig)
@@ -288,7 +324,7 @@ void sighandler(int sig)
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0       }
+    NULL, 0, 0, 0           }
 };
 
 int initWebsocket()
@@ -321,9 +357,7 @@ int initWebsocket()
   info.iface = iface;
   info.protocols = protocols;
 
-
   info.extensions = libwebsocket_get_internal_extensions();
-
 
   info.ssl_cert_filepath = NULL;
   info.ssl_private_key_filepath = NULL;
@@ -371,8 +405,11 @@ void setup()
   digitalWrite(led, LOW);
 
   // Init pin state variables
-  for(int i=0; i<TOTAL_NUM_PINS; i++)
-    aiPinStates[i] = 0;
+  int i=0;
+  for(i=0; i<TOTAL_NUM_Dx; i++)    
+    g_abD[i] = false;
+  for(i=0; i<TOTAL_NUM_Px; i++)
+    g_aiP[i] = 0;   
 
 
   _udpIn.begin(3333);
@@ -389,6 +426,30 @@ void setup()
 void loop()
 {
 
+
+}
+
+// Parce Serial Commands
+void getSerialCommand() 
+{
+  if (Serial.available() > 0) {
+    // get incoming byte:
+    g_iByte = Serial.read();
+    Serial.println(g_iByte);
+
+    switch (g_iByte)
+    {
+    case UP:
+      g_iNewCode = 0;      
+      break;
+
+    case DOWN:
+    case LEFT:
+    case RIGHT:
+      g_iNewCode = 1;            
+      break;
+    }
+  }
 
 }
 
