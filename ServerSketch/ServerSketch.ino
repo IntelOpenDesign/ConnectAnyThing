@@ -49,7 +49,6 @@ EthernetUDP _udpIn;
 //char colors[8*N_PANNEL] = "#000000,#000000,#000000";
 char  retMessage[(1+1+4+1)]="0,1023";
 
-
 //-----------------------------------------------------------
 // Process recieved message here.... 
 //------------------------------------------------------------
@@ -69,51 +68,7 @@ void processTouch(char* in) {
       //delay(500);
   }
 
-/*          
-          int id = 0;
-          
-          int x = 0;
-          int y = 0;
-          int pannel = 0;
-          Serial.println(pch);
-          if (pch) 
-          { 
-            x = atoi(pch);
-            pch = strtok(0,"-");
-           }
-           if (pch) 
-          { 
-            y = atoi(pch);
-            pch = strtok(0,"-");
-           }
-           if (pch) pannel = atoi(pch);
-          
-*/            
-
-          
-       /*'''
-          if ((pannel >=0) && (pannel < N_PANNEL))
-          {
-            OSCMessage m("/touch");
-            m.add(id);
-             m.add(x);
-            m.add(y);
-            digitalWrite(led, HIGH);
-            delay(500);
-            digitalWrite(led, LOW);
-            
-            lwsl_notice("Message should be sent");
-            udp[pannel].beginPacket(ip[pannel],udpPort);
-            m.send(udp[pannel]);
-            udp[pannel].endPacket();
-
-          }
-*/
 }
-
-
-
-
 
 /*
 This part of the code is inspired by the stock example coming with libsockets.
@@ -160,7 +115,8 @@ static int callback_http(struct libwebsocket_context *context,
 		enum libwebsocket_callback_reasons reason, void *user,
 							   void *in, size_t len)
 {
-          Serial.println("callback_http()");
+     //     Serial.println("callback_http()");
+     // WE ARE ALWAYS HITTING THIS POINT
   
 	char buf[256];
 	int n;
@@ -208,11 +164,11 @@ callback_lyt_protocol(struct libwebsocket_context *context,
 					       void *user, void *in, size_t len)
 {
   
-        Serial.println("callback_lyt_protocol()");
-  
+        //Serial.println("callback_lyt_protocol()");
+        // WE ARE ALWAYS HITTING THIS POINT
+        
 	int n;
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 +
-						  LWS_SEND_BUFFER_POST_PADDING];
+	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
 	unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 	
 
@@ -223,8 +179,8 @@ callback_lyt_protocol(struct libwebsocket_context *context,
 	case LWS_CALLBACK_SERVER_WRITEABLE:
                 sensor1 = analogRead(sensor1Pin);
 		n = sprintf((char *)p, "%d,%d", currentLED, sensor1);//colors);
-                //Serial.print("Output Message:");
-                //Serial.println(n);
+                Serial.print("Output Message:");
+                Serial.println(n);
 		n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
 		if (n < 0) {
 			lwsl_err("ERROR %d writing to socket\n", n);
