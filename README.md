@@ -3,7 +3,16 @@ ConnectAnyThing
 
 # Overview
 
-ConnectAnyThing is an open platform aimed to enable non-technical creative people, to control Intel's Galileo development board, through an HTML5 website. The first version of this system was created during an Intel's internal hackthone in December of 2013.
+ConnectAnyThing is an open platform intended for easy prototyping of connected appliances, devices, and installations using Intel’s Galileo development board.  When you load ConnectAnyThing onto the Galileo’s SD card, Galileo broadcasts a WiFi network and hosts an HTML5 webpage that allows anyone to connect, read inputs and control outputs from their mobile device. The first version of this system was created during an Intel internal hackthon in December of 2013.
+
+
+Some potential uses:
+
+Make a publicly controllable art installation.
+Interactive window displays.
+Remote monitoring and control for cold/toxic/unpleasant environments.
+Build a mobile-controlled door lock or lights for a shed or outbuilding.
+
 
 The Team:
 Carlos Montesinos <carlos.montesinos@intel.com>
@@ -54,7 +63,7 @@ If you wish to change the name of the hotspot network, change the SSID name in t
 
 ####Network setting
  
-* WIFI Board : 192.168.0.10  (cat board)
+* WIFI Board : 192.168.0.10  (C.A.T. board)
 
 ## How To Run ConnectAnyThing
 
