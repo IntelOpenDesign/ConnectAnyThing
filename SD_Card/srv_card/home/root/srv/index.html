@@ -8,6 +8,7 @@
 	var ledStateCurrent = 0;
 	var ledStateOld = 0;
 	var voltageValue;
+	var iPwmPin3 = 0;
 	
 	function init() { 
 		output = document.getElementById("outputText"); 
@@ -43,7 +44,9 @@
 	function doSend() { 
 		//message = "trigger";
 		//message = "D13";
-		message = "P3,500";
+		//message = "P3,500";
+		message = "P3," + iPwmPin3;
+		iPwmPin3 = iPwmPin3 + 10;
 		try{  
 			console.info("SENT: " + message);  
 			websocket.send(message);  
