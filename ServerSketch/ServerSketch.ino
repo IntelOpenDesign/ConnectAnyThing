@@ -123,7 +123,7 @@ void procWebMsg(char* _in, size_t _len) {
     Serial.print("Value: ");
     Serial.println(String(iValue));
     g_aiP[iPin] = iValue; // Toggle state
-    analogWrite(iPin, g_abD[iPin]); // Set state
+    analogWrite(iPin, g_aiP[iPin]); // Set state
   }
   else
   {
@@ -480,8 +480,15 @@ void setup()
   for(int i=0; i<14; i++)
   {
     pinMode(i, OUTPUT);
-    digitalWrite(i, LOW);
   }
+
+  // Init pins
+  digitalWrite(0, LOW);digitalWrite(1, LOW);digitalWrite(2, LOW);
+  digitalWrite(4, LOW);digitalWrite(7, LOW);digitalWrite(8, LOW);
+  digitalWrite(12, LOW);digitalWrite(13, LOW);
+  
+  analogWrite(3, 0);analogWrite(5, 0);analogWrite(6, 0);
+  analogWrite(9, 0);analogWrite(10, 0);analogWrite(11, 0);
 
   // Init pin state variables
   int i=0;
