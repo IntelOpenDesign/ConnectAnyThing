@@ -41,7 +41,8 @@
 	}  
 	
 	function doSend() { 
-		message = "trigger";
+		//message = "trigger";
+		message = "D13";
 		try{  
 			console.info("SENT: " + message);  
 			websocket.send(message);  
@@ -72,6 +73,9 @@
 	} 
 	
 	function parseMessage(data){
+	
+		writeToScreen('<span style="color: red;">Data In:</span> ' + data);
+	
 		ledStateCurrent = data.substr(0,1);
 		voltageValue = data.substring(2);
 		console.info(voltageValue);

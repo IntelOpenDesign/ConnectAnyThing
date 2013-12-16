@@ -66,13 +66,45 @@ void procWebMsg(char* _in, size_t _len) {
 
   /*
   g_abD[i] = false;      digitalWrite(i, LOW);    
-  g_aiP[i] = 0;        analogWrite(i, LOW);    
+   g_aiP[i] = 0;        analogWrite(i, LOW);    
+   */
+
+  String sMsg(_in);
+
+  /*
+  if( sMsg == "trigger" ) // Debugging
+    sMsg = "D13";
   */
-  
+
+  sMsg.toLowerCase();
+
   Serial.print("input: "); 
-  Serial.println(String(_in));
-    Serial.print("_len: "); 
+  Serial.println(sMsg);
+  Serial.print("_len: "); 
   Serial.println(String(_len));
+
+  // Parse incomming message
+  if(  sMsg.startsWith("d") && _len <= 3 )
+  {
+    // Check if we are setting a Dx pin
+    int iPin = sMsg.substring(1,sMsg.length()).toInt();
+    Serial.print("Pin: ");
+    Serial.println(String(iPin));
+    g_abD[iPin] = ~g_abD[iPin]; // Toggle state
+    digitalWrite(iPin, g_abD[iPin]); // Set state
+  }
+  else if(  sMsg.startsWith("p") )
+  {
+    // Check if we are setting a Px pin
+
+  }
+  else
+  {
+    Serial.print("Error. Unrecongnized message: ");   
+    Serial.println(sMsg);
+  }
+
+/*
   if(String(_in) == "trigger"){
     Serial.println("Trigger found");
     if(currentLED){
@@ -84,6 +116,7 @@ void procWebMsg(char* _in, size_t _len) {
       currentLED = true;
     } 
   }
+*/
 
 }
 
@@ -109,45 +142,45 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"           }
+    "/favicon.ico", "image/x-icon"             }
   ,
   { 
-    "/img/2s.png", "image/png"           }
+    "/img/2s.png", "image/png"             }
   ,
   { 
-    "/img/splash.png", "image/png"           }
+    "/img/splash.png", "image/png"             }
   ,
   { 
-    "/img/splash2.png", "image/png"           }
+    "/img/splash2.png", "image/png"             }
   ,
   { 
-    "/img/placeholder.png", "image/png"           }
+    "/img/placeholder.png", "image/png"             }
   ,
   { 
-    "/img/placeholder-on.png", "image/png"           }
+    "/img/placeholder-on.png", "image/png"             }
   ,
   { 
-    "/css/phone.css", "text/css"           }
+    "/css/phone.css", "text/css"             }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"           }
+    "/js/jquery-2.0.3.min.js", "application/javascript"             }
   ,
   { 
-    "/js/phone.js", "application/javascript"           }
+    "/js/phone.js", "application/javascript"             }
   ,
   { 
-    "/js/pixel.js", "application/javascript"           }
+    "/js/pixel.js", "application/javascript"             }
   ,
   { 
-    "/js/pixelView.js", "application/javascript"           }
+    "/js/pixelView.js", "application/javascript"             }
   ,
   { 
-    "/js/socketController.js", "application/javascript"           }
+    "/js/socketController.js", "application/javascript"             }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"           }
+    "/index.html", "text/html"             }
   ,
 };
 
@@ -255,9 +288,11 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
+/*
   getSerialCommand(); 
   if( g_iNewCode )
   {
+*/    
     // NEW CODE
     Serial.println("NEW CODE");
     // Read pin state HW
@@ -284,7 +319,8 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
     analogRead(A3),
     analogRead(A4),
     analogRead(A5)
-    );
+      );
+/*
   }
   else
   {
@@ -293,6 +329,7 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
     sensor1 = analogRead(sensor1Pin);
     n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
   }
+*/
 
   Serial.print("Output Message [sendStatusToWebsite()]:");
   Serial.println(n);
@@ -323,7 +360,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0           } /* terminator */
+    NULL, NULL, 0, 0             } /* terminator */
 };
 
 void sighandler(int sig)
@@ -334,7 +371,7 @@ void sighandler(int sig)
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0           }
+    NULL, 0, 0, 0             }
 };
 
 int initWebsocket()
@@ -411,7 +448,7 @@ void setup()
   system("/home/root/startAP");
 
   // Init Galileo HW
-  
+
   // Enable all digital pins as outputs
   for(int i=0; i<14; i++)
   {
@@ -463,6 +500,7 @@ void getSerialCommand()
   }
 
 }
+
 
 
 
