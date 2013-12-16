@@ -28,11 +28,17 @@ This documents describes the system's hardware and software architecture, which 
 ## How To Run ConnectAnyThing
 
 1) Clone or download the project's zip file.
+
 2) In the SD_Card directory, unzip the image-full-clanton.zip file (it should contain the image-full-clanton.ext3 file).
+
 3) Copy the entire content of this directory to the root directory of the Galileo Micro SD card, keeping its structure intact ( remove the image-full-clanton.zip if needed ).
+
 4) Put the Micro SD card back in the Galileo board and power up.
+
 5) On your mobile device or computer, connect to the "ConnectAnyThing" network.
+
 6) Start a browser and go to "cat.com" or "192.168.0.10".
+
 7) Control the output pin D13 and read data in from pin A0.
 
 ## ConnectAnyThing Architecture 
