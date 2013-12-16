@@ -62,11 +62,18 @@ char  retMessage[(1+1+4+1)]="0,1023";
 //-----------------------------------------------------------
 // Process recieved message from the webpage here.... 
 //------------------------------------------------------------
-void processTouch(char* in) {
+void procWebMsg(char* _in, size_t _len) {
 
+  /*
+  g_abD[i] = false;      digitalWrite(i, LOW);    
+  g_aiP[i] = 0;        analogWrite(i, LOW);    
+  */
+  
   Serial.print("input: "); 
-  Serial.println(in);
-  if(String(in) == "trigger"){
+  Serial.println(String(_in));
+    Serial.print("_len: "); 
+  Serial.println(String(_len));
+  if(String(_in) == "trigger"){
     Serial.println("Trigger found");
     if(currentLED){
       digitalWrite(led, LOW);
@@ -225,7 +232,10 @@ void *in, size_t len)
 
   case LWS_CALLBACK_RECEIVE:
 
-    processTouch((char*) in); 		
+    // **********************************
+    // Process Data Receieved from the Website    
+    // **********************************
+    procWebMsg((char*) in, len); 		
 
     break;
 
@@ -401,8 +411,13 @@ void setup()
   system("/home/root/startAP");
 
   // Init Galileo HW
-  pinMode(led, OUTPUT);
-  digitalWrite(led, LOW);
+  
+  // Enable all digital pins as outputs
+  for(int i=0; i<14; i++)
+  {
+    pinMode(i, OUTPUT);
+    digitalWrite(i, LOW);
+  }
 
   // Init pin state variables
   int i=0;
@@ -411,15 +426,11 @@ void setup()
   for(i=0; i<TOTAL_NUM_Px; i++)
     g_aiP[i] = 0;   
 
-
   _udpIn.begin(3333);
   _udpIn.listen();
 
-
-
   Serial.println("Starting WebSocket");
   initWebsocket();  
-
 
 }
 
