@@ -95,8 +95,35 @@ void procWebMsg(char* _in, size_t _len) {
   }
   else if(  sMsg.startsWith("p") )
   {
-    // Check if we are setting a Px pin
+    // Check if we are setting a Px pin 
+    
+    // Get pin number and value
+    int iValue = 0;
+    int iPin = 0;
+    
+    if( sMsg.charAt(2) == ',' )
+    {
+      iPin = sMsg.substring(1,2).toInt();
+      iValue = sMsg.substring(3,sMsg.length()).toInt();
+    }
+    else if( sMsg.charAt(3) == ',' )
+    {
+      iPin = sMsg.substring(1,3).toInt();
+      iValue = sMsg.substring(4,sMsg.length()).toInt();      
+    }
+    else
+    {
+      Serial.print("Error. Unrecongnized message: ");   
+      Serial.println(sMsg);
+    }
 
+    // Set pin value
+    Serial.print("Pin: ");
+    Serial.println(String(iPin));
+    Serial.print("Value: ");
+    Serial.println(String(iValue));
+    g_aiP[iPin] = iValue; // Toggle state
+    analogWrite(iPin, g_abD[iPin]); // Set state
   }
   else
   {
@@ -294,7 +321,7 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   {
 */    
     // NEW CODE
-    Serial.println("NEW CODE");
+    //Serial.println("NEW CODE");
     // Read pin state HW
 
     // Send HW status to website
@@ -331,8 +358,8 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   }
 */
 
-  Serial.print("Output Message [sendStatusToWebsite()]:");
-  Serial.println(n);
+  //Serial.print("Output Message [sendStatusToWebsite()]:");
+  //Serial.println(n);
   n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
 
   return n;
