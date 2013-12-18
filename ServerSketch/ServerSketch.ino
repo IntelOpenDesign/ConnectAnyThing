@@ -73,8 +73,8 @@ void procWebMsg(char* _in, size_t _len) {
 
   /*
   if( sMsg == "trigger" ) // Debugging
-    sMsg = "D13";
-  */
+   sMsg = "D13";
+   */
 
   sMsg.toLowerCase();
 
@@ -96,11 +96,11 @@ void procWebMsg(char* _in, size_t _len) {
   else if(  sMsg.startsWith("p") )
   {
     // Check if we are setting a Px pin 
-    
+
     // Get pin number and value
     int iValue = 0;
     int iPin = 0;
-    
+
     if( sMsg.charAt(2) == ',' )
     {
       iPin = sMsg.substring(1,2).toInt();
@@ -131,19 +131,19 @@ void procWebMsg(char* _in, size_t _len) {
     Serial.println(sMsg);
   }
 
-/*
+  /*
   if(String(_in) == "trigger"){
-    Serial.println("Trigger found");
-    if(currentLED){
-      digitalWrite(led, LOW);
-      currentLED = false;
-    }
-    else{
-      digitalWrite(led, HIGH);
-      currentLED = true;
-    } 
-  }
-*/
+   Serial.println("Trigger found");
+   if(currentLED){
+   digitalWrite(led, LOW);
+   currentLED = false;
+   }
+   else{
+   digitalWrite(led, HIGH);
+   currentLED = true;
+   } 
+   }
+   */
 
 }
 
@@ -167,47 +167,210 @@ struct serveable {
   const char *mimetype;
 }; 
 
+/*
+static const struct serveable whitelist[] = {
+ { 
+ "/favicon.ico", "image/x-icon"             }
+ ,
+ { 
+ "/img/2s.png", "image/png"             }
+ ,
+ { 
+ "/img/splash.png", "image/png"             }
+ ,
+ { 
+ "/img/splash2.png", "image/png"             }
+ ,
+ { 
+ "/img/placeholder.png", "image/png"             }
+ ,
+ { 
+ "/img/placeholder-on.png", "image/png"             }
+ ,
+ { 
+ "/css/phone.css", "text/css"             }
+ ,
+ { 
+ "/js/jquery-2.0.3.min.js", "application/javascript"             }
+ ,
+ { 
+ "/js/phone.js", "application/javascript"             }
+ ,
+ { 
+ "/js/pixel.js", "application/javascript"             }
+ ,
+ { 
+ "/js/pixelView.js", "application/javascript"             }
+ ,
+ { 
+ "/js/socketController.js", "application/javascript"             }
+ ,
+ 
+ // last one is the default served if no match
+ { 
+ "/index.html", "text/html"             }
+ ,
+ };
+ */
+
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"             }
+    "/favicon.ico", "image/x-icon"               }
   ,
   { 
-    "/img/2s.png", "image/png"             }
+    "/images/Galileo-Ref_01.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_02.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_03.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_03_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_04.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_05.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_05_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_06.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_06_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_07.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_07_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_08.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_09.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_10.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_11.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_12.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_12_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_13.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_14.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_15.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_15_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_16.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_17.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_18.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_18_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_19.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_20.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_21.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_21_off.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_22.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_23.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_24.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_25.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_26.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_27.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_28.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_29.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_30.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_31.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_32.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_33.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_34.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_35.png", "image/png"     }
+    ,
+  { 
+    "/images/Galileo-Ref_36.png", "image/png"     }
   ,
   { 
-    "/img/splash.png", "image/png"             }
+    "/css/phone.css", "text/css"               }
   ,
   { 
-    "/img/splash2.png", "image/png"             }
+    "/js/jquery-2.0.3.min.js", "application/javascript"               }
   ,
   { 
-    "/img/placeholder.png", "image/png"             }
+    "/js/phone.js", "application/javascript"               }
   ,
   { 
-    "/img/placeholder-on.png", "image/png"             }
+    "/js/pixel.js", "application/javascript"               }
   ,
   { 
-    "/css/phone.css", "text/css"             }
+    "/js/pixelView.js", "application/javascript"               }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"             }
-  ,
-  { 
-    "/js/phone.js", "application/javascript"             }
-  ,
-  { 
-    "/js/pixel.js", "application/javascript"             }
-  ,
-  { 
-    "/js/pixelView.js", "application/javascript"             }
-  ,
-  { 
-    "/js/socketController.js", "application/javascript"             }
+    "/js/socketController.js", "application/javascript"               }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"             }
+    "/index.html", "text/html"               }
   ,
 };
 
@@ -315,48 +478,48 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
-/*
+  /*
   getSerialCommand(); 
-  if( g_iNewCode )
-  {
-*/    
-    // NEW CODE
-    //Serial.println("NEW CODE");
-    // Read pin state HW
+   if( g_iNewCode )
+   {
+   */
+  // NEW CODE
+  //Serial.println("NEW CODE");
+  // Read pin state HW
 
-    // Send HW status to website
-    n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-    g_abD[0],
-    g_abD[1],
-    g_abD[2],
-    g_aiP[3],   // Px
-    g_abD[4],
-    g_aiP[5],   // Px
-    g_aiP[6],   // Px
-    g_abD[7],
-    g_abD[8],
-    g_aiP[9],   // Px
-    g_aiP[10],  // Px
-    g_aiP[11],  // Px
-    g_abD[12],
-    g_abD[13],
-    analogRead(A0),
-    analogRead(A1),
-    analogRead(A2),
-    analogRead(A3),
-    analogRead(A4),
-    analogRead(A5)
-      );
-/*
+  // Send HW status to website
+  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+  g_abD[0],
+  g_abD[1],
+  g_abD[2],
+  g_aiP[3],   // Px
+  g_abD[4],
+  g_aiP[5],   // Px
+  g_aiP[6],   // Px
+  g_abD[7],
+  g_abD[8],
+  g_aiP[9],   // Px
+  g_aiP[10],  // Px
+  g_aiP[11],  // Px
+  g_abD[12],
+  g_abD[13],
+  analogRead(A0),
+  analogRead(A1),
+  analogRead(A2),
+  analogRead(A3),
+  analogRead(A4),
+  analogRead(A5)
+    );
+  /*
   }
-  else
-  {
-    // OLD CODE
-    Serial.println("OLD CODE");
-    sensor1 = analogRead(sensor1Pin);
-    n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
-  }
-*/
+   else
+   {
+   // OLD CODE
+   Serial.println("OLD CODE");
+   sensor1 = analogRead(sensor1Pin);
+   n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
+   }
+   */
 
   //Serial.print("Output Message [sendStatusToWebsite()]:");
   //Serial.println(n);
@@ -387,7 +550,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0             } /* terminator */
+    NULL, NULL, 0, 0               } /* terminator */
 };
 
 void sighandler(int sig)
@@ -398,7 +561,7 @@ void sighandler(int sig)
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0             }
+    NULL, 0, 0, 0               }
 };
 
 int initWebsocket()
@@ -483,12 +646,21 @@ void setup()
   }
 
   // Init pins
-  digitalWrite(0, LOW);digitalWrite(1, LOW);digitalWrite(2, LOW);
-  digitalWrite(4, LOW);digitalWrite(7, LOW);digitalWrite(8, LOW);
-  digitalWrite(12, LOW);digitalWrite(13, LOW);
-  
-  analogWrite(3, 0);analogWrite(5, 0);analogWrite(6, 0);
-  analogWrite(9, 0);analogWrite(10, 0);analogWrite(11, 0);
+  digitalWrite(0, LOW);
+  digitalWrite(1, LOW);
+  digitalWrite(2, LOW);
+  digitalWrite(4, LOW);
+  digitalWrite(7, LOW);
+  digitalWrite(8, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(13, LOW);
+
+  analogWrite(3, 0);
+  analogWrite(5, 0);
+  analogWrite(6, 0);
+  analogWrite(9, 0);
+  analogWrite(10, 0);
+  analogWrite(11, 0);
 
   // Init pin state variables
   int i=0;
@@ -534,6 +706,7 @@ void getSerialCommand()
   }
 
 }
+
 
 
 
