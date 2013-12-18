@@ -215,162 +215,165 @@ static const struct serveable whitelist[] = {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"               }
+    "/favicon.ico", "image/x-icon"                 }
   ,
   { 
-    "/images/Galileo-Ref_01.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_02.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_03.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_03_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_04.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_05.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_05_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_06.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_06_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_07.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_07_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_08.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_09.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_10.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_11.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_12.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_12_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_13.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_14.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_15.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_15_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_16.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_17.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_18.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_18_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_19.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_20.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_21.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_21_off.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_22.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_23.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_24.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_25.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_26.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_27.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_28.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_29.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_30.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_31.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_32.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_33.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_34.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_35.png", "image/png"     }
-    ,
-  { 
-    "/images/Galileo-Ref_36.png", "image/png"     }
+    "/images/Galileo-Ref_01.png", "image/png"       }
   ,
   { 
-    "/css/phone.css", "text/css"               }
+    "/images/Galileo-Ref_02.png", "image/png"       }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"               }
+    "/images/Galileo-Ref_03.png", "image/png"       }
   ,
   { 
-    "/js/phone.js", "application/javascript"               }
+    "/images/Galileo-Ref_03_off.png", "image/png"       }
   ,
   { 
-    "/js/pixel.js", "application/javascript"               }
+    "/images/Galileo-Ref_04.png", "image/png"       }
   ,
   { 
-    "/js/pixelView.js", "application/javascript"               }
+    "/images/Galileo-Ref_05.png", "image/png"       }
   ,
   { 
-    "/js/socketController.js", "application/javascript"               }
+    "/images/Galileo-Ref_05_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_06.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_06_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_07.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_07_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_08.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_09.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_10.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_11.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_12.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_12_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_13.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_14.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_15.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_15_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_16.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_17.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_18.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_18_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_19.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_20.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_21.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_21_off.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_22.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_23.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_24.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_25.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_26.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_27.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_28.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_29.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_30.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_31.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_32.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_33.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_34.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_35.png", "image/png"       }
+  ,
+  { 
+    "/images/Galileo-Ref_36.png", "image/png"       }
+  ,
+  { 
+    "/images/blank.gif", "image/png"       }
+  ,
+  { 
+    "/css/phone.css", "text/css"                 }
+  ,
+  { 
+    "/js/jquery-2.0.3.min.js", "application/javascript"                 }
+  ,
+  { 
+    "/js/phone.js", "application/javascript"                 }
+  ,
+  { 
+    "/js/pixel.js", "application/javascript"                 }
+  ,
+  { 
+    "/js/pixelView.js", "application/javascript"                 }
+  ,
+  { 
+    "/js/socketController.js", "application/javascript"                 }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"               }
+    "/index.html", "text/html"                 }
   ,
 };
 
@@ -550,7 +553,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0               } /* terminator */
+    NULL, NULL, 0, 0                 } /* terminator */
 };
 
 void sighandler(int sig)
@@ -561,7 +564,7 @@ void sighandler(int sig)
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0               }
+    NULL, 0, 0, 0                 }
 };
 
 int initWebsocket()
@@ -706,6 +709,7 @@ void getSerialCommand()
   }
 
 }
+
 
 
 

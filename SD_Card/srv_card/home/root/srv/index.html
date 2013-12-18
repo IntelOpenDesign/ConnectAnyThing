@@ -63,22 +63,81 @@
 		}  
         
         function changeImage(pin,pinLEDCurrentValue) { 
-                var pre = document.getElementById(pin); 
-				
-				if(pinLEDCurrentValue == 0){
-					//console.info(pin+" off");
-					pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/Galileo-Ref_03_off.png' /></a>";
-				}else{
-					//console.info(pin+" on");
-					pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/Galileo-Ref_03.png' /></a>";
+			var image = "";
+        	var pre = document.getElementById(pin); 
+			console.info("Change Image: "+pin);
+			if(pinLEDCurrentValue == 0){
+				//console.info(pin+" off");
+				switch(pin){
+					case "D0":
+						image = "Galileo-Ref_21_off";
+						break;
+					case "D1":
+						image = "Galileo-Ref_18_off";
+						break;
+					case "D2":
+						image = "Galileo-Ref_15_off";
+						break;
+					case "D4":
+						image = "Galileo-Ref_12_off";
+						break;
+					case "D7":
+						image = "Galileo-Ref_07_off";
+						break;
+					case "D8":
+						image = "Galileo-Ref_06_off";
+						break;
+					case "D12":
+						image = "Galileo-Ref_05_off";
+						break;
+					case "D13":
+						image = "Galileo-Ref_03_off";
+						break;
+					default:
+						image = "Galileo-Ref_03_off";
+						break;
 				}
+				pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/"+image+".png' /></a>";
+			}else{
+				//console.info(pin+" on");
+				switch(pin){
+					case "D0":
+						image = "Galileo-Ref_21";
+						break;
+					case "D1":
+						image = "Galileo-Ref_18";
+						break;
+					case "D2":
+						image = "Galileo-Ref_15";
+						break;
+					case "D4":
+						image = "Galileo-Ref_12";
+						break;
+					case "D7":
+						image = "Galileo-Ref_07";
+						break;
+					case "D8":
+						image = "Galileo-Ref_06";
+						break;
+					case "D12":
+						image = "Galileo-Ref_05";
+						break;
+					case "D13":
+						image = "Galileo-Ref_03";
+						break;
+					default:
+						image = "Galileo-Ref_03";
+						break;
+				}
+				pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/"+image+".png' /></a>";
+			}
 	
         } 
 		
 		function populateAnalogInputs(analogInputs){
 			for(i=0; i < analogInputs.length; i++){
 				var pre = document.getElementById("voltage"+[i]); 
-               	pre.innerHTML = '<span id="voltage'+i+'"><br />' + analogInputs[i]+' v</span>';
+               	pre.innerHTML = '<span id="voltage'+i+'"><br />' + analogInputs[i]+'</span>';
 			}
 			
 		}
@@ -181,7 +240,7 @@ background-image: -webkit-linear-gradient(top, #000000, #333333, #000000);
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_08.png); position:absolute; left:0px; top:238px; width:99px; height:530px;" title=""></div>
 			<div style="overflow:visible; background-image:url(images/blank.gif); position:absolute; left:99px; top:238px; width:119px; height:25px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P11',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P11',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_10.png); position:absolute; left:218px; top:238px; width:652px; height:316px;" title=""></div>
 			<div style="background-image:url(images/Galileo-Ref_11.png); position:absolute; left:99px; top:263px; width:119px; height:17px;" title=""></div>
@@ -189,53 +248,53 @@ background-image: -webkit-linear-gradient(top, #000000, #333333, #000000);
 				<a id="D4" href="javascript:doSend('D4');"><img src="images/Galileo-Ref_12_off.png" /></a>
 			</div>
 			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:280px; width:119px; height:22px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P10',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P10',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_14.png); position:absolute; left:99px; top:302px; width:119px; height:18px;" title=""></div>
 			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:308px; width:65px; height:44px;" title="">
 				<a id="D2" href="javascript:doSend('D2');"><img src="images/Galileo-Ref_15_off.png" /></a>
 			</div>
 			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:320px; width:119px; height:21px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P9',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P9',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_17.png); position:absolute; left:99px; top:341px; width:119px; height:20px;" title=""></div>
 			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:352px; width:65px; height:37px;" title="">
 				<a id="D1" href="javascript:doSend('D1');"><img src="images/Galileo-Ref_18_off.png" /></a>			
 			</div>
 			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:361px; width:119px; height:22px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P6',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P6',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_20.png); position:absolute; left:99px; top:383px; width:119px; height:13px;" title=""></div>
 			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:389px; width:65px; height:49px;" title="">
 				<a id="D0" href="javascript:doSend('D0');"><img src="images/Galileo-Ref_21_off.png" /></a>
 			</div>
 			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:396px; width:119px; height:26px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P5',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P5',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_23.png); position:absolute; left:99px; top:422px; width:119px; height:16px;" title=""></div>
 			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:438px; width:119px; height:26px;" title="">
-				<div id="slider"><input id="slide" type="range" min="0" max="255" step="2" onchange="updateSlider('P3',this.value)" /></div>	
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P3',this.value)" /></div>	
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_25.png); position:absolute; left:870px; top:438px; width:65px; height:330px;" title=""></div>
 			<div style="background-image:url(images/Galileo-Ref_26.png); position:absolute; left:99px; top:464px; width:119px; height:304px;" title=""></div>
 			<div style="background-image:url(images/Galileo-Ref_27.png); position:absolute; left:218px; top:554px; width:137px; height:214px;" title=""></div>
 			<div style="background-image:url(images/Galileo-Ref_28.png); position:absolute; left:355px; top:554px; width:62px; height:60px;" title="">
-				<span id="voltage0"><br />0 v</span>
+				<span id="voltage0"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_29.png); position:absolute; left:417px; top:554px; width:65px; height:60px;" title="">
-				<span id="voltage1"><br />0 v</span>
+				<span id="voltage1"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_30.png); position:absolute; left:482px; top:554px; width:66px; height:60px;" title="">
-				<span id="voltage2"><br />0 v</span>
+				<span id="voltage2"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_31.png); position:absolute; left:548px; top:554px; width:66px; height:60px;" title="">
-				<span id="voltage3"><br />0 v</span>
+				<span id="voltage3"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_32.png); position:absolute; left:614px; top:554px; width:64px; height:60px;" title="">
-				<span id="voltage4"><br />0 v</span>
+				<span id="voltage4"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_33.png); position:absolute; left:678px; top:554px; width:66px; height:60px;" title="">
-				<span id="voltage5"><br />0 v</span>
+				<span id="voltage5"><br />0</span>
 			</div>
 			<div style="background-image:url(images/Galileo-Ref_34.png); position:absolute; left:744px; top:554px; width:126px; height:214px;" title=""></div>
 			<div style="background-image:url(images/Galileo-Ref_35.png); position:absolute; left:355px; top:614px; width:389px; height:154px;" title=""></div>
