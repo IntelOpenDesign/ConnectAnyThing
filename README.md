@@ -5,16 +5,15 @@ ConnectAnyThing
 
 ConnectAnyThing is an open platform intended for easy prototyping of connected appliances, devices, and installations using Intel’s Galileo development board.  When you load ConnectAnyThing onto the Galileo’s SD card, Galileo broadcasts a WiFi network and hosts an HTML5 webpage that allows anyone to connect, read inputs and control outputs from their mobile device. The first version of this system was created during an Intel internal hackthon in December of 2013.
 
+### Potential Uses
 
-Some potential uses:
+* Make a publicly controllable art installation.
+* Interactive window displays.
+* Remote monitoring and control for cold/toxic/unpleasant environments.
+* Build a mobile-controlled door lock or lights for a shed or outbuilding.
 
-Make a publicly controllable art installation.
-Interactive window displays.
-Remote monitoring and control for cold/toxic/unpleasant environments.
-Build a mobile-controlled door lock or lights for a shed or outbuilding.
+### The Team
 
-
-The Team:
 Carlos Montesinos <carlos.montesinos@intel.com>
 Lucas Ainsworth <lucas.b.ainsworth@intel.com>
 Clayton Hofrock <clayton.a.hofrock@intel.com>
@@ -22,24 +21,41 @@ David Shaw <david.shaw@intel.com>
 Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com>
 Sorin Blebea <sorin.blebea@intel.com>
 Sweta Patel <sweta.patel@intel.com>
+Seth Hunter <seth.e.hunter@intel.com>
 
-This documents describes the system's hardware and software architecture, which was based on the [LYT project]( https://github.com/secondstory/LYT ). You can see a video of a practical application of this platform in [the creators project website](http://thecreatorsproject.vice.com/the-makers-series/the-makers-lit-by-second-story).
+### Credits
+
+Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
 ## How To Run ConnectAnyThing
 
-1) Clone or download the project's zip file.
+1) Download the project's zip file or clone the repository.
 
-2) In the SD_Card directory, unzip the image-full-clanton.zip file (it should contain the image-full-clanton.ext3 file).
+2) Unpack the content and locate the SD_Card directory.
 
-3) Copy the entire content of this directory to the root directory of the Galileo Micro SD card, keeping its structure intact ( remove the image-full-clanton.zip if needed ).
+3) Make sure the [Micro SD card is FAT32 formatted.] ( http://www.wikihow.com/Format-an-SD-Card )
 
-4) Put the Micro SD card back in the Galileo board and power up.
+4) Copy the entire content of the SD_Card directory into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
-5) On your mobile device or computer, connect to the "ConnectAnyThing" network.
+5) In the SD_Card directory, unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
 
-6) Start a browser and go to "cat.com" or "192.168.0.10".
+6) If successful, the Micro SD card's directory tree should look as follows:
+* boot (directory)
+* srv_card (directory)
+* bzImage (file)
+* core-image-minimal-initramfs-claton.cpio.gz (file)
+* image-full-clatong.ext3 (file)
+* image-full-clatong.zip (file) <- This can be removed
 
-7) Control the output pin D13 and read data in from pin A0.
+7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
+
+8) On your mobile device or computer, connect to the "ConnectAnyThing" network. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above.] ( https://communities.intel.com/docs/DOC-21838 )
+
+9) Start a web browser on your device and in the address bar type either: "cat", "cat.com", or "192.168.0.10".
+
+10) If successful, you should see a Galileo board image and it's pin controls.
+
+ENJOY...!!!
 
 ## ConnectAnyThing Architecture 
 
@@ -70,23 +86,6 @@ If you wish to change the name of the hotspot network, change the SSID name in t
 ####Network setting
  
 * WIFI Board : 192.168.0.10  (C.A.T. board)
-
-## How To Run ConnectAnyThing
-
-1) Checkout or download the project's zip file.
-
-2) In the SD_Card directory, unzip the image-full-clanton.zip file (it should contain the image-full-clanton.ext3 file).
-
-3) Copy the entire content of this directory to the root directory of the Galileo Micro SD card, keeping its structure intact ( remove the image-full-clanton.zip if needed ).
-
-4) Put the Micro SD card back in the Galileo board and power up.
-
-5) On your mobile device or computer, connect to the ConnectAnyThing network.
-
-6) Start a browser and go to "cat.com" or "192.168.0.10".
-
-7) Control the output pin D13 and read data in from pin A0.
-
 
 ## How To Edit the HTML5 Website
 Copy the file index.html from: ~/srv to /media/mmcblk0p1/srv_card/home/root/srv/ use the following command on the Linux command line:
