@@ -14,13 +14,13 @@ ConnectAnyThing is an open platform intended for easy prototyping of connected a
 
 ### The Team
 
-Carlos Montesinos <carlos.montesinos@intel.com>
-Lucas Ainsworth <lucas.b.ainsworth@intel.com>
-Clayton Hofrock <clayton.a.hofrock@intel.com>
-David Shaw <david.shaw@intel.com>
-Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com>
-Sorin Blebea <sorin.blebea@intel.com>
-Sweta Patel <sweta.patel@intel.com>
+Carlos Montesinos <carlos.montesinos@intel.com><br />
+Lucas Ainsworth <lucas.b.ainsworth@intel.com><br />
+Clayton Hofrock <clayton.a.hofrock@intel.com><br />
+David Shaw <david.shaw@intel.com><br />
+Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com><br />
+Sorin Blebea <sorin.blebea@intel.com><br />
+Sweta Patel <sweta.patel@intel.com><br />
 Seth Hunter <seth.e.hunter@intel.com>
 
 ### Credits
@@ -81,7 +81,7 @@ ENJOY...!!!
 ## Developers
 
 ### Development Work Flow
-We welcome developers to contribute with the project. Please push any contributions against the *develop* branch and request a pull.
+We welcome developers to contribute to the project. Please push any contributions against the *develop* branch and request a pull.
 
 ### Changing Network Name
 If you wish to change the name of the hotspot network, change the SSID name in the file hostapd.conf located in /etc/hostapd/.
