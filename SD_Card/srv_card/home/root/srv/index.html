@@ -2,125 +2,303 @@
 <head>
 <title>C:A:T</title>
 <script language="javascript" type="text/javascript"> 
-	var wsArray = ["ws://cat/", "wss://echo.websocket.org"]; 
-	var wsUri = wsArray[0]; 
-	var output, voltageOutput;  
-	var ledStateCurrent = 0;
-	var ledStateOld = 0;
-	var voltageValue;
-	
-	function init() { 
-		output = document.getElementById("outputText"); 
-		 
-		try{
-        	websocket = new WebSocket(wsUri,'touchserver-protocol');
-            websocket.onopen = function(evt) { onOpen(evt) }; 
-			websocket.onclose = function(evt) { onClose(evt) }; 
-			websocket.onmessage = function(evt) { onMessage(evt) };		
-        } catch(exception){
-            writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
-        }
-	}  
-		
-	function onOpen(evt) { 
-		console.info("CONNECTED"); 
+        var wsArray = ["ws://cat/", "wss://echo.websocket.org"]; 
+        var wsUri = wsArray[0]; 
+		var aTestString = "1,0,1,123,1,25,233,1,1,128,120,212,0,1,.01,2.3,4.3,.2,.8,1.3";
+		var backEndProtocolAnalogInput = ["A0","A1","A2","A3","A5","A5"];
+		var backEndProtocolDigitalOutput = ["D0","D1","D2","D4","D7","D8","D12","D13"];
+		var backEndProtocolDigitalOutputCurrentValues = [0,0,0,0,0,0,0,0];
+		var backEndProtocolDigitalOutputOldValues = [0,0,0,0,0,0,0,0];
+		var backEndString = [20];
+		var led =[];
+        var output;  
+        
+        function init() { 
+            output = document.getElementById("outputText"); 
+			//parseMessage(aTestString);  //for development
+        	try{
+                websocket = new WebSocket(wsUri,'touchserver-protocol');
+            	websocket.onopen = function(evt) { onOpen(evt) }; 
+                websocket.onclose = function(evt) { onClose(evt) }; 
+                websocket.onmessage = function(evt) { onMessage(evt) };                
+        	} catch(exception){
+            	writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+        	}
+        }  
+                
+        function onOpen(evt) { 
+				writeToScreen('<span style="color: black;">CONNECTED</span>'); 
+                console.info("CONNECTED"); 
+        }  
+        
+        function onClose(evt) { 
+				writeToScreen('<span style="color: red;">DISCONNECTED</span>'); 
+                console.info("DISCONNECTED"); 
+        }  
+        
+        function onMessage(evt) { 
+                var received_msg = evt.data;
+                parseMessage(received_msg);
+                //console.info(evt.data);
+        }  
+        
+        function onError(evt) { 
+                writeToScreen('<span style="color: red;">ERROR: Cannot Connect</span>'); 
+        }  
+        
+        function doSend(message) { 
+			console.info(message);
+        	try{  
+				console.info("SENT: " + message);  
+                websocket.send(message);  
+           	} catch(exception){  
+                writeToScreen('<span style="color: red;">ERROR: Cannot Send</span> ');
+           	}
+        }  
+        
+        function writeToScreen(message) { 
+                var pre = document.getElementById("outputText"); 
+                pre.style.wordWrap = "break-word"; 
+                pre.innerHTML = message; 
 		}  
+        
+        function changeImage(pin,pinLEDCurrentValue) { 
+			var image = "";
+        	var pre = document.getElementById(pin); 
+			console.info("Change Image: "+pin);
+			if(pinLEDCurrentValue == 0){
+				//console.info(pin+" off");
+				switch(pin){
+					case "D0":
+						image = "Galileo-Ref_21_off";
+						break;
+					case "D1":
+						image = "Galileo-Ref_18_off";
+						break;
+					case "D2":
+						image = "Galileo-Ref_15_off";
+						break;
+					case "D4":
+						image = "Galileo-Ref_12_off";
+						break;
+					case "D7":
+						image = "Galileo-Ref_07_off";
+						break;
+					case "D8":
+						image = "Galileo-Ref_06_off";
+						break;
+					case "D12":
+						image = "Galileo-Ref_05_off";
+						break;
+					case "D13":
+						image = "Galileo-Ref_03_off";
+						break;
+					default:
+						image = "Galileo-Ref_03_off";
+						break;
+				}
+				pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/"+image+".png' /></a>";
+			}else{
+				//console.info(pin+" on");
+				switch(pin){
+					case "D0":
+						image = "Galileo-Ref_21";
+						break;
+					case "D1":
+						image = "Galileo-Ref_18";
+						break;
+					case "D2":
+						image = "Galileo-Ref_15";
+						break;
+					case "D4":
+						image = "Galileo-Ref_12";
+						break;
+					case "D7":
+						image = "Galileo-Ref_07";
+						break;
+					case "D8":
+						image = "Galileo-Ref_06";
+						break;
+					case "D12":
+						image = "Galileo-Ref_05";
+						break;
+					case "D13":
+						image = "Galileo-Ref_03";
+						break;
+					default:
+						image = "Galileo-Ref_03";
+						break;
+				}
+				pre.innerHTML = "<a id=\""+pin+"\" href='javascript:doSend(\""+pin+"\");'><img src='images/"+image+".png' /></a>";
+			}
 	
-	function onClose(evt) { 
-		console.info("DISCONNECTED"); 
-	}  
-	
-	function onMessage(evt) { 
-		var received_msg = evt.data;
-		parseMessage(received_msg);
-		//console.info(evt.data);
-	}  
-	
-	function onError(evt) { 
-		writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data); 
-	}  
-	
-	function doSend() { 
-		message = "trigger";
-		try{  
-			console.info("SENT: " + message);  
-			websocket.send(message);  
-           } catch(exception){  
-           		writeToScreen('<span style="color: red;">ERROR:</span> ' + message.data);
-           }
-	}  
-	
-	function writeToScreen(message) { 
-		var pre = document.createElement("p"); 
-		pre.style.wordWrap = "break-word"; 
-		pre.innerHTML = message; 
-		output.appendChild(pre); }  
-
-	function writeVoltage() { 
-	//console.info("Message " + message.substr(0,3));
-		var pre = document.getElementById("voltage"); 
-		pre.innerHTML = "Voltage: " + voltageValue + " v"; 
-	}  
-	
-	function changeImage() { 
-		var pre = document.getElementById("switch"); 
-		if(ledStateCurrent == "0"){
-			pre.innerHTML = "<p id='switch'><a href='javascript:doSend();'><img src='img/placeholder.png' /></a></p>";
-		}else{
-			pre.innerHTML = "<p id='switch'><a href='javascript:doSend();'><img src='img/placeholder-on.png' /></a></p>";
-		}
-	} 
-	
-	function parseMessage(data){
-		ledStateCurrent = data.substr(0,1);
-		voltageValue = data.substring(2);
-		voltageValue = (voltageValue/1024)*5;
-		writeVoltage();
-		if(ledStateCurrent != ledStateOld){
-			changeImage();
-		}
-		ledStateOld = ledStateCurrent;
-	}
+        } 
 		
-	window.addEventListener("load", init, false);  
+		function populateAnalogInputs(analogInputs){
+			for(i=0; i < analogInputs.length; i++){
+				var pre = document.getElementById("voltage"+[i]); 
+               	pre.innerHTML = '<span id="voltage'+i+'"><br />' + analogInputs[i]+'</span>';
+			}
+			
+		}
+		
+		function setDigitalOutPut(ledValues){
+			//set current values
+			for(i=0; i < ledValues.length; i++){
+				backEndProtocolDigitalOutputCurrentValues[i] = ledValues[i];
+			} 
+			//check current and old values for diff
+			for(i=0; i < ledValues.length; i++){
+				if(backEndProtocolDigitalOutputCurrentValues[i] != backEndProtocolDigitalOutputOldValues[i]){
+					changeImage(backEndProtocolDigitalOutput[i],backEndProtocolDigitalOutputCurrentValues[i]);
+				}
+                backEndProtocolDigitalOutputOldValues[i] = backEndProtocolDigitalOutputCurrentValues[i];
+			} 
+		}
+        
+        function parseMessage(data){
+			backEndString = data.split(",");
+			populateAnalogInputs(backEndString.slice(14));
+			setDigitalOutPut(led.concat(backEndString.slice(0,1),backEndString.slice(1,2),backEndString.slice(2,3),backEndString.slice(4,5),backEndString.slice(7,8),backEndString.slice(8,9),backEndString.slice(12,13),backEndString.slice(13,14)));
+        }
+		
+		function updateSlider(whichSlider, slideAmount) {
+        	try{  
+				console.info("SENT: " + whichSlider+ "," +slideAmount);  
+                websocket.send(whichSlider+ "," +slideAmount);  
+           	} catch(exception){  
+                writeToScreen('<span style="color: red;">ERROR: Cannot send values</span> ');
+           	}
+		}
+                
+        window.addEventListener("load", init, false); 
+		 
 </script>   
 
 <style type="text/css">
 body {
-	width:720px;
-	height:1280px;
-	padding-bottom:50px;
-	margin:0;
-	text-align:center;
-	background-color:#eeeeee;
-	font-family:Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size:20px;
-}
-
-#output{
-	width:300px;
-	margin:10px;
-	padding:10px;
-	border:1px #cccccc solid;
+        width:720px;
+        height:1280px;
+        padding-bottom:50px;
+        margin:0;
+        text-align:center;
+        background-color:#eeeeee;
+        font-family:Gotham, "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size:20px;
 }
 
 #outputText{
-	font-size:12px;
+		margin-top:20px;
+        font-size:12px;
 }
 
 h1{
-	font-size:35px;
+        font-size:35px;
 }
+
+#voltage0, #voltage1, #voltage2, #voltage3, #voltage4, #voltage5{
+	color: #ffffff;
+	font-size:12px;
+	line-height:1.5;
+}
+
+input {
+	width:115px;
+}
+
+/*this is only for webkit, not opera*/
+input[type='range'] {  
+-webkit-appearance: none;
+padding-left:2px; padding-right:2px;
+-webkit-border-radius: 5px;  
+background-image: -webkit-linear-gradient(top, #000000, #333333, #000000);
+}  
 
 </style>
 </head>
  
 <body>
 <div id="output">  
-	<img id="image" src="img/splash2.png"><br />
-	<span id="voltage">Voltage: 0 v </span>
-	<p id="switch"><a href="javascript:doSend();"><img src="img/placeholder.png" /></a></p>	
-	<div id="outputText"></div>	
+		<div style="position:absolute; left:0px; top:0px; width:1024px; height:768px;">
+			<div style="background-image:url(images/Galileo-Ref_01.png); position:absolute; left:0px; top:0px; width:1024px; height:107px;" title="">
+				<div id="outputText"></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_02.png); position:absolute; left:0px; top:107px; width:870px; height:131px;" title=""></div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:107px; width:65px; height:41px;" title="">
+				<a id="D13" href="javascript:doSend('D13');"><img src="images/Galileo-Ref_03_off.png" /></a>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_04.png); position:absolute; left:935px; top:107px; width:89px; height:661px;" title="">
+			</div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:148px; width:65px; height:40px;" title="">
+				<a id="D12" href="javascript:doSend('D12');"><img src="images/Galileo-Ref_05_off.png" /></a>
+			</div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:188px; width:65px; height:40px;" title="">
+				<a id="D8" href="javascript:doSend('D8');"><img src="images/Galileo-Ref_06_off.png" /></a>
+			</div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:228px; width:65px; height:40px;" title="">
+				<a id="D7" href="javascript:doSend('D7');"><img src="images/Galileo-Ref_07_off.png" /></a>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_08.png); position:absolute; left:0px; top:238px; width:99px; height:530px;" title=""></div>
+			<div style="overflow:visible; background-image:url(images/blank.gif); position:absolute; left:99px; top:238px; width:119px; height:25px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P11',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_10.png); position:absolute; left:218px; top:238px; width:652px; height:316px;" title=""></div>
+			<div style="background-image:url(images/Galileo-Ref_11.png); position:absolute; left:99px; top:263px; width:119px; height:17px;" title=""></div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:268px; width:65px; height:40px;" title="">
+				<a id="D4" href="javascript:doSend('D4');"><img src="images/Galileo-Ref_12_off.png" /></a>
+			</div>
+			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:280px; width:119px; height:22px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P10',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_14.png); position:absolute; left:99px; top:302px; width:119px; height:18px;" title=""></div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:308px; width:65px; height:44px;" title="">
+				<a id="D2" href="javascript:doSend('D2');"><img src="images/Galileo-Ref_15_off.png" /></a>
+			</div>
+			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:320px; width:119px; height:21px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P9',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_17.png); position:absolute; left:99px; top:341px; width:119px; height:20px;" title=""></div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:352px; width:65px; height:37px;" title="">
+				<a id="D1" href="javascript:doSend('D1');"><img src="images/Galileo-Ref_18_off.png" /></a>			
+			</div>
+			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:361px; width:119px; height:22px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P6',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_20.png); position:absolute; left:99px; top:383px; width:119px; height:13px;" title=""></div>
+			<div style="background-image:url(images/blank.gif); position:absolute; left:870px; top:389px; width:65px; height:49px;" title="">
+				<a id="D0" href="javascript:doSend('D0');"><img src="images/Galileo-Ref_21_off.png" /></a>
+			</div>
+			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:396px; width:119px; height:26px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P5',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_23.png); position:absolute; left:99px; top:422px; width:119px; height:16px;" title=""></div>
+			<div style="overflow:hidden; background-image:url(images/blank.gif); position:absolute; left:99px; top:438px; width:119px; height:26px;" title="">
+				<div id="slider"><input id="slide" type="range" value="0" min="0" max="255" step="2" onchange="updateSlider('P3',this.value)" /></div>	
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_25.png); position:absolute; left:870px; top:438px; width:65px; height:330px;" title=""></div>
+			<div style="background-image:url(images/Galileo-Ref_26.png); position:absolute; left:99px; top:464px; width:119px; height:304px;" title=""></div>
+			<div style="background-image:url(images/Galileo-Ref_27.png); position:absolute; left:218px; top:554px; width:137px; height:214px;" title=""></div>
+			<div style="background-image:url(images/Galileo-Ref_28.png); position:absolute; left:355px; top:554px; width:62px; height:60px;" title="">
+				<span id="voltage0"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_29.png); position:absolute; left:417px; top:554px; width:65px; height:60px;" title="">
+				<span id="voltage1"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_30.png); position:absolute; left:482px; top:554px; width:66px; height:60px;" title="">
+				<span id="voltage2"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_31.png); position:absolute; left:548px; top:554px; width:66px; height:60px;" title="">
+				<span id="voltage3"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_32.png); position:absolute; left:614px; top:554px; width:64px; height:60px;" title="">
+				<span id="voltage4"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_33.png); position:absolute; left:678px; top:554px; width:66px; height:60px;" title="">
+				<span id="voltage5"><br />0</span>
+			</div>
+			<div style="background-image:url(images/Galileo-Ref_34.png); position:absolute; left:744px; top:554px; width:126px; height:214px;" title=""></div>
+			<div style="background-image:url(images/Galileo-Ref_35.png); position:absolute; left:355px; top:614px; width:389px; height:154px;" title=""></div>
+		</div>
 </div>
 </body>
 </html>
