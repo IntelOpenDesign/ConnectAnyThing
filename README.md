@@ -80,6 +80,9 @@ ENJOY...!!!
 
 ## Developers
 
+### Development Work Flow
+We welcome developers to contribute with the project. Please push any contributions against the *develop* branch and request a pull.
+
 ### Changing Network Name
 If you wish to change the name of the hotspot network, change the SSID name in the file hostapd.conf located in /etc/hostapd/.
 
