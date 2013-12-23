@@ -62,7 +62,7 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 9) Start a web browser on your device and in the address bar type either: "cat", "cat.com", or "192.168.0.10".
 
-10) If successful, you should see a Galileo board image and it's pin controls.
+10) If successful, you should see a Galileo board image and pin controls.
 
 ENJOY...!!!
 
