@@ -27,13 +27,22 @@ Seth Hunter <seth.e.hunter@intel.com>
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
-## How To Run ConnectAnyThing
+## How To Set Up ConnectAnyThing
+
+### Hardware Required
+
+* One [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
+* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
+* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* One external 5V (3A) power supply.
+
+### Software Installation
 
 1) Download the project's zip file or clone the repository.
 
 2) Unpack the content and locate the SD_Card directory.
 
-3) Make sure the [Micro SD card is FAT32 formatted.] ( http://www.wikihow.com/Format-an-SD-Card )
+3) Make sure the [Micro SD card is FAT32 formatted]( http://www.wikihow.com/Format-an-SD-Card ).
 
 4) Copy the entire content of the SD_Card directory into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
@@ -45,11 +54,11 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 * bzImage (file)
 * core-image-minimal-initramfs-claton.cpio.gz (file)
 * image-full-clatong.ext3 (file)
-* image-full-clatong.zip (file) <- This can be removed
+* image-full-clatong.zip (file) <- This file can be removed to free up space.
 
 7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
 
-8) On your mobile device or computer, connect to the "ConnectAnyThing" network. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above.] ( https://communities.intel.com/docs/DOC-21838 )
+8) On your mobile device or computer, connect to the "ConnectAnyThing" network. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
 
 9) Start a web browser on your device and in the address bar type either: "cat", "cat.com", or "192.168.0.10".
 
@@ -57,36 +66,23 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ENJOY...!!!
 
-## ConnectAnyThing Architecture 
+## Release Notes
 
-### Hardware description
+### Rev 0.1.0
+* The Graphical User Interface enables direct access to the pins listed bellow.
+* Pins: A0,A1,A2,A3,A4,and A5 are enabled as analog inputs.
+* Pins: 2,4,7,8,12,and 13 are enabled as digital outputs.
+* Pins: 3,5,6,9,10,and 11 are enabled as analog outputs.
 
-* Our set up uses 1 Galileo board as a web server/WiFi hotspot.
-* The board uses a half PCI-E Intel N-135 WiFi card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
-* One external 5V (3A) power supply.
+### Known Issues
+* Connecting with an iPhone: If you are using an iPhone, make sure to disable your 4G/LTE radio. If the radio is on when attempting to access ConnectAnyThing's hotspot , Apple may block access to it.
+* Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
 
-### Software description
+## Developers
 
-The server board runs a couple of extra services than the stock installation :
-
-* *hostapd* : for creating the access point
-* *udhcpd* : Lightweight DHCP server
-* *(busybox) dnsd* : used for DNS resolution of the http:://cat.com address (was customized for acting as a captive portal, but not really working with iPhone so the customization was dropped)
-
-On top of that we installed the libwebsockets library (compiled from source).
-Finally the board runs an arduino sketch (compiled against the libwebsockets library) that act as a web-server and an OSC client forwarding touch information to the proper board.
-
-### Networking description
-
-The server board creates an open WiFi network called "ConnectAnyThing".
-Clients will connect to the WiFi, request the http://cat.com/ webpage and will be delivered with a UI to control Galileo's pins.
-Communication from phone clients to server is made through websockets.
+### Changing Network Name
 If you wish to change the name of the hotspot network, change the SSID name in the file hostapd.conf located in /etc/hostapd/.
 
-####Network setting
- 
-* WIFI Board : 192.168.0.10  (C.A.T. board)
-
-## How To Edit the HTML5 Website
+### How To Edit the HTML5 Website
 Copy the file index.html from: ~/srv to /media/mmcblk0p1/srv_card/home/root/srv/ use the following command on the Linux command line:
 cp -r /media/mmcblk0p1/srv_card/home/root/srv/* ./srv/
