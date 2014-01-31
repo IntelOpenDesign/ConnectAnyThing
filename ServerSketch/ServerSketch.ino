@@ -44,69 +44,12 @@ int g_iNewCode = 0;
 #define RIGHT 100 // d
 #define SPACE 32 // space 
 
-//-----------------------------------------------------------
-// Process recieved message from the webpage here.... 
-//------------------------------------------------------------
-void procWebMsg(char* _in, size_t _len) {
 
-  String sMsg(_in);
+static struct option options[] = {
 
-  sMsg.toLowerCase();
-
-  Serial.print("input: "); 
-  Serial.println(sMsg);
-  Serial.print("_len: "); 
-  Serial.println(String(_len));
-
-  // Parse incomming message
-  if(  sMsg.startsWith("d") && _len <= 3 )
-  {
-    // Check if we are setting a Dx pin
-    int iPin = sMsg.substring(1,sMsg.length()).toInt();
-    Serial.print("Pin: ");
-    Serial.println(String(iPin));
-    g_abD[iPin] = ~g_abD[iPin]; // Toggle state
-    digitalWrite(iPin, g_abD[iPin]); // Set state
-  }
-  else if(  sMsg.startsWith("p") )
-  {
-    // Check if we are setting a Px pin 
-
-    // Get pin number and value
-    int iValue = 0;
-    int iPin = 0;
-
-    if( sMsg.charAt(2) == ',' )
-    {
-      iPin = sMsg.substring(1,2).toInt();
-      iValue = sMsg.substring(3,sMsg.length()).toInt();
-    }
-    else if( sMsg.charAt(3) == ',' )
-    {
-      iPin = sMsg.substring(1,3).toInt();
-      iValue = sMsg.substring(4,sMsg.length()).toInt();      
-    }
-    else
-    {
-      Serial.print("Error. Unrecongnized message: ");   
-      Serial.println(sMsg);
-    }
-
-    // Set pin value
-    Serial.print("Pin: ");
-    Serial.println(String(iPin));
-    Serial.print("Value: ");
-    Serial.println(String(iValue));
-    g_aiP[iPin] = iValue; // Toggle state
-    analogWrite(iPin, g_aiP[iPin]); // Set state
-  }
-  else
-  {
-    Serial.print("Error. Unrecongnized message: ");   
-    Serial.println(sMsg);
-  }
-
-}
+  { 
+    NULL, 0, 0, 0                 }
+};
 
 /*
 This part of the code is inspired by the stock example coming with libsockets.
@@ -120,15 +63,12 @@ enum lyt_protocols {
   PROTOCOL_COUNT
 };
 
-
 #define LOCAL_RESOURCE_PATH "/home/root/srv/"
 
 struct serveable {
   const char *urlpath;
   const char *mimetype;
 }; 
-
-
 
 static const struct serveable whitelist[] = {
   { 
@@ -296,6 +236,10 @@ static const struct serveable whitelist[] = {
 
 /* this protocol server (always the first one) just knows how to do HTTP */
 
+/*
+This callback is called when the browser is refreshed (an HTTP call is performed).
+Here we send the files to the browser.
+*/
 static int callback_http(struct libwebsocket_context *context,
 struct libwebsocket *wsi,
 enum libwebsocket_callback_reasons reason, void *user,
@@ -344,14 +288,14 @@ void *in, size_t len)
 
 /* lyt_protocol*/
 static int
-callback_lyt_protocol(struct libwebsocket_context *context,
+callback_cat_protocol(struct libwebsocket_context *context,
 struct libwebsocket *wsi,
 enum libwebsocket_callback_reasons reason,
 void *user,
 void *in, size_t len)
 {
 
-  //Serial.println("callback_lyt_protocol()");
+  //Serial.println("callback_cat_protocol()");
   // WE ARE ALWAYS HITTING THIS POINT
 
   int iNumBytes = -1;
@@ -387,6 +331,70 @@ void *in, size_t len)
   }
 
   return 0;
+}
+
+//-----------------------------------------------------------
+// Process recieved message from the webpage here.... 
+//------------------------------------------------------------
+void procWebMsg(char* _in, size_t _len) {
+
+  String sMsg(_in);
+
+  sMsg.toLowerCase();
+
+  Serial.print("input: "); 
+  Serial.println(sMsg);
+  Serial.print("_len: "); 
+  Serial.println(String(_len));
+
+  // Parse incomming message
+  if(  sMsg.startsWith("d") && _len <= 3 )
+  {
+    // Check if we are setting a Dx pin
+    int iPin = sMsg.substring(1,sMsg.length()).toInt();
+    Serial.print("Pin: ");
+    Serial.println(String(iPin));
+    g_abD[iPin] = ~g_abD[iPin]; // Toggle state
+    digitalWrite(iPin, g_abD[iPin]); // Set state
+  }
+  else if(  sMsg.startsWith("p") )
+  {
+    // Check if we are setting a Px pin 
+
+    // Get pin number and value
+    int iValue = 0;
+    int iPin = 0;
+
+    if( sMsg.charAt(2) == ',' )
+    {
+      iPin = sMsg.substring(1,2).toInt();
+      iValue = sMsg.substring(3,sMsg.length()).toInt();
+    }
+    else if( sMsg.charAt(3) == ',' )
+    {
+      iPin = sMsg.substring(1,3).toInt();
+      iValue = sMsg.substring(4,sMsg.length()).toInt();      
+    }
+    else
+    {
+      Serial.print("Error. Unrecongnized message: ");   
+      Serial.println(sMsg);
+    }
+
+    // Set pin value
+    Serial.print("Pin: ");
+    Serial.println(String(iPin));
+    Serial.print("Value: ");
+    Serial.println(String(iValue));
+    g_aiP[iPin] = iValue; // Toggle state
+    analogWrite(iPin, g_aiP[iPin]); // Set state
+  }
+  else
+  {
+    Serial.print("Error. Unrecongnized message: ");   
+    Serial.println(sMsg);
+  }
+
 }
 
 // **********************************
@@ -452,7 +460,7 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
 /* list of supported protocols and callbacks */
 
 static struct libwebsocket_protocols protocols[] = {
-  /* first protocol must always be HTTP handler */
+  /* first protocol must always be HTTP handler, to serve webpage */
 
   {
     "http-only",		/* name */
@@ -460,10 +468,10 @@ static struct libwebsocket_protocols protocols[] = {
     0,			/* per_session_data_size */
     0,			/* max frame size / rx buffer */
   }
-  ,
+  , // manages data in and data out from and to the website
   {
     "touchserver-protocol",
-    callback_lyt_protocol,
+    callback_cat_protocol,
     0,
     128,
   }
@@ -477,12 +485,6 @@ void sighandler(int sig)
 {
   force_exit = 1;
 }
-
-static struct option options[] = {
-
-  { 
-    NULL, 0, 0, 0                 }
-};
 
 int initWebsocket()
 {
@@ -499,7 +501,6 @@ int initWebsocket()
 
   memset(&info, 0, sizeof info);
   info.port = 80;
-
 
   signal(SIGINT, sighandler);
   int syslog_options =  LOG_PID | LOG_PERROR;
