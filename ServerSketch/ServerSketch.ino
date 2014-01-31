@@ -10,12 +10,6 @@
 #include <Dhcp.h>
 #include <Dns.h>
 #include <Ethernet.h>
-#include <EthernetUdp.h>
-
-#include <OSCBundle.h>
-#include <OSCData.h>
-#include <OSCMatch.h>
-#include <OSCMessage.h>
 
 #include <libwebsockets.h>
 
@@ -29,11 +23,6 @@
 #include <syslog.h>
 #include <signal.h>
 
-#define N_PANNEL 3
-IPAddress ip[N_PANNEL]; 
-EthernetUDP udp[N_PANNEL];
-
-int udpPort=3333;
 int led = 13; 
 boolean currentLED = false;
 int sensor1 = 0;
@@ -55,26 +44,12 @@ int g_iNewCode = 0;
 #define RIGHT 100 // d
 #define SPACE 32 // space 
 
-EthernetUDP _udpIn;
-//char colors[8*N_PANNEL] = "#000000,#000000,#000000";
-char  retMessage[(1+1+4+1)]="0,1023";
-
 //-----------------------------------------------------------
 // Process recieved message from the webpage here.... 
 //------------------------------------------------------------
 void procWebMsg(char* _in, size_t _len) {
 
-  /*
-  g_abD[i] = false;      digitalWrite(i, LOW);    
-   g_aiP[i] = 0;        analogWrite(i, LOW);    
-   */
-
   String sMsg(_in);
-
-  /*
-  if( sMsg == "trigger" ) // Debugging
-   sMsg = "D13";
-   */
 
   sMsg.toLowerCase();
 
@@ -131,20 +106,6 @@ void procWebMsg(char* _in, size_t _len) {
     Serial.println(sMsg);
   }
 
-  /*
-  if(String(_in) == "trigger"){
-   Serial.println("Trigger found");
-   if(currentLED){
-   digitalWrite(led, LOW);
-   currentLED = false;
-   }
-   else{
-   digitalWrite(led, HIGH);
-   currentLED = true;
-   } 
-   }
-   */
-
 }
 
 /*
@@ -167,51 +128,7 @@ struct serveable {
   const char *mimetype;
 }; 
 
-/*
-static const struct serveable whitelist[] = {
- { 
- "/favicon.ico", "image/x-icon"             }
- ,
- { 
- "/img/2s.png", "image/png"             }
- ,
- { 
- "/img/splash.png", "image/png"             }
- ,
- { 
- "/img/splash2.png", "image/png"             }
- ,
- { 
- "/img/placeholder.png", "image/png"             }
- ,
- { 
- "/img/placeholder-on.png", "image/png"             }
- ,
- { 
- "/css/phone.css", "text/css"             }
- ,
- { 
- "/js/jquery-2.0.3.min.js", "application/javascript"             }
- ,
- { 
- "/js/phone.js", "application/javascript"             }
- ,
- { 
- "/js/pixel.js", "application/javascript"             }
- ,
- { 
- "/js/pixelView.js", "application/javascript"             }
- ,
- { 
- "/js/socketController.js", "application/javascript"             }
- ,
- 
- // last one is the default served if no match
- { 
- "/index.html", "text/html"             }
- ,
- };
- */
+
 
 static const struct serveable whitelist[] = {
   { 
@@ -405,10 +322,10 @@ void *in, size_t len)
       return 1; /* through completion or error, close the socket */
 
     /*
-		 * notice that the sending of the file completes asynchronously,
-     		 * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
-     		 * it's done
-     		 */
+     * notice that the sending of the file completes asynchronously,
+     * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
+     * it's done
+     */
 
     break;
 
@@ -671,9 +588,6 @@ void setup()
     g_abD[i] = false;
   for(i=0; i<TOTAL_NUM_Px; i++)
     g_aiP[i] = 0;   
-
-  _udpIn.begin(3333);
-  _udpIn.listen();
 
   Serial.println("Starting WebSocket");
   initWebsocket();  
