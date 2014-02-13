@@ -306,7 +306,8 @@ void *in, size_t len)
   case LWS_CALLBACK_SERVER_WRITEABLE:
 
     // **********************************
-    // Send Data to Website    
+    // Send Galileo's HW state to ALL clients
+    // This function is continuesly called 
     // **********************************
     iNumBytes = sendStatusToWebsite(wsi);
     if (iNumBytes < 0) 
@@ -318,10 +319,13 @@ void *in, size_t len)
     break;
 
   case LWS_CALLBACK_RECEIVE:
+  
+    Serial.println("Cleaning Protocol");
 
     // **********************************
-    // Process Data Receieved from the Website    
-    // **********************************
+    // Process Data Receieved from the Website
+    // Update Galileo's HW    
+    // **********************************    
     procWebMsg((char*) in, len); 		
 
     break;
