@@ -696,18 +696,25 @@ void processMessage(char *_acMsg)
       Serial.println("ERROR: No Status data.");
       return;
     }
-    else if (oStatus->valuestring == "OK")
+    else if ( strncmp(oStatus->valuestring,"OK",2) == 0 )
     {
+      // Process if status is OK
       Serial.println("STATUS: OK");
+
+    }
+    else if ( strncmp(oStatus->valuestring,"ERROR",5) == 0 )
+    {
+      // Process if status is ERROR
+      Serial.println("STATUS: ERROR");
     }
     else
     {
-      Serial.println("STATUS: ERROR");
-    }    
+      Serial.println("ERROR: Unknown status");      
+    } 
   }
   else
   {
-    Serial.println("msg is NULL");
+    Serial.println("Client message is NULL");
   }
   
   aJson.deleteItem(poMsg);
@@ -719,7 +726,9 @@ void processMessage(char *_acMsg)
 //char *g_acMessage = NULL;
 //char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
 //char g_acMessage[] = "{\"status\": { \"8\": 0, \"9\": 128 } }";
-char g_acMessage[] = "{\"status\":\"OK\"}"; // Doesn't work
+//char g_acMessage[] = "{\"status\":\"OK\"}";
+//char g_acMessage[] = "{\"status\":\"ERROR\"}";
+char g_acMessage[] = "{\"status\":\"OTHER ERROR\"}";
 //,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
 
 void loop()
