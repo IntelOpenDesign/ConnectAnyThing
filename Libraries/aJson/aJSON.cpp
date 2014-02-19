@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <ctype.h>
-#include <avr/pgmspace.h>
+//#include <avr/pgmspace.h>
 
 #include "aJSON.h"
 #include "utility/stringbuffer.h"

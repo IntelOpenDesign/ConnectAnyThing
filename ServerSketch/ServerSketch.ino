@@ -13,6 +13,8 @@
 
 #include <libwebsockets.h>
 
+#include <aJSON.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -599,12 +601,168 @@ void setup()
 
 }
 
+/*
+{	"status":<OK,ERROR>,
+	"pins":{	"<0,1,…,13,A0,…,A5>":
+				{	"label":"<label text>",
+					"is_analog":"<true,false>",
+					"is_sensor":"<true,false>",
+					"value":"<0.0,1.0>",
+					"connections":[<array of pins>],
+				},
+				...,
+			},
+	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
+						...,
+					]	
+}
+*/
+
+
+//const PROGMEM TEST_STRING[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\";
+// "{"status":OK,"pins":{"13":{"label":"LED ON 13","is_analog":"false","is_sensor":"false","value":"0.0","connections":[]}},"connections":[]}";
+
+//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+
+unsigned long last_print = 0;
+aJsonStream serial_stream(&Serial);
+
+
+/* Generate message like: { "analog": [0, 200, 400, 600, 800, 1000] } */
+aJsonObject *createMessage()
+{
+  aJsonObject *msg = aJson.createObject();
+
+  int analogValues[6];
+  for (int i = 0; i < 6; i++) {
+    analogValues[i] = analogRead(i);
+  }
+  aJsonObject *analog = aJson.createIntArray(analogValues, 6);
+  aJson.addItemToObject(msg, "analog", analog);
+
+  return msg;
+}
+
+/*
+if(msg != NULL)
+  {
+    aJsonObject *pwm = aJson.getObjectItem(msg, "pwm");
+    if (!pwm) {
+      Serial.println("no pwm data");
+      return;
+    }
+  
+    const static int pins[] = { 8, 9 };
+    const static int pins_n = 2;
+    for (int i = 0; i < pins_n; i++) {
+      char pinstr[3];
+      snprintf(pinstr, sizeof(pinstr), "%d", pins[i]);
+  
+      aJsonObject *pwmval = aJson.getObjectItem(pwm, pinstr);
+      if (!pwmval) continue; // Value not provided, ok.
+      if (pwmval->type != aJson_Int) {
+        Serial.print("invalid data type ");
+        Serial.print(pwmval->type, DEC);
+        Serial.print(" for pin ");
+        Serial.println(pins[i], DEC);
+        continue;
+      }
+  
+      Serial.print("setting pin ");
+      Serial.print(pins[i], DEC);
+      Serial.print(" to value ");
+      Serial.println(pwmval->valueint, DEC);
+      analogWrite(pins[i], pwmval->valueint);
+    }
+  }
+  else
+  {
+    Serial.println("msg is NULL");      
+  }
+ */ 
+
+void processMessage(char *_acMsg)
+{
+
+   Serial.print("Incoming message: ");
+   Serial.println(_acMsg);  
+  
+   aJsonObject *poMsg = aJson.parse(_acMsg);
+    
+  if(poMsg != NULL)
+  {
+    aJsonObject *oStatus = aJson.getObjectItem(poMsg, "status");
+    if (!oStatus) {
+      Serial.println("ERROR: No Status data.");
+      return;
+    }
+    else if (oStatus->valuestring == "OK")
+    {
+      Serial.println("STATUS: OK");
+    }
+    else
+    {
+      Serial.println("STATUS: ERROR");
+    }    
+  }
+  else
+  {
+    Serial.println("msg is NULL");
+  }
+  
+  aJson.deleteItem(poMsg);
+}
+
+//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+//char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
+
+//char *g_acMessage = NULL;
+//char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
+//char g_acMessage[] = "{\"status\": { \"8\": 0, \"9\": 128 } }";
+char g_acMessage[] = "{\"status\":\"OK\"}"; // Doesn't work
+//,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+
 void loop()
 {
 
+   if (millis() - last_print > 1000) {
 
+    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+//    aJsonObject *msg = aJson.parse(g_acMessage);
+    processMessage(g_acMessage);
+     
+    last_print = millis();
+  }
 }
 
+
+  /*
+  if (millis() - last_print > 1000) {
+    // One second elapsed, send message.
+    aJsonObject *msg = createMessage();
+    aJson.print(msg, &serial_stream);
+    Serial.println(); // Add newline. 
+    aJson.deleteItem(msg);
+    last_print = millis();
+  }
+
+  if (serial_stream.available()) {
+    // First, skip any accidental whitespace like newlines.
+    serial_stream.skip();
+  }
+*/
+
+  //if (serial_stream.available()) {
+    // Something real on input, let's take a look.
+    //aJsonObject *msg = aJson.parse(&serial_stream);
+    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+    // aJsonObject *msg = aJson.parse(g_acMessage);
+    // processMessage(msg);
+    // aJson.deleteItem(msg);
+ // }
+
+
+/////////////////////////////////////////////////////////////////////////////////
 // Parce Serial Commands
 void getSerialCommand() 
 {
@@ -626,11 +784,7 @@ void getSerialCommand()
       break;
     }
   }
-
 }
-
-
-
 
 
 
