@@ -41,10 +41,12 @@ int g_aiP[TOTAL_NUM_Px];
 #define NUM_OF_ANALOG_PINS 6
 #define NUM_OF_DIGITAL_PINS 14
 
+#define ANALOG_OUT_MAX_VALUE 255
+
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
   boolean is_analog;
-  boolean is_sensor;
+  boolean is_input;
   float value;
   boolean connections[TOTAL_NUM_OF_PINS];
 } Pin;
@@ -415,7 +417,6 @@ void procWebMsg(char* _in, size_t _len) {
     Serial.print("Error. Unrecongnized message: ");   
     Serial.println(sMsg);
   }
-
 }
 
 // **********************************
@@ -638,22 +639,24 @@ void initBoardState()
   for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
   {
     g_aPins[i].is_analog = false;
-    g_aPins[i].is_sensor = false;
+    g_aPins[i].is_input = false;
   }
 
   // Initialize pins A0-A5 as analog in pins
   for(int i=NUM_OF_DIGITAL_PINS; i<TOTAL_NUM_OF_PINS; i++)
   {
     g_aPins[i].is_analog = true;
-    g_aPins[i].is_sensor = true;
+    g_aPins[i].is_input = true;
   }
 
+  // Set the HW state
+  setBoardState();
 
   
   /*
   char label[25];
   boolean is_analog;
-  boolean is_sensor;
+  boolean is_input;
   float value;
   int connections[20];
 } Pin;
@@ -663,13 +666,37 @@ Pin g_aPins[TOTAL_NUM_OF_PINS];
 */
 }
 
+void setBoardState()
+{
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+      if( g_aPins[i].is_input )
+      {
+        pinMode(i, INPUT);
+      }
+      else
+      {
+        pinMode(i, OUTPUT);
+        
+        if( g_aPins[i].is_analog )
+        {
+          analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
+        }
+        else
+        {
+          digitalWrite(i, int(g_aPins[i].value) );
+        }
+        
+      }
+  }
+}
 
 /*
 {	"status":<OK,ERROR>,
 	"pins":{	"<0,1,…,13,A0,…,A5>":
 				{	"label":"<label text>",
 					"is_analog":"<true,false>",
-					"is_sensor":"<true,false>",
+					"is_input":"<true,false>",
 					"value":"<0.0,1.0>",
 					"connections":[<array of pins>],
 				},
@@ -682,10 +709,10 @@ Pin g_aPins[TOTAL_NUM_OF_PINS];
 */
 
 
-//const PROGMEM TEST_STRING[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\";
-// "{"status":OK,"pins":{"13":{"label":"LED ON 13","is_analog":"false","is_sensor":"false","value":"0.0","connections":[]}},"connections":[]}";
+//const PROGMEM TEST_STRING[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\";
+// "{"status":OK,"pins":{"13":{"label":"LED ON 13","is_analog":"false","is_input":"false","value":"0.0","connections":[]}},"connections":[]}";
 
-//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
 
 unsigned long last_print = 0;
 aJsonStream serial_stream(&Serial);
@@ -783,7 +810,7 @@ void processMessage(char *_acMsg)
   aJson.deleteItem(poMsg);
 }
 
-//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
 //char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
 
 //char *g_acMessage = NULL;
@@ -792,14 +819,14 @@ void processMessage(char *_acMsg)
 //char g_acMessage[] = "{\"status\":\"OK\"}";
 //char g_acMessage[] = "{\"status\":\"ERROR\"}";
 char g_acMessage[] = "{\"status\":\"OTHER ERROR\"}";
-//,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+//,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
 
 void loop()
 {
 
    if (millis() - last_print > 1000) {
 
-    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
 //    aJsonObject *msg = aJson.parse(g_acMessage);
     processMessage(g_acMessage);
      
@@ -827,7 +854,7 @@ void loop()
   //if (serial_stream.available()) {
     // Something real on input, let's take a look.
     //aJsonObject *msg = aJson.parse(&serial_stream);
-    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_sensor\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
     // aJsonObject *msg = aJson.parse(g_acMessage);
     // processMessage(msg);
     // aJson.deleteItem(msg);
