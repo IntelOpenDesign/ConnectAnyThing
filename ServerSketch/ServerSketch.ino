@@ -36,6 +36,21 @@ int sensor1Pin = A0;    // select the input pin for the potentiometer
 boolean g_abD[TOTAL_NUM_Dx];
 int g_aiP[TOTAL_NUM_Px];
 
+#define PIN_LABEL_SIZE 25
+#define TOTAL_NUM_OF_PINS 20
+#define NUM_OF_ANALOG_PINS 6
+#define NUM_OF_DIGITAL_PINS 14
+
+typedef struct Pin {
+  char label[PIN_LABEL_SIZE];
+  boolean is_analog;
+  boolean is_sensor;
+  float value;
+  boolean connections[TOTAL_NUM_OF_PINS];
+} Pin;
+
+Pin g_aPins[TOTAL_NUM_OF_PINS];
+
 // Serial Interface
 int g_iByte = 0;
 int g_iNewCode = 0;
@@ -600,6 +615,54 @@ void setup()
   initWebsocket();  
 
 }
+
+//////////////////////////////////////////////////////////////
+
+void initBoardState()
+{
+
+  // Initialize all pins with no lable and 0.0 value
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    memset(g_aPins[i].label, '\0', sizeof(g_aPins[i].label));
+    strcpy(g_aPins[i].label,"None");
+    g_aPins[i].value = 0.0;
+    memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
+    for(int j=0; j<TOTAL_NUM_OF_PINS; j++)
+    {
+      g_aPins[i].connections[j] = false;
+    }
+  }
+  
+  // Initialize pins 0-13 as digital out pins
+  for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
+  {
+    g_aPins[i].is_analog = false;
+    g_aPins[i].is_sensor = false;
+  }
+
+  // Initialize pins A0-A5 as analog in pins
+  for(int i=NUM_OF_DIGITAL_PINS; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    g_aPins[i].is_analog = true;
+    g_aPins[i].is_sensor = true;
+  }
+
+
+  
+  /*
+  char label[25];
+  boolean is_analog;
+  boolean is_sensor;
+  float value;
+  int connections[20];
+} Pin;
+
+#define TOTAL_NUM_OF_PINS 20 
+Pin g_aPins[TOTAL_NUM_OF_PINS];
+*/
+}
+
 
 /*
 {	"status":<OK,ERROR>,
