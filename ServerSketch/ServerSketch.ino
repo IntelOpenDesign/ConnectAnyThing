@@ -524,10 +524,9 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 {
 
   int n;
-  /*
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-
+/*
     // Send HW status to website
     n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
     g_abD[0],
@@ -556,14 +555,18 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 */
 
     ////// NEW JSON CODE /////
-    /*
+    
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
+    //p = (char *)(aJson.print(msg));
+    char * pTempPointer = aJson.print(msg);
+    p = (unsigned char *)pTempPointer;
+//    Serial.println("");
 
     aJson.print(msg, &serial_stream);
     Serial.println("");
     aJson.deleteItem(msg);
-*/
+
     /*
     // Creating buffer for WebSockets
      int n;
@@ -588,6 +591,9 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   //Serial.print("Output Message [sendStatusToWebsite()]:");
   //Serial.println(n);
 
+  n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+  
+      aJson.deleteItem(msg);
 
   return n;
 }
