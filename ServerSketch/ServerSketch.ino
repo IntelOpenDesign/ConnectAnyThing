@@ -581,7 +581,7 @@ void setup()
   system("/home/root/startAP");
 
   // Init Galileo HW
-
+  
   // Enable all digital pins as outputs
   for(int i=0; i<14; i++)
   {
@@ -611,6 +611,9 @@ void setup()
     g_abD[i] = false;
   for(i=0; i<TOTAL_NUM_Px; i++)
     g_aiP[i] = 0;   
+
+  // JSON protocol code
+  initBoardState();
 
   Serial.println("Starting WebSocket");
   initWebsocket();  
@@ -724,15 +727,44 @@ aJsonObject* getJsonBoardState()
   poStatus = aJson.createItem("OK");
  
   // Create PINS
-  //aJson.addItemToObject(poItem, "analog", poPin13);
-  //aJson.addItemToObject(poPins,"13",poPins);
-
-  int iaPinConnects[10];
-
-  
+  int iaPinConnects[TOTAL_NUM_OF_PINS];
   char caPinNumBuffer[10];
-  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+//  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  for(int i=0; i<1 ;i++)
   {
+    aJson.addItemToObject(apoPin[i],"label", aJson.createItem( g_aPins[i].label ) );
+
+    // Populate the pin's type    
+    if( g_aPins[i].is_analog )
+    {
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createTrue() );
+    }
+    else
+    {
+        aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+    }
+
+    // Populate the pin's direction
+    if( g_aPins[i].is_input )
+    {
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createTrue() );
+    }
+    else
+    {
+        aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+    }
+
+    // Populate pin's value
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
+    
+    // TO DO - Add pin connections array
+    aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
+    
+    // Push to JSON structure
+    sprintf(caPinNumBuffer,"%d",i);
+    aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
+    
+    /*
     aJson.addItemToObject(apoPin[i],"label", aJson.createItem("None") );
     aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
     aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
@@ -740,14 +772,21 @@ aJsonObject* getJsonBoardState()
     aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
     sprintf(caPinNumBuffer,"%d",i);
     aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
+    */
   }
 
+/*
+typedef struct Pin {
+  char label[PIN_LABEL_SIZE];
+  boolean is_analog;
+  boolean is_input;
+  float value;
+  boolean connections[TOTAL_NUM_OF_PINS];
+} Pin;
 
-//  poItem = aJson.createItem("Value13");
-//  aJson.addItemToObject(poPins,"13",poItem);
+Pin g_aPins[TOTAL_NUM_OF_PINS];
+*/
 
-
-// poPins =   aJson.createItem("20"); // THIS WORKS
 
   // Create CONNECTIONS
   int iaConnections[10];
