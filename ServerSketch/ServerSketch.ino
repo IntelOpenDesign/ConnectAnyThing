@@ -30,6 +30,9 @@ boolean currentLED = false;
 int sensor1 = 0;
 int sensor1Pin = A0;    // select the input pin for the potentiometer
 
+// JSON specifics
+aJsonStream serial_stream(&Serial);
+
 // HW declaration
 #define TOTAL_NUM_Dx 14 
 #define TOTAL_NUM_Px 12
@@ -432,10 +435,11 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
 
 
   getSerialCommand(); 
-  if( g_iNewCode )
+  if( !g_iNewCode )
   {
 
     // OLD CODE
+    Serial.println("OLD CODE");
 
     // Send HW status to website
     n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
@@ -469,6 +473,11 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
     ////// NEW JSON CODE /////
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
+     
+    aJson.print(msg, &serial_stream);
+    Serial.println("");
+    aJson.deleteItem(msg);
+    
     /*
     // Creating buffer for WebSockets
      int n;
@@ -862,7 +871,7 @@ aJsonObject* getJsonBoardState()
 //char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
 
 unsigned long last_print = 0;
-aJsonStream serial_stream(&Serial);
+//aJsonStream serial_stream(&Serial);
 
 
 /* Generate message like: { "analog": [0, 200, 400, 600, 800, 1000] } */
