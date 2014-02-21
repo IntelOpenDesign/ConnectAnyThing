@@ -42,6 +42,7 @@ int g_aiP[TOTAL_NUM_Px];
 #define NUM_OF_DIGITAL_PINS 14
 
 #define ANALOG_OUT_MAX_VALUE 255
+#define ANALOG_IN_MAX_VALUE 4096
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
@@ -49,7 +50,8 @@ typedef struct Pin {
   boolean is_input;
   float value;
   boolean connections[TOTAL_NUM_OF_PINS];
-} Pin;
+} 
+Pin;
 
 Pin g_aPins[TOTAL_NUM_OF_PINS];
 
@@ -67,7 +69,7 @@ int g_iNewCode = 0;
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0                 }
+    NULL, 0, 0, 0                       }
 };
 
 /*
@@ -91,165 +93,165 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                 }
+    "/favicon.ico", "image/x-icon"                       }
   ,
   { 
-    "/images/Galileo-Ref_01.png", "image/png"       }
+    "/images/Galileo-Ref_01.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_02.png", "image/png"       }
+    "/images/Galileo-Ref_02.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_03.png", "image/png"       }
+    "/images/Galileo-Ref_03.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_03_off.png", "image/png"       }
+    "/images/Galileo-Ref_03_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_04.png", "image/png"       }
+    "/images/Galileo-Ref_04.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_05.png", "image/png"       }
+    "/images/Galileo-Ref_05.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_05_off.png", "image/png"       }
+    "/images/Galileo-Ref_05_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_06.png", "image/png"       }
+    "/images/Galileo-Ref_06.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_06_off.png", "image/png"       }
+    "/images/Galileo-Ref_06_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_07.png", "image/png"       }
+    "/images/Galileo-Ref_07.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_07_off.png", "image/png"       }
+    "/images/Galileo-Ref_07_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_08.png", "image/png"       }
+    "/images/Galileo-Ref_08.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_09.png", "image/png"       }
+    "/images/Galileo-Ref_09.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_10.png", "image/png"       }
+    "/images/Galileo-Ref_10.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_11.png", "image/png"       }
+    "/images/Galileo-Ref_11.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_12.png", "image/png"       }
+    "/images/Galileo-Ref_12.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_12_off.png", "image/png"       }
+    "/images/Galileo-Ref_12_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_13.png", "image/png"       }
+    "/images/Galileo-Ref_13.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_14.png", "image/png"       }
+    "/images/Galileo-Ref_14.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_15.png", "image/png"       }
+    "/images/Galileo-Ref_15.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_15_off.png", "image/png"       }
+    "/images/Galileo-Ref_15_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_16.png", "image/png"       }
+    "/images/Galileo-Ref_16.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_17.png", "image/png"       }
+    "/images/Galileo-Ref_17.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_18.png", "image/png"       }
+    "/images/Galileo-Ref_18.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_18_off.png", "image/png"       }
+    "/images/Galileo-Ref_18_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_19.png", "image/png"       }
+    "/images/Galileo-Ref_19.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_20.png", "image/png"       }
+    "/images/Galileo-Ref_20.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_21.png", "image/png"       }
+    "/images/Galileo-Ref_21.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_21_off.png", "image/png"       }
+    "/images/Galileo-Ref_21_off.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_22.png", "image/png"       }
+    "/images/Galileo-Ref_22.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_23.png", "image/png"       }
+    "/images/Galileo-Ref_23.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_24.png", "image/png"       }
+    "/images/Galileo-Ref_24.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_25.png", "image/png"       }
+    "/images/Galileo-Ref_25.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_26.png", "image/png"       }
+    "/images/Galileo-Ref_26.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_27.png", "image/png"       }
+    "/images/Galileo-Ref_27.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_28.png", "image/png"       }
+    "/images/Galileo-Ref_28.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_29.png", "image/png"       }
+    "/images/Galileo-Ref_29.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_30.png", "image/png"       }
+    "/images/Galileo-Ref_30.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_31.png", "image/png"       }
+    "/images/Galileo-Ref_31.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_32.png", "image/png"       }
+    "/images/Galileo-Ref_32.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_33.png", "image/png"       }
+    "/images/Galileo-Ref_33.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_34.png", "image/png"       }
+    "/images/Galileo-Ref_34.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_35.png", "image/png"       }
+    "/images/Galileo-Ref_35.png", "image/png"             }
   ,
   { 
-    "/images/Galileo-Ref_36.png", "image/png"       }
+    "/images/Galileo-Ref_36.png", "image/png"             }
   ,
   { 
-    "/images/blank.gif", "image/png"       }
+    "/images/blank.gif", "image/png"             }
   ,
   { 
-    "/css/phone.css", "text/css"                 }
+    "/css/phone.css", "text/css"                       }
   ,
   { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"                 }
+    "/js/jquery-2.0.3.min.js", "application/javascript"                       }
   ,
   { 
-    "/js/phone.js", "application/javascript"                 }
+    "/js/phone.js", "application/javascript"                       }
   ,
   { 
-    "/js/pixel.js", "application/javascript"                 }
+    "/js/pixel.js", "application/javascript"                       }
   ,
   { 
-    "/js/pixelView.js", "application/javascript"                 }
+    "/js/pixelView.js", "application/javascript"                       }
   ,
   { 
-    "/js/socketController.js", "application/javascript"                 }
+    "/js/socketController.js", "application/javascript"                       }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"                 }
+    "/index.html", "text/html"                       }
   ,
 };
 
@@ -257,8 +259,8 @@ static const struct serveable whitelist[] = {
 
 /*
 This callback is called when the browser is refreshed (an HTTP call is performed).
-Here we send the files to the browser.
-*/
+ Here we send the files to the browser.
+ */
 static int callback_http(struct libwebsocket_context *context,
 struct libwebsocket *wsi,
 enum libwebsocket_callback_reasons reason, void *user,
@@ -338,7 +340,7 @@ void *in, size_t len)
     break;
 
   case LWS_CALLBACK_RECEIVE:
-  
+
     Serial.println("Cleaning Protocol");
 
     // **********************************
@@ -428,48 +430,66 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
-  /*
-  getSerialCommand(); 
-   if( g_iNewCode )
-   {
-   */
-  // NEW CODE
-  //Serial.println("NEW CODE");
-  // Read pin state HW
 
-  // Send HW status to website
-  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-  g_abD[0],
-  g_abD[1],
-  g_abD[2],
-  g_aiP[3],   // Px
-  g_abD[4],
-  g_aiP[5],   // Px
-  g_aiP[6],   // Px
-  g_abD[7],
-  g_abD[8],
-  g_aiP[9],   // Px
-  g_aiP[10],  // Px
-  g_aiP[11],  // Px
-  g_abD[12],
-  g_abD[13],
-  analogRead(A0),
-  analogRead(A1),
-  analogRead(A2),
-  analogRead(A3),
-  analogRead(A4),
-  analogRead(A5)
-    );
-  /*
+  getSerialCommand(); 
+  if( g_iNewCode )
+  {
+
+    // OLD CODE
+
+    // Send HW status to website
+    n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+    g_abD[0],
+    g_abD[1],
+    g_abD[2],
+    g_aiP[3],   // Px
+    g_abD[4],
+    g_aiP[5],   // Px
+    g_aiP[6],   // Px
+    g_abD[7],
+    g_abD[8],
+    g_aiP[9],   // Px
+    g_aiP[10],  // Px
+    g_aiP[11],  // Px
+    g_abD[12],
+    g_abD[13],
+    analogRead(A0),
+    analogRead(A1),
+    analogRead(A2),
+    analogRead(A3),
+    analogRead(A4),
+    analogRead(A5)
+      );
+
   }
-   else
-   {
-   // OLD CODE
-   Serial.println("OLD CODE");
-   sensor1 = analogRead(sensor1Pin);
-   n = sprintf((char *)p, "%d,%d", currentLED, sensor1);
-   }
-   */
+  else
+  {
+    // NEW CODE
+
+    ////// NEW JSON CODE /////
+    updateBoardState();
+    aJsonObject *msg = getJsonBoardState();
+    /*
+    // Creating buffer for WebSockets
+     int n;
+     // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+     // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+     
+     // Get JSON string
+     p = (unsigned char *)(aJson.print(msg));
+     
+     // Free memory
+     aJson.deleteItem(msg);
+     */
+     
+
+ //   aJson.print(msg, &serial_stream);
+//    Serial.println("");
+ //   aJson.deleteItem(msg);
+     
+  }
 
   //Serial.print("Output Message [sendStatusToWebsite()]:");
   //Serial.println(n);
@@ -500,7 +520,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0                 } /* terminator */
+    NULL, NULL, 0, 0                       } /* terminator */
 };
 
 void sighandler(int sig)
@@ -581,7 +601,7 @@ void setup()
   system("/home/root/startAP");
 
   // Init Galileo HW
-  
+
   // Enable all digital pins as outputs
   for(int i=0; i<14; i++)
   {
@@ -637,7 +657,7 @@ void initBoardState()
       g_aPins[i].connections[j] = false;
     }
   }
-  
+
   // Initialize pins 0-13 as digital out pins
   for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
   {
@@ -655,60 +675,81 @@ void initBoardState()
   // Set the HW state
   setBoardState();
 
-  
+
   /*
   char label[25];
-  boolean is_analog;
-  boolean is_input;
-  float value;
-  int connections[20];
-} Pin;
-
-#define TOTAL_NUM_OF_PINS 20 
-Pin g_aPins[TOTAL_NUM_OF_PINS];
-*/
+   boolean is_analog;
+   boolean is_input;
+   float value;
+   int connections[20];
+   } Pin;
+   
+   #define TOTAL_NUM_OF_PINS 20 
+   Pin g_aPins[TOTAL_NUM_OF_PINS];
+   */
 }
 
 void setBoardState()
 {
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
-      if( g_aPins[i].is_input )
+    if( g_aPins[i].is_input )
+    {
+      pinMode(i, INPUT);
+    }
+    else
+    {
+      pinMode(i, OUTPUT);
+
+      if( g_aPins[i].is_analog )
       {
-        pinMode(i, INPUT);
+        analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
       }
       else
       {
-        pinMode(i, OUTPUT);
-        
-        if( g_aPins[i].is_analog )
-        {
-          analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
-        }
-        else
-        {
-          digitalWrite(i, int(g_aPins[i].value) );
-        }
+        digitalWrite(i, int(g_aPins[i].value) );
       }
+    }
   }
 }
+
+void updateBoardState()
+{
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    if( g_aPins[i].is_input )
+    {
+      if( g_aPins[i].is_analog )
+      {
+        g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
+      }
+      else
+      {
+        g_aPins[i].value = digitalRead(i);
+      }
+    }
+    else
+    {
+      if( g_aPins[i].is_analog )
+      {
+        analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
+      }
+      else
+      {
+        digitalWrite(i, int(g_aPins[i].value) );
+      }
+    }
+  }
+}
+
 
 // Get the board state and return a JSON object
 aJsonObject* getJsonBoardState()
 {
   //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
-  
+
   aJsonObject* poJsonBoardState = aJson.createObject();
 
-/*
-  int analogValues[6];
-  for (int i = 0; i < 6; i++) {
-    analogValues[i] = analogRead(i);
-  }
-  aJsonObject *analog = aJson.createIntArray(analogValues, 6);
-  aJson.addItemToObject(msg, "analog", analog);
- */
-  
   // Creating status JSON object
   aJsonObject* poStatus = aJson.createObject();
 
@@ -722,15 +763,14 @@ aJsonObject* getJsonBoardState()
 
   // Creating connection JSON object
   aJsonObject* poConnections = aJson.createObject();
-  
+
   // Create STATUS
   poStatus = aJson.createItem("OK");
- 
+
   // Create PINS
   int iaPinConnects[TOTAL_NUM_OF_PINS];
   char caPinNumBuffer[10];
-//  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
-  for(int i=0; i<1 ;i++)
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
   {
     aJson.addItemToObject(apoPin[i],"label", aJson.createItem( g_aPins[i].label ) );
 
@@ -741,7 +781,7 @@ aJsonObject* getJsonBoardState()
     }
     else
     {
-        aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
     }
 
     // Populate the pin's direction
@@ -751,42 +791,39 @@ aJsonObject* getJsonBoardState()
     }
     else
     {
-        aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
     }
 
     // Populate pin's value
     aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
-    
+
     // TO DO - Add pin connections array
     aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
-    
+    /*
+     int analogValues[6];
+     for (int i = 0; i < 6; i++) {
+     analogValues[i] = analogRead(i);
+     }
+     aJsonObject *analog = aJson.createIntArray(analogValues, 6);
+     aJson.addItemToObject(msg, "analog", analog);
+     */
+    /*
+    typedef struct Pin {
+     char label[PIN_LABEL_SIZE];
+     boolean is_analog;
+     boolean is_input;
+     float value;
+     boolean connections[TOTAL_NUM_OF_PINS];
+     } Pin;
+     
+     Pin g_aPins[TOTAL_NUM_OF_PINS];
+     */
+
     // Push to JSON structure
     sprintf(caPinNumBuffer,"%d",i);
     aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
-    
-    /*
-    aJson.addItemToObject(apoPin[i],"label", aJson.createItem("None") );
-    aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
-    aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
-    aJson.addItemToObject(apoPin[i],"value", aJson.createItem(0.0) );
-    aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
-    sprintf(caPinNumBuffer,"%d",i);
-    aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
-    */
+
   }
-
-/*
-typedef struct Pin {
-  char label[PIN_LABEL_SIZE];
-  boolean is_analog;
-  boolean is_input;
-  float value;
-  boolean connections[TOTAL_NUM_OF_PINS];
-} Pin;
-
-Pin g_aPins[TOTAL_NUM_OF_PINS];
-*/
-
 
   // Create CONNECTIONS
   int iaConnections[10];
@@ -796,38 +833,27 @@ Pin g_aPins[TOTAL_NUM_OF_PINS];
   aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
   aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
- 
 
-  /*
-  // Delete all JSON objectss
-  aJson.deleteItem(poStatus);
-  aJson.deleteItem(poPin13);
-  aJson.deleteItem(poItem);
-  aJson.deleteItem(poPins);
-  aJson.deleteItem(poPin); 
-  aJson.deleteItem(poConnections); 
-  */
-  
   return poJsonBoardState;
- 
+
 }
 
 /*
 {	"status":<OK,ERROR>,
-	"pins":{	"<0,1,…,13,A0,…,A5>":
-				{	"label":"<label text>",
-					"is_analog":"<true,false>",
-					"is_input":"<true,false>",
-					"value":"<0.0,1.0>",
-					"connections":[<array of pins>],
-				},
-				...,
-			},
-	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
-						...,
-					]	
-}
-*/
+ 	"pins":{	"<0,1,…,13,A0,…,A5>":
+ 				{	"label":"<label text>",
+ 					"is_analog":"<true,false>",
+ 					"is_input":"<true,false>",
+ 					"value":"<0.0,1.0>",
+ 					"connections":[<array of pins>],
+ 				},
+ 				...,
+ 			},
+ 	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
+ 						...,
+ 					]	
+ }
+ */
 
 
 //const PROGMEM TEST_STRING[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\";
@@ -856,50 +882,50 @@ aJsonObject *createMessage()
 
 /*
 if(msg != NULL)
-  {
-    aJsonObject *pwm = aJson.getObjectItem(msg, "pwm");
-    if (!pwm) {
-      Serial.println("no pwm data");
-      return;
-    }
-  
-    const static int pins[] = { 8, 9 };
-    const static int pins_n = 2;
-    for (int i = 0; i < pins_n; i++) {
-      char pinstr[3];
-      snprintf(pinstr, sizeof(pinstr), "%d", pins[i]);
-  
-      aJsonObject *pwmval = aJson.getObjectItem(pwm, pinstr);
-      if (!pwmval) continue; // Value not provided, ok.
-      if (pwmval->type != aJson_Int) {
-        Serial.print("invalid data type ");
-        Serial.print(pwmval->type, DEC);
-        Serial.print(" for pin ");
-        Serial.println(pins[i], DEC);
-        continue;
-      }
-  
-      Serial.print("setting pin ");
-      Serial.print(pins[i], DEC);
-      Serial.print(" to value ");
-      Serial.println(pwmval->valueint, DEC);
-      analogWrite(pins[i], pwmval->valueint);
-    }
-  }
-  else
-  {
-    Serial.println("msg is NULL");      
-  }
- */ 
+ {
+ aJsonObject *pwm = aJson.getObjectItem(msg, "pwm");
+ if (!pwm) {
+ Serial.println("no pwm data");
+ return;
+ }
+ 
+ const static int pins[] = { 8, 9 };
+ const static int pins_n = 2;
+ for (int i = 0; i < pins_n; i++) {
+ char pinstr[3];
+ snprintf(pinstr, sizeof(pinstr), "%d", pins[i]);
+ 
+ aJsonObject *pwmval = aJson.getObjectItem(pwm, pinstr);
+ if (!pwmval) continue; // Value not provided, ok.
+ if (pwmval->type != aJson_Int) {
+ Serial.print("invalid data type ");
+ Serial.print(pwmval->type, DEC);
+ Serial.print(" for pin ");
+ Serial.println(pins[i], DEC);
+ continue;
+ }
+ 
+ Serial.print("setting pin ");
+ Serial.print(pins[i], DEC);
+ Serial.print(" to value ");
+ Serial.println(pwmval->valueint, DEC);
+ analogWrite(pins[i], pwmval->valueint);
+ }
+ }
+ else
+ {
+ Serial.println("msg is NULL");      
+ }
+ */
 
 void processMessage(char *_acMsg)
 {
 
-   Serial.print("Incoming message: ");
-   Serial.println(_acMsg);  
-  
-   aJsonObject *poMsg = aJson.parse(_acMsg);
-    
+  Serial.print("Incoming message: ");
+  Serial.println(_acMsg);  
+
+  aJsonObject *poMsg = aJson.parse(_acMsg);
+
   if(poMsg != NULL)
   {
     aJsonObject *oStatus = aJson.getObjectItem(poMsg, "status");
@@ -927,7 +953,7 @@ void processMessage(char *_acMsg)
   {
     Serial.println("Client message is NULL");
   }
-  
+
   aJson.deleteItem(poMsg);
 }
 
@@ -945,53 +971,54 @@ char g_acMessage[] = "{\"status\":\"OTHER ERROR\"}";
 void loop()
 {
 
-   if (millis() - last_print > 2000) {
+  if (millis() - last_print > 2000) {
 
     //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
-//    aJsonObject *msg = aJson.parse(g_acMessage);
+    //    aJsonObject *msg = aJson.parse(g_acMessage);
 
     ///////////////////////////////////////
     // Test receiving message
     //processMessage(g_acMessage);
+//    updateBoardState();
     ///////////////////////////////////////
-     
-   //////////////////////////////////////////
-     // Test sending message
-    aJsonObject *msg = getJsonBoardState();
-    aJson.print(msg, &serial_stream);
-    Serial.println("");
-    aJson.deleteItem(msg);
-   //////////////////////////////////////////  
-     
+
+    //////////////////////////////////////////
+    // Test sending message
+//    aJsonObject *msg = getJsonBoardState();
+ //   aJson.print(msg, &serial_stream);
+//    Serial.println("");
+ //   aJson.deleteItem(msg);
+    //////////////////////////////////////////  
+
     last_print = millis();
   }
 }
 
 
-  /*
+/*
   if (millis() - last_print > 1000) {
-    // One second elapsed, send message.
-    aJsonObject *msg = createMessage();
-    aJson.print(msg, &serial_stream);
-    Serial.println(); // Add newline. 
-    aJson.deleteItem(msg);
-    last_print = millis();
-  }
+ // One second elapsed, send message.
+ aJsonObject *msg = createMessage();
+ aJson.print(msg, &serial_stream);
+ Serial.println(); // Add newline. 
+ aJson.deleteItem(msg);
+ last_print = millis();
+ }
+ 
+ if (serial_stream.available()) {
+ // First, skip any accidental whitespace like newlines.
+ serial_stream.skip();
+ }
+ */
 
-  if (serial_stream.available()) {
-    // First, skip any accidental whitespace like newlines.
-    serial_stream.skip();
-  }
-*/
-
-  //if (serial_stream.available()) {
-    // Something real on input, let's take a look.
-    //aJsonObject *msg = aJson.parse(&serial_stream);
-    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
-    // aJsonObject *msg = aJson.parse(g_acMessage);
-    // processMessage(msg);
-    // aJson.deleteItem(msg);
- // }
+//if (serial_stream.available()) {
+// Something real on input, let's take a look.
+//aJsonObject *msg = aJson.parse(&serial_stream);
+//aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+// aJsonObject *msg = aJson.parse(g_acMessage);
+// processMessage(msg);
+// aJson.deleteItem(msg);
+// }
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1017,6 +1044,9 @@ void getSerialCommand()
     }
   }
 }
+
+
+
 
 
 
