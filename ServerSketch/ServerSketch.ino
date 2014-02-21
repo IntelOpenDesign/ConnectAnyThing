@@ -686,9 +686,80 @@ void setBoardState()
         {
           digitalWrite(i, int(g_aPins[i].value) );
         }
-        
       }
   }
+}
+
+// Get the board state and return a JSON object
+aJsonObject* getJsonBoardState()
+{
+  //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
+  
+  aJsonObject* poJsonBoardState = aJson.createObject();
+
+/*
+  int analogValues[6];
+  for (int i = 0; i < 6; i++) {
+    analogValues[i] = analogRead(i);
+  }
+  aJsonObject *analog = aJson.createIntArray(analogValues, 6);
+  aJson.addItemToObject(msg, "analog", analog);
+ */
+  
+  aJsonObject* poStatus = aJson.createObject();
+  aJsonObject* poItems = aJson.createObject();
+  aJsonObject* poItem = aJson.createObject();
+  aJsonObject* poPins = aJson.createObject();
+  aJsonObject* poPin = aJson.createObject();
+  aJsonObject* poConnections = aJson.createObject();
+  
+  // Create STATUS
+  poStatus = aJson.createItem("OK");
+//  aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
+ 
+  // Create PINS
+  //aJson.addItemToObject(poItem, "analog", poItems);
+  //aJson.addItemToObject(poPins,"13",poPins);
+
+/*
+  aJson.addItemToObject(poItems,"label", aJson.createItem("None") );
+  aJson.addItemToObject(poItems,"is_analog", aJson.createFalse() );
+  aJson.addItemToObject(poItems,"is_input", aJson.createFalse() );
+  aJson.addItemToObject(poItems,"value", aJson.createItem(0.0) );
+  int iaPinConnects[10];
+  aJson.addItemToObject(poItems,"connections", aJson.createIntArray(iaPinConnects,0) );
+  aJson.addItemToObject(poPins,"13",poItems);
+*/ 
+
+
+  poItem = aJson.createItem("Value13");
+  aJson.addItemToObject(poPins,"13",poItem);
+
+
+// poPins =   aJson.createItem("20"); // THIS WORKS
+
+  // Create CONNECTIONS
+  int iaConnections[10];
+  poConnections = aJson.createIntArray(iaConnections, 0);  
+
+  // Push to JSON object
+  aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
+  aJson.addItemToObject(poJsonBoardState,"pins",poPins);
+  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
+ 
+
+  /*
+  // Delete all JSON objectss
+  aJson.deleteItem(poStatus);
+  aJson.deleteItem(poItems);
+  aJson.deleteItem(poItem);
+  aJson.deleteItem(poPins);
+  aJson.deleteItem(poPin); 
+  aJson.deleteItem(poConnections); 
+  */
+  
+  return poJsonBoardState;
+ 
 }
 
 /*
@@ -828,7 +899,19 @@ void loop()
 
     //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
 //    aJsonObject *msg = aJson.parse(g_acMessage);
-    processMessage(g_acMessage);
+
+    ///////////////////////////////////////
+    // Test receiving message
+    //processMessage(g_acMessage);
+    ///////////////////////////////////////
+     
+   //////////////////////////////////////////
+     // Test sending message
+    aJsonObject *msg = getJsonBoardState();
+    aJson.print(msg, &serial_stream);
+    Serial.println("");
+    aJson.deleteItem(msg);
+   //////////////////////////////////////////  
      
     last_print = millis();
   }
