@@ -706,29 +706,41 @@ aJsonObject* getJsonBoardState()
   aJson.addItemToObject(msg, "analog", analog);
  */
   
+  // Creating status JSON object
   aJsonObject* poStatus = aJson.createObject();
-  aJsonObject* poItems = aJson.createObject();
-  aJsonObject* poItem = aJson.createObject();
+
+  // Creating pin JSON objects
   aJsonObject* poPins = aJson.createObject();
-  aJsonObject* poPin = aJson.createObject();
+  aJsonObject* apoPin[TOTAL_NUM_OF_PINS];
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    apoPin[i] = aJson.createObject();
+  }
+
+  // Creating connection JSON object
   aJsonObject* poConnections = aJson.createObject();
   
   // Create STATUS
   poStatus = aJson.createItem("OK");
-//  aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
  
   // Create PINS
-  //aJson.addItemToObject(poItem, "analog", poItems);
+  //aJson.addItemToObject(poItem, "analog", poPin13);
   //aJson.addItemToObject(poPins,"13",poPins);
 
-  aJson.addItemToObject(poItems,"label", aJson.createItem("None") );
-  aJson.addItemToObject(poItems,"is_analog", aJson.createFalse() );
-  aJson.addItemToObject(poItems,"is_input", aJson.createFalse() );
-  aJson.addItemToObject(poItems,"value", aJson.createItem(0.0) );
   int iaPinConnects[10];
-  aJson.addItemToObject(poItems,"connections", aJson.createIntArray(iaPinConnects,0) );
-  aJson.addItemToObject(poPins,"13",poItems);
 
+  
+  char caPinNumBuffer[10];
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    aJson.addItemToObject(apoPin[i],"label", aJson.createItem("None") );
+    aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+    aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem(0.0) );
+    aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
+    sprintf(caPinNumBuffer,"%d",i);
+    aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
+  }
 
 
 //  poItem = aJson.createItem("Value13");
@@ -750,7 +762,7 @@ aJsonObject* getJsonBoardState()
   /*
   // Delete all JSON objectss
   aJson.deleteItem(poStatus);
-  aJson.deleteItem(poItems);
+  aJson.deleteItem(poPin13);
   aJson.deleteItem(poItem);
   aJson.deleteItem(poPins);
   aJson.deleteItem(poPin); 
@@ -894,7 +906,7 @@ char g_acMessage[] = "{\"status\":\"OTHER ERROR\"}";
 void loop()
 {
 
-   if (millis() - last_print > 1000) {
+   if (millis() - last_print > 2000) {
 
     //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
 //    aJsonObject *msg = aJson.parse(g_acMessage);
