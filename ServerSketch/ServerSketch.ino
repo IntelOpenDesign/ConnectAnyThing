@@ -721,7 +721,6 @@ aJsonObject* getJsonBoardState()
   //aJson.addItemToObject(poItem, "analog", poItems);
   //aJson.addItemToObject(poPins,"13",poPins);
 
-/*
   aJson.addItemToObject(poItems,"label", aJson.createItem("None") );
   aJson.addItemToObject(poItems,"is_analog", aJson.createFalse() );
   aJson.addItemToObject(poItems,"is_input", aJson.createFalse() );
@@ -729,11 +728,11 @@ aJsonObject* getJsonBoardState()
   int iaPinConnects[10];
   aJson.addItemToObject(poItems,"connections", aJson.createIntArray(iaPinConnects,0) );
   aJson.addItemToObject(poPins,"13",poItems);
-*/ 
 
 
-  poItem = aJson.createItem("Value13");
-  aJson.addItemToObject(poPins,"13",poItem);
+
+//  poItem = aJson.createItem("Value13");
+//  aJson.addItemToObject(poPins,"13",poItem);
 
 
 // poPins =   aJson.createItem("20"); // THIS WORKS
