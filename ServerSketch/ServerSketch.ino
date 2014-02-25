@@ -45,7 +45,7 @@ int g_aiP[TOTAL_NUM_Px];
 #define NUM_OF_DIGITAL_PINS 14
 
 #define ANALOG_OUT_MAX_VALUE 255
-#define ANALOG_IN_MAX_VALUE 4096
+#define ANALOG_IN_MAX_VALUE 1024 //4096
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
@@ -72,7 +72,7 @@ int g_iNewCode = 0;
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0                         }
+    NULL, 0, 0, 0                               }
 };
 
 /*
@@ -96,167 +96,42 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                         }
+    "/favicon.ico", "image/x-icon"                               }
   ,
   { 
-    "/images/Galileo-Ref_01.png", "image/png"               }
+    "/static/css/app.css", "text/css"                               }
   ,
   { 
-    "/images/Galileo-Ref_02.png", "image/png"               }
+    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                               }
   ,
   { 
-    "/images/Galileo-Ref_03.png", "image/png"               }
+    "/static/js/app.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_03_off.png", "image/png"               }
+    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_04.png", "image/png"               }
+    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_05.png", "image/png"               }
+    "/static/js/angular.min.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_05_off.png", "image/png"               }
+    "/static/js/jquery.min.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_06.png", "image/png"               }
+    "/static/js/jquery-ui.min.js", "application/javascript"                               }
   ,
   { 
-    "/images/Galileo-Ref_06_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_07.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_07_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_08.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_09.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_10.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_11.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_12.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_12_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_13.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_14.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_15.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_15_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_16.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_17.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_18.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_18_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_19.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_20.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_21.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_21_off.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_22.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_23.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_24.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_25.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_26.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_27.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_28.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_29.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_30.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_31.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_32.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_33.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_34.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_35.png", "image/png"               }
-  ,
-  { 
-    "/images/Galileo-Ref_36.png", "image/png"               }
-  ,
-  { 
-    "/images/blank.gif", "image/png"               }
-  ,
-  { 
-    "/css/phone.css", "text/css"                         }
-  ,
-  { 
-    "/js/jquery-2.0.3.min.js", "application/javascript"                         }
-  ,
-  { 
-    "/js/phone.js", "application/javascript"                         }
-  ,
-  { 
-    "/js/pixel.js", "application/javascript"                         }
-  ,
-  { 
-    "/js/pixelView.js", "application/javascript"                         }
-  ,
-  { 
-    "/js/socketController.js", "application/javascript"                         }
+    "/static/js/underscore-min.js", "application/javascript"                               }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"                         }
+    "/index.html", "text/html"                               }
   ,
 };
+
 
 /* this protocol server (always the first one) just knows how to do HTTP */
 
@@ -446,72 +321,73 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
-//  getSerialCommand(); 
-//  if( !g_iNewCode )
- // {
+  //  getSerialCommand(); 
+  //  if( !g_iNewCode )
+  // {
 
-    // OLD CODE
-    Serial.println("OLD CODE");
+  // OLD CODE
+  Serial.println("OLD CODE");
 
-    // Send HW status to website
-    n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-    g_abD[0],
-    g_abD[1],
-    g_abD[2],
-    g_aiP[3],   // Px
-    g_abD[4],
-    g_aiP[5],   // Px
-    g_aiP[6],   // Px
-    g_abD[7],
-    g_abD[8],
-    g_aiP[9],   // Px
-    g_aiP[10],  // Px
-    g_aiP[11],  // Px
-    g_abD[12],
-    g_abD[13],
-    analogRead(A0),
-    analogRead(A1),
-    analogRead(A2),
-    analogRead(A3),
-    analogRead(A4),
-    analogRead(A5)
-      );
+  // Send HW status to website
+//  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",
+  g_abD[0],
+  g_abD[1],
+  g_abD[2],
+  g_aiP[3],   // Px
+  g_abD[4],
+  g_aiP[5],   // Px
+  g_aiP[6],   // Px
+  g_abD[7],
+  g_abD[8],
+  g_aiP[9],   // Px
+  g_aiP[10],  // Px
+  g_aiP[11],  // Px
+  g_abD[12],
+  g_abD[13],
+  analogRead(A0)/float(ANALOG_IN_MAX_VALUE),
+  analogRead(A1)/float(ANALOG_IN_MAX_VALUE),
+  analogRead(A2)/float(ANALOG_IN_MAX_VALUE),
+  analogRead(A3)/float(ANALOG_IN_MAX_VALUE),
+  analogRead(A4)/float(ANALOG_IN_MAX_VALUE),
+  analogRead(A5)/float(ANALOG_IN_MAX_VALUE)
+    );
 
-//  }
-//  else
-//  {
-    // NEW CODE
+  //  }
+  //  else
+  //  {
+  // NEW CODE
 
-    ////// NEW JSON CODE /////
-    /*
+  ////// NEW JSON CODE /////
+  /*
     updateBoardState();
-    aJsonObject *msg = getJsonBoardState();
-
-    aJson.print(msg, &serial_stream);
-    Serial.println("");
-    aJson.deleteItem(msg);
-*/
-    /*
+   aJsonObject *msg = getJsonBoardState();
+   
+   aJson.print(msg, &serial_stream);
+   Serial.println("");
+   aJson.deleteItem(msg);
+   */
+  /*
     // Creating buffer for WebSockets
-     int n;
-     // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-     // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-     
-     // Get JSON string
-     p = (unsigned char *)(aJson.print(msg));
-     
-     // Free memory
-     aJson.deleteItem(msg);
-     */
+   int n;
+   // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+   // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+   
+   // Get JSON string
+   p = (unsigned char *)(aJson.print(msg));
+   
+   // Free memory
+   aJson.deleteItem(msg);
+   */
 
 
-    //   aJson.print(msg, &serial_stream);
-    //    Serial.println("");
-    //   aJson.deleteItem(msg);
+  //   aJson.print(msg, &serial_stream);
+  //    Serial.println("");
+  //   aJson.deleteItem(msg);
 
- // }
+  // }
 
   //Serial.print("Output Message [sendStatusToWebsite()]:");
   //Serial.println(n);
@@ -520,55 +396,61 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   return n;
 }
 
+static long unsigned int g_luiCounter = 0;
 int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 {
 
-  int n;
-  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-/*
-    // Send HW status to website
-    n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-    g_abD[0],
-    g_abD[1],
-    g_abD[2],
-    g_aiP[3],   // Px
-    g_abD[4],
-    g_aiP[5],   // Px
-    g_aiP[6],   // Px
-    g_abD[7],
-    g_abD[8],
-    g_aiP[9],   // Px
-    g_aiP[10],  // Px
-    g_aiP[11],  // Px
-    g_abD[12],
-    g_abD[13],
-    analogRead(A0),
-    analogRead(A1),
-    analogRead(A2),
-    analogRead(A3),
-    analogRead(A4),
-    analogRead(A5)
-      );
-      
-      n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-*/
+  int n = 0;
+
+  if( g_luiCounter%100 == 0)
+  {
+    Serial.println("NEW CODE");
+
+    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+    /*
+      // Send HW status to website
+     n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+     g_abD[0],
+     g_abD[1],
+     g_abD[2],
+     g_aiP[3],   // Px
+     g_abD[4],
+     g_aiP[5],   // Px
+     g_aiP[6],   // Px
+     g_abD[7],
+     g_abD[8],
+     g_aiP[9],   // Px
+     g_aiP[10],  // Px
+     g_aiP[11],  // Px
+     g_abD[12],
+     g_abD[13],
+     analogRead(A0),
+     analogRead(A1),
+     analogRead(A2),
+     analogRead(A3),
+     analogRead(A4),
+     analogRead(A5)
+     );
+     
+     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+     */
 
     ////// NEW JSON CODE /////
-    
+
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
     //p = (char *)(aJson.print(msg));
     char * pTempPointer = aJson.print(msg);
     p = (unsigned char *)pTempPointer;
-//    Serial.println("");
+    //    Serial.println("");
 
     aJson.print(msg, &serial_stream);
     Serial.println("");
     aJson.deleteItem(msg);
 
     /*
-    // Creating buffer for WebSockets
+      // Creating buffer for WebSockets
      int n;
      // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
      // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
@@ -586,14 +468,17 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
     //    Serial.println("");
     //   aJson.deleteItem(msg);
 
- // }
+    // }
 
-  //Serial.print("Output Message [sendStatusToWebsite()]:");
-  //Serial.println(n);
+    //Serial.print("Output Message [sendStatusToWebsite()]:");
+    //Serial.println(n);
 
-  n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-  
-      aJson.deleteItem(msg);
+    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+
+    aJson.deleteItem(msg);
+  }
+
+  g_luiCounter++;
 
   return n;
 }
@@ -613,7 +498,7 @@ static struct libwebsocket_protocols protocols[] = {
   }
   , // manages data in and data out from and to the website
   {
-    "touchserver-protocol",
+    "hardware-state-protocol",
     callback_cat_protocol,
     0,
     128,
@@ -621,7 +506,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0                         } /* terminator */
+    NULL, NULL, 0, 0                               } /* terminator */
 };
 
 void sighandler(int sig)
@@ -1145,6 +1030,9 @@ void getSerialCommand()
     }
   }
 }
+
+
+
 
 
 
