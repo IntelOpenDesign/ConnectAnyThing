@@ -49,8 +49,8 @@ int g_aiP[TOTAL_NUM_Px];
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
-  boolean is_analog;
-  boolean is_input;
+  int is_analog;
+  int is_input;
   float value;
   boolean connections[TOTAL_NUM_OF_PINS];
 } 
@@ -72,7 +72,7 @@ int g_iNewCode = 0;
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0                                     }
+    NULL, 0, 0, 0                                           }
 };
 
 /*
@@ -96,39 +96,39 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                                     }
+    "/favicon.ico", "image/x-icon"                                           }
   ,
   { 
-    "/static/css/app.css", "text/css"                                     }
+    "/static/css/app.css", "text/css"                                           }
   ,
   { 
-    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                     }
+    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
   ,
   { 
-    "/static/js/app.js", "application/javascript"                                     }
+    "/static/js/app.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                     }
+    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                     }
+    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/angular.min.js", "application/javascript"                                     }
+    "/static/js/angular.min.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery.min.js", "application/javascript"                                     }
+    "/static/js/jquery.min.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery-ui.min.js", "application/javascript"                                     }
+    "/static/js/jquery-ui.min.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/underscore-min.js", "application/javascript"                                     }
+    "/static/js/underscore-min.js", "application/javascript"                                           }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"                                     }
+    "/index.html", "text/html"                                           }
   ,
 };
 
@@ -566,7 +566,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0                                     } /* terminator */
+    NULL, NULL, 0, 0                                           } /* terminator */
 };
 
 void sighandler(int sig)
@@ -1037,9 +1037,9 @@ void procPinsMsg( aJsonObject *_pJsonPins )
     {
       /*
       Serial.print("Pin ");
-      Serial.print(pinstr);
-      Serial.println(" found");
-*/
+       Serial.print(pinstr);
+       Serial.println(" found");
+       */
 
       char sPinState[128];
       Serial.println("Pin Data: ");
@@ -1048,39 +1048,56 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
       if (poLabel)
       {
-        snprintf(sPinState, sizeof(sPinState), "%s", poLabel->valuestring);
-        Serial.println(sPinState);
+        //snprintf(sPinState, sizeof(sPinState), "%s", poLabel->valuestring);
+        //Serial.println(sPinState);
+        snprintf(g_aPins[i].label, PIN_LABEL_SIZE, "%s", poLabel->valuestring);
+        //       Serial.println(g_aPins[i].label);
+        //        g_aPins[i].label[PIN_LABEL_SIZE]
       }
 
       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
       if (poIsAnalog)
       {
-        snprintf(sPinState, sizeof(sPinState), "%i", poIsAnalog->valuebool);
-        Serial.println(sPinState);
+        //        snprintf(sPinState, sizeof(sPinState), "%s", poIsAnalog->valuestring);
+        //       Serial.println(sPinState);
+        if( 0 == strcmp(poIsAnalog->valuestring,"true") )
+          g_aPins[i].is_analog = 1;
+        else if( 0 == strcmp(poIsAnalog->valuestring,"false") )
+          g_aPins[i].is_analog = 0;
+        else
+          g_aPins[i].is_analog = -1;
       }       
-   
+
       aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
       if (poIsInput)
       {
-        snprintf(sPinState, sizeof(sPinState), "%i", poIsInput->valuebool);
-        Serial.println(sPinState);
+        // snprintf(sPinState, sizeof(sPinState), "%s", poIsInput->valuestring);
+        // Serial.println(sPinState);
+        //  g_aPins[i].is_input = 
+        if( 0 == strcmp(poIsInput->valuestring,"true") )
+          g_aPins[i].is_input = 1;
+        else if( 0 == strcmp(poIsInput->valuestring,"false") )
+          g_aPins[i].is_input = 0;
+        else
+          g_aPins[i].is_input = -1;
       }
-      
+
       aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
       if (poValue)
       {
-        snprintf(sPinState, sizeof(sPinState), "%f", poValue->valuefloat);
-        Serial.println(sPinState);
+        //snprintf(sPinState, sizeof(sPinState), "%s", poValue->valuestring);
+        //Serial.println(sPinState);
+        g_aPins[i].value = atof(poValue->valuestring);
       }
-       
-       /* 
-//        g_aPins[i].is_analog = poLabel->valuebool;
-      // g_aPins[i].label[PIN_LABEL_SIZE] = 
 
-      aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
-      if (poPinVals)
-        g_aPins[i].is_analog = poIsAnalog->valuebool;
-*/
+      /* 
+       //        g_aPins[i].is_analog = poLabel->valuebool;
+       // g_aPins[i].label[PIN_LABEL_SIZE] = 
+       
+       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
+       if (poPinVals)
+       g_aPins[i].is_analog = poIsAnalog->valuebool;
+       */
 
       // g_aPins[i].is_input = 
 
@@ -1088,11 +1105,11 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       // g_aPins[i].value = 
 
       // Print pin value after assigment
-//      char sPinState[128];
-//      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
-//      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, poIsAnalog->valuebool, g_aPins[i].is_input, g_aPins[i].value);
- //     Serial.println("Pin Data: ");
-  //    Serial.println(sPinState);
+      //      char sPinState[128];
+      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
+      //snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, poIsAnalog->valuebool, g_aPins[i].is_input, g_aPins[i].value);
+      //Serial.println("Pin Data: ");
+      Serial.println(sPinState);
 
 
     }    
@@ -1201,6 +1218,9 @@ void getSerialCommand()
     }
   }
 }
+
+
+
 
 
 
