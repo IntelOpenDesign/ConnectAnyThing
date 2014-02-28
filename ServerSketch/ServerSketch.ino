@@ -72,7 +72,7 @@ int g_iNewCode = 0;
 static struct option options[] = {
 
   { 
-    NULL, 0, 0, 0                               }
+    NULL, 0, 0, 0                                     }
 };
 
 /*
@@ -96,39 +96,39 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                               }
+    "/favicon.ico", "image/x-icon"                                     }
   ,
   { 
-    "/static/css/app.css", "text/css"                               }
+    "/static/css/app.css", "text/css"                                     }
   ,
   { 
-    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                               }
+    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                     }
   ,
   { 
-    "/static/js/app.js", "application/javascript"                               }
+    "/static/js/app.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                               }
+    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                               }
+    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/angular.min.js", "application/javascript"                               }
+    "/static/js/angular.min.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/jquery.min.js", "application/javascript"                               }
+    "/static/js/jquery.min.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/jquery-ui.min.js", "application/javascript"                               }
+    "/static/js/jquery-ui.min.js", "application/javascript"                                     }
   ,
   { 
-    "/static/js/underscore-min.js", "application/javascript"                               }
+    "/static/js/underscore-min.js", "application/javascript"                                     }
   ,
 
   /* last one is the default served if no match */
   { 
-    "/index.html", "text/html"                               }
+    "/index.html", "text/html"                                     }
   ,
 };
 
@@ -185,6 +185,9 @@ void *in, size_t len)
   return 0;
 }
 
+// Testing
+char pcTestBuffer[512] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"},\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
+
 /* lyt_protocol*/
 static int
 callback_cat_protocol(struct libwebsocket_context *context,
@@ -238,7 +241,7 @@ void *in, size_t len)
     // Process Data Receieved from the Website
     // Update Galileo's HW    
     // **********************************    
-    procWebMsg((char*) in, len); 		
+    procWebMsg((char*) in, len);
 
     break;
 
@@ -247,6 +250,63 @@ void *in, size_t len)
   }
 
   return 0;
+}
+
+//-----------------------------------------------------------
+// Process recieved message from the webpage here.... 
+//------------------------------------------------------------
+void procClientMsg(char* _in, size_t _len) {
+
+  /*
+{	"status":<OK,ERROR>,
+   	"pins":{	"<0,1,…,13,A0,…,A5>":
+   				{	"label":"<label text>",
+   					"is_analog":"<true,false>",
+   					"is_input":"<true,false>",
+   					"value":"<0.0,1.0>",
+   				},
+   				...,
+   			},
+   	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
+   						...,
+   					]	
+   }
+   */
+
+  Serial.println("procClientMsg()");
+  Serial.println(String(_in));
+
+  // Create JSON message
+  aJsonObject *pJsonMsg = aJson.parse(_in);
+  if( pJsonMsg == NULL )
+  {
+    Serial.println("ERROR: No JSON message to process");
+    return;
+  }
+
+
+  Serial.print("pJsonMsg is of type: ");
+  Serial.print(pJsonMsg->type);
+  aJsonObject *pJsonStatus = aJson.getObjectItem(pJsonMsg, "status");
+  Serial.println("HERE");
+  aJsonObject *pJsonPins = aJson.getObjectItem(pJsonMsg, "pins");
+  Serial.println("HERE");
+  aJsonObject *pJsonConnections = aJson.getObjectItem(pJsonMsg, "connections");
+  Serial.println("HERE");  
+
+  if( pJsonPins )  // Check if there is pin info
+  {
+    procPinsMsg( pJsonPins );
+  }
+  else if( pJsonConnections )  // Check if there is connection info
+  {
+    procConnMsg( pJsonConnections );  
+  }
+  else
+  {
+    Serial.println("No JSON message to process");
+  }
+
 }
 
 //-----------------------------------------------------------
@@ -326,10 +386,10 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   // {
 
   // OLD CODE
-  Serial.println("OLD CODE");
+  //  Serial.println("OLD CODE");
 
   // Send HW status to website
-//  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+  //  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
   n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",
   g_abD[0],
   g_abD[1],
@@ -358,7 +418,7 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   //  {
   // NEW CODE
 
-  ////// NEW JSON CODE /////
+    ////// NEW JSON CODE /////
   /*
     updateBoardState();
    aJsonObject *msg = getJsonBoardState();
@@ -506,7 +566,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0                               } /* terminator */
+    NULL, NULL, 0, 0                                     } /* terminator */
 };
 
 void sighandler(int sig)
@@ -831,7 +891,6 @@ aJsonObject* getJsonBoardState()
  					"is_analog":"<true,false>",
  					"is_input":"<true,false>",
  					"value":"<0.0,1.0>",
- 					"connections":[<array of pins>],
  				},
  				...,
  			},
@@ -904,6 +963,11 @@ if(msg != NULL)
  }
  */
 
+//char g_acMessage[] = "{\"status\":\"OK\"}";
+//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"}}}"; //,\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
+//char g_acMessage[] = "{\"status\":OK,\"pins\":\"HELLO\"}";//[\"14\":[\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"]]}"; //,\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
+char g_acMessage[] = "{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"}, \"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"} }}";//, \"pins\": { \"8\": 0, \"9\": 128 } ";
+
 void processMessage(char *_acMsg)
 {
 
@@ -914,18 +978,34 @@ void processMessage(char *_acMsg)
 
   if(poMsg != NULL)
   {
-    aJsonObject *oStatus = aJson.getObjectItem(poMsg, "status");
-    if (!oStatus) {
+    aJsonObject *poStatus = aJson.getObjectItem(poMsg, "status");
+    if (!poStatus) {
       Serial.println("ERROR: No Status data.");
       return;
     }
-    else if ( strncmp(oStatus->valuestring,"OK",2) == 0 )
+    else if ( strncmp(poStatus->valuestring,"OK",2) == 0 )
     {
       // Process if status is OK
       Serial.println("STATUS: OK");
 
+      ///////
+      aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
+      if( pJsonPins )  // Check if there is pin info
+        procPinsMsg( pJsonPins );
+
+      //    Serial.println("HERE");
+      //    aJsonObject *pJsonConnections = aJson.getObjectItem(pJsonMsg, "connections");
+      //    Serial.println("HERE");  
+
+
+
+      //      else if( pJsonConnections )  // Check if there is connection info
+      //     {
+      //      procConnMsg( pJsonConnections );  
+      //   } 
+      ///////
     }
-    else if ( strncmp(oStatus->valuestring,"ERROR",5) == 0 )
+    else if ( strncmp(poStatus->valuestring,"ERROR",5) == 0 )
     {
       // Process if status is ERROR
       Serial.println("STATUS: ERROR");
@@ -943,16 +1023,104 @@ void processMessage(char *_acMsg)
   aJson.deleteItem(poMsg);
 }
 
-//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
-//char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
+void procPinsMsg( aJsonObject *_pJsonPins )
+{
+  Serial.println("Processing Pins");
 
-//char *g_acMessage = NULL;
-//char g_acMessage[] = "{ \"pwm\": { \"8\": 0, \"9\": 128 } }";
-//char g_acMessage[] = "{\"status\": { \"8\": 0, \"9\": 128 } }";
-//char g_acMessage[] = "{\"status\":\"OK\"}";
-//char g_acMessage[] = "{\"status\":\"ERROR\"}";
-char g_acMessage[] = "{\"status\":\"OTHER ERROR\"}";
-//,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
+  // Iterate all pins and check if we have data available
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    char pinstr[3];
+    snprintf(pinstr, sizeof(pinstr), "%d", i);    
+    aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
+    if (poPinVals)
+    {
+      /*
+      Serial.print("Pin ");
+      Serial.print(pinstr);
+      Serial.println(" found");
+*/
+
+      char sPinState[128];
+      Serial.println("Pin Data: ");
+      //       aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
+
+      aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
+      if (poLabel)
+      {
+        snprintf(sPinState, sizeof(sPinState), "%s", poLabel->valuestring);
+        Serial.println(sPinState);
+      }
+
+      aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
+      if (poIsAnalog)
+      {
+        snprintf(sPinState, sizeof(sPinState), "%i", poIsAnalog->valuebool);
+        Serial.println(sPinState);
+      }       
+   
+      aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
+      if (poIsInput)
+      {
+        snprintf(sPinState, sizeof(sPinState), "%i", poIsInput->valuebool);
+        Serial.println(sPinState);
+      }
+      
+      aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
+      if (poValue)
+      {
+        snprintf(sPinState, sizeof(sPinState), "%f", poValue->valuefloat);
+        Serial.println(sPinState);
+      }
+       
+       /* 
+//        g_aPins[i].is_analog = poLabel->valuebool;
+      // g_aPins[i].label[PIN_LABEL_SIZE] = 
+
+      aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
+      if (poPinVals)
+        g_aPins[i].is_analog = poIsAnalog->valuebool;
+*/
+
+      // g_aPins[i].is_input = 
+
+
+      // g_aPins[i].value = 
+
+      // Print pin value after assigment
+//      char sPinState[128];
+//      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
+//      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, poIsAnalog->valuebool, g_aPins[i].is_input, g_aPins[i].value);
+ //     Serial.println("Pin Data: ");
+  //    Serial.println(sPinState);
+
+
+    }    
+
+
+
+
+  }
+}
+
+void procConnMsg( aJsonObject *_pJsonConnections )
+{
+  Serial.println("Processing Connections");
+}
+
+/*
+typedef struct Pin {
+ char label[PIN_LABEL_SIZE];
+ boolean is_analog;
+ boolean is_input;
+ float value;
+ boolean connections[TOTAL_NUM_OF_PINS];
+ } 
+ Pin;
+ 
+ Pin g_aPins[TOTAL_NUM_OF_PINS];
+ */
+
 
 void loop()
 {
@@ -962,9 +1130,12 @@ void loop()
     //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
     //    aJsonObject *msg = aJson.parse(g_acMessage);
 
+    // Testing processing pins and connections   
+    //procClientMsg(g_acMessage,512);
+
     ///////////////////////////////////////
     // Test receiving message
-    //processMessage(g_acMessage);
+    processMessage(g_acMessage);
     //    updateBoardState();
     ///////////////////////////////////////
 
@@ -1030,6 +1201,9 @@ void getSerialCommand()
     }
   }
 }
+
+
+
 
 
 
