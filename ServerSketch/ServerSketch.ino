@@ -992,17 +992,15 @@ void processMessage(char *_acMsg)
       // Process if status is OK
       Serial.println("STATUS: OK");
 
-      ///////
+      // Check if the message has pin data
       aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
       if( pJsonPins )  // Check if there is pin info
         procPinsMsg( pJsonPins );
 
-      //    Serial.println("HERE");
-      //    aJsonObject *pJsonConnections = aJson.getObjectItem(pJsonMsg, "connections");
-      //    Serial.println("HERE");  
-
-
-
+      aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
+      if( pJsonConnections )  // Check if there is pin info
+        procConnMsg( pJsonConnections );
+        
       //      else if( pJsonConnections )  // Check if there is connection info
       //     {
       //      procConnMsg( pJsonConnections );  
@@ -1099,18 +1097,26 @@ void procPinsMsg( aJsonObject *_pJsonPins )
   //    snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
   //    Serial.println(sPinState);
 
-
     }    
-
-
-
-
   }
 }
 
+// {"status":<OK,ERROR>,  "connections":[ {"source":"14","target":"3”} ]  }
 void procConnMsg( aJsonObject *_pJsonConnections )
 {
   Serial.println("Processing Connections");
+
+/*  
+  // Iterate all pins and check if we have data available
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    char pinstr[3];
+    snprintf(pinstr, sizeof(pinstr), "%d", i);    
+    aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
+    
+  }
+  */
+  
 }
 
 /*
@@ -1131,6 +1137,8 @@ char g_acMessage[1000];
 int g_ToggleFlag = 0;
 char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
 char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}   }}";
+//char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\”}]}";
+char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}";
 
 void loop()
 {
@@ -1145,12 +1153,17 @@ void loop()
 
     ///////////////////////////////////////
     // Test receiving message
+    /*
     if(g_ToggleFlag)
       snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_On);  
     else
       snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_Off);
-     
+    
     g_ToggleFlag = ~g_ToggleFlag;
+      */
+
+    // Connect/Disconnect
+    snprintf(g_acMessage,sizeof(g_acMessage),g_acConnA0_TO_3);  
     
     processMessage(g_acMessage);
     updateBoardState();
