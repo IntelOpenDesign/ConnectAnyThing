@@ -1104,8 +1104,65 @@ void procPinsMsg( aJsonObject *_pJsonPins )
 // {"status":<OK,ERROR>,  "connections":[ {"source":"14","target":"3”} ]  }
 void procConnMsg( aJsonObject *_pJsonConnections )
 {
-  Serial.println("Processing Connections");
+  int uiSourcePin = -1;
+  int uiTargetPin = -1;
+  unsigned char ucNumOfConns = aJson.getArraySize(_pJsonConnections);
+  
+  Serial.print("Processing ");
+  Serial.print(String(ucNumOfConns));
+  Serial.println(" Connections");
 
+  for(int i=0; i<ucNumOfConns; i++)
+  {
+   
+    // Get item
+    aJsonObject* poItem = aJson.getArrayItem(_pJsonConnections, i);
+    if (!poItem)
+      continue;
+    
+    // Get source
+    aJsonObject* poSource = aJson.getObjectItem(poItem, "source");
+    if (poSource)
+    {
+      uiSourcePin = atoi(poSource->valuestring);
+      if( poSource->valueint < 0 || poSource->valueint <= TOTAL_NUM_OF_PINS)
+      {
+        Serial.println("Source pin out of bounds");
+        continue;
+      }
+    }
+    else
+    {
+      Serial.println("No source in connections");
+      continue;
+    }
+    
+    // Get target
+    aJsonObject* poTarget = aJson.getObjectItem(poItem, "target");
+    if (poTarget)
+    {
+        uiTargetPin = atoi(poTarget->valuestring);
+       if( poTarget->valueint < 0 || poTarget->valueint <= TOTAL_NUM_OF_PINS)
+      {
+        Serial.println("Target pin out of bounds");
+        continue;
+      }
+    }
+    else
+    {
+      Serial.println("No target in connections");
+      continue;
+    }
+    
+    Serial.print("Source: ");        
+    Serial.println(String(uiSourcePin));        
+    Serial.print("Target: "); 
+    Serial.println(String(uiTargetPin));        
+    
+    // Toggle pin connection
+    g_aPins[uiTargetPin].connections[uiSourcePin] = ~g_aPins[uiTargetPin].connections[uiSourcePin];
+  
+  }
 /*  
   // Iterate all pins and check if we have data available
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
@@ -1137,8 +1194,7 @@ char g_acMessage[1000];
 int g_ToggleFlag = 0;
 char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
 char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}   }}";
-//char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\”}]}";
-char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}";
+char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"5\"}]}";
 
 void loop()
 {
