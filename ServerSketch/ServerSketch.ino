@@ -500,13 +500,15 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
+//    Serial.println("HERE0");
     //p = (char *)(aJson.print(msg));
     char * pTempPointer = aJson.print(msg);
+ //   Serial.println("HERE1");
     p = (unsigned char *)pTempPointer;
     //    Serial.println("");
-
+ //   Serial.println("HERE2");
     aJson.print(msg, &serial_stream);
-    Serial.println("");
+ //   Serial.println("HERE3");
     aJson.deleteItem(msg);
 
     /*
@@ -534,8 +536,8 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
     //Serial.println(n);
 
     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-
-    aJson.deleteItem(msg);
+//    Serial.println("HERE4");
+ //   aJson.deleteItem(msg);
   }
 
   g_luiCounter++;
@@ -823,28 +825,30 @@ aJsonObject* getJsonBoardState()
     // Populate the pin's type    
     if( g_aPins[i].is_analog )
     {
-      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createTrue() );
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createItem("true") );
     }
     else
     {
-      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createItem("false") );
     }
 
     // Populate the pin's direction
     if( g_aPins[i].is_input )
     {
-      aJson.addItemToObject(apoPin[i],"is_input", aJson.createTrue() );
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createItem("true") );
     }
     else
     {
-      aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createItem("false") );
     }
 
     // Populate pin's value
-    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
+    char buff[20];
+    snprintf(buff, sizeof(buff),"%f", g_aPins[i].value);
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( buff ) );
 
     // TO DO - Add pin connections array
-    aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
+   // aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
     /*
      int analogValues[6];
      for (int i = 0; i < 6; i++) {
@@ -971,8 +975,8 @@ if(msg != NULL)
 void processMessage(char *_acMsg)
 {
 
-  Serial.print("Incoming message: ");
-  Serial.println(_acMsg);  
+//  Serial.print("Incoming message: "); // debug
+//  Serial.println(_acMsg);  
 
   aJsonObject *poMsg = aJson.parse(_acMsg);
 
@@ -1042,7 +1046,6 @@ void procPinsMsg( aJsonObject *_pJsonPins )
        */
 
       char sPinState[128];
-      Serial.println("Pin Data: ");
       //       aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
 
       aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
@@ -1090,26 +1093,11 @@ void procPinsMsg( aJsonObject *_pJsonPins )
         g_aPins[i].value = atof(poValue->valuestring);
       }
 
-      /* 
-       //        g_aPins[i].is_analog = poLabel->valuebool;
-       // g_aPins[i].label[PIN_LABEL_SIZE] = 
-       
-       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
-       if (poPinVals)
-       g_aPins[i].is_analog = poIsAnalog->valuebool;
-       */
-
-      // g_aPins[i].is_input = 
-
-
-      // g_aPins[i].value = 
-
       // Print pin value after assigment
+//            Serial.println("Pin Data: ");
       //      char sPinState[128];
-      snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
-      //snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, poIsAnalog->valuebool, g_aPins[i].is_input, g_aPins[i].value);
-      //Serial.println("Pin Data: ");
-      Serial.println(sPinState);
+  //    snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
+  //    Serial.println(sPinState);
 
 
     }    
