@@ -1264,7 +1264,7 @@ void loop()
 
     ///////////////////////////////////////
     // Test receiving message
-    
+    /*
     if(g_ToggleFlag)
       snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_On);  
     else
@@ -1274,10 +1274,10 @@ void loop()
     
     processMessage(g_acMessage);   
     updateBoardState();
-    
+    */
 
     ///////////////////////////////////////
-    /*
+    
     // Connect/Disconnect
     switch(g_iDebugState)
     {
@@ -1301,7 +1301,7 @@ void loop()
     }
    
     updateBoardState();
-    */
+    
     ///////////////////////////////////////
 
     //////////////////////////////////////////
