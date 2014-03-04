@@ -808,37 +808,57 @@ void updateBoardState()
 float getTotalPinAnalogValue(int _iPinNum)
 {
   float fPinValSum = 0;
+  int iConnCount = 1; // Pins are always connected to themselves
   
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     // Checking what pins are connected to iPinNum
-    if(g_aPins[_iPinNum].connections[i])
+    if( _iPinNum != i) // Ignore the value set to the pin and only use connected pin values
     {
-      fPinValSum += g_aPins[i].value;  
-      Serial.print(i); Serial.print(" --> "); Serial.println(_iPinNum);
-      Serial.print("Value: "); Serial.println(fPinValSum);
-    }    
+      if(g_aPins[_iPinNum].connections[i])
+      {
+        iConnCount++;
+        fPinValSum += g_aPins[i].value;  
+        Serial.print(i); Serial.print(" --> "); Serial.print(_iPinNum);
+        Serial.print(" value: "); Serial.println(g_aPins[i].value);
+      }    
+    } 
   }
+  
+  if( 1 == iConnCount ) // No other connections found besides itself
+    fPinValSum = g_aPins[_iPinNum].value;    
   
   if(fPinValSum > 1.0)
     fPinValSum = 1.0;
+  
+  Serial.print("Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
 }
 
 int getTotalPinDigitalValue(int _iPinNum)
 { 
+  int iRetValue = 0;
+  int iConnCount = 1; // Pins are always connected to themselves
+    
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     // Checking what pins are connected to iPinNum
-    if(g_aPins[_iPinNum].connections[i])
+    if( _iPinNum != i) // Ignore the value set to the pin and only use connected pin values
     {
-      if(g_aPins[i].value == 1.0)
-        return 1.0;
-    }    
+      if(g_aPins[_iPinNum].connections[i])
+      {
+        iConnCount++;
+        if(g_aPins[i].value == 1.0)
+          iRetValue = 1;
+      }    
+    }
   }
   
-  return 0.0;
+  if( 1 == iConnCount ) // No other connections found besides itself
+    iRetValue = g_aPins[_iPinNum].value;    
+  
+  return iRetValue;
 }
 
 // Get the board state and return a JSON object
@@ -1247,7 +1267,7 @@ char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\
 //char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"5\"}]}";
 
 char g_acPin13_On_3_Analog[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}  }}";
-char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}";
+char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"3\"}]}";
 int g_iDebugState = 0;
 
 
@@ -1285,14 +1305,12 @@ void loop()
         snprintf(g_acMessage,sizeof(g_acMessage),g_acPin13_On_3_Analog);  
         processMessage(g_acMessage);
         g_iDebugState = 1;
-        Serial.println("HERE 0");
       break;
       
       case 1:
         snprintf(g_acMessage,sizeof(g_acMessage),g_acConnA0_TO_3);  
         processMessage(g_acMessage);   
         g_iDebugState = 2;       
-         Serial.println("HERE 1");      
       break;
       
       default:
