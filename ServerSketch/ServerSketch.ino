@@ -702,7 +702,10 @@ void initBoardState()
     memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
     for(int j=0; j<TOTAL_NUM_OF_PINS; j++)
     {
-      g_aPins[i].connections[j] = false;
+      if( i == j ) // Pins are always connected to themselves
+        g_aPins[i].connections[j] = true;
+      else
+        g_aPins[i].connections[j] = false;
     }
   }
 
@@ -763,33 +766,80 @@ void setBoardState()
 
 void updateBoardState()
 {
+  // Update input pins first
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
-    if( g_aPins[i].is_input )
+    if( g_aPins[i].is_input ) // Process input pins
     {
-      if( g_aPins[i].is_analog )
+      if( g_aPins[i].is_analog ) // Process analog pins
       {
         g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
       }
-      else
+      else // Process digital pins
       {
         g_aPins[i].value = digitalRead(i);
       }
     }
-    else
+  }
+
+  // Update outputs pins
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog )
+       //Serial.println("HERE");
+//       Serial.print("Is Analog: ");Serial.println(g_aPins[i].is_analog);
+      if( g_aPins[i].is_analog ) // Process analog pins
       {
-        analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
+        //analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
+  //      Serial.print("Analog Pin "); Serial.print(i); Serial.print(": ");Serial.println(getTotalPinAnalogValue(i));
+        analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
       }
-      else
+      else // Process digital pins
       {
-        digitalWrite(i, int(g_aPins[i].value) );
+        //digitalWrite(i, int(g_aPins[i].value) );
+  //      Serial.print("Digital Pin "); Serial.print(i); Serial.print(": ");Serial.println(getTotalPinDigitalValue(i));        
+        digitalWrite(i, getTotalPinDigitalValue(i) );
       }
     }
   }
 }
 
+float getTotalPinAnalogValue(int _iPinNum)
+{
+  float fPinValSum = 0;
+  
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    // Checking what pins are connected to iPinNum
+    if(g_aPins[_iPinNum].connections[i])
+    {
+      fPinValSum += g_aPins[i].value;  
+      Serial.print(i); Serial.print(" --> "); Serial.println(_iPinNum);
+      Serial.print("Value: "); Serial.println(fPinValSum);
+    }    
+  }
+  
+  if(fPinValSum > 1.0)
+    fPinValSum = 1.0;
+  
+  return fPinValSum;
+}
+
+int getTotalPinDigitalValue(int _iPinNum)
+{ 
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    // Checking what pins are connected to iPinNum
+    if(g_aPins[_iPinNum].connections[i])
+    {
+      if(g_aPins[i].value == 1.0)
+        return 1.0;
+    }    
+  }
+  
+  return 0.0;
+}
 
 // Get the board state and return a JSON object
 aJsonObject* getJsonBoardState()
@@ -1094,8 +1144,8 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       // Print pin value after assigment
 //            Serial.println("Pin Data: ");
       //      char sPinState[128];
-  //    snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
-  //    Serial.println(sPinState);
+   //   snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
+    //  Serial.println(sPinState);
 
     }    
   }
@@ -1194,7 +1244,12 @@ char g_acMessage[1000];
 int g_ToggleFlag = 0;
 char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
 char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}   }}";
-char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"5\"}]}";
+//char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"5\"}]}";
+
+char g_acPin13_On_3_Analog[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}  }}";
+char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}";
+int g_iDebugState = 0;
+
 
 void loop()
 {
@@ -1209,20 +1264,44 @@ void loop()
 
     ///////////////////////////////////////
     // Test receiving message
-    /*
+    
     if(g_ToggleFlag)
       snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_On);  
     else
       snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_Off);
     
     g_ToggleFlag = ~g_ToggleFlag;
-      */
-
-    // Connect/Disconnect
-    snprintf(g_acMessage,sizeof(g_acMessage),g_acConnA0_TO_3);  
     
-    processMessage(g_acMessage);
+    processMessage(g_acMessage);   
     updateBoardState();
+    
+
+    ///////////////////////////////////////
+    /*
+    // Connect/Disconnect
+    switch(g_iDebugState)
+    {
+      case 0:
+        snprintf(g_acMessage,sizeof(g_acMessage),g_acPin13_On_3_Analog);  
+        processMessage(g_acMessage);
+        g_iDebugState = 1;
+        Serial.println("HERE 0");
+      break;
+      
+      case 1:
+        snprintf(g_acMessage,sizeof(g_acMessage),g_acConnA0_TO_3);  
+        processMessage(g_acMessage);   
+        g_iDebugState = 2;       
+         Serial.println("HERE 1");      
+      break;
+      
+      default:
+      
+      break;
+    }
+   
+    updateBoardState();
+    */
     ///////////////////////////////////////
 
     //////////////////////////////////////////
