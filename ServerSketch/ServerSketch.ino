@@ -284,15 +284,11 @@ void procClientMsg(char* _in, size_t _len) {
     return;
   }
 
-
-  Serial.print("pJsonMsg is of type: ");
-  Serial.print(pJsonMsg->type);
+//  Serial.print("pJsonMsg is of type: ");
+//  Serial.print(pJsonMsg->type);
   aJsonObject *pJsonStatus = aJson.getObjectItem(pJsonMsg, "status");
-  Serial.println("HERE");
   aJsonObject *pJsonPins = aJson.getObjectItem(pJsonMsg, "pins");
-  Serial.println("HERE");
   aJsonObject *pJsonConnections = aJson.getObjectItem(pJsonMsg, "connections");
-  Serial.println("HERE");  
 
   if( pJsonPins )  // Check if there is pin info
   {
@@ -381,15 +377,6 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
-  //  getSerialCommand(); 
-  //  if( !g_iNewCode )
-  // {
-
-  // OLD CODE
-  //  Serial.println("OLD CODE");
-
-  // Send HW status to website
-  //  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
   n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",
   g_abD[0],
   g_abD[1],
@@ -413,44 +400,6 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   analogRead(A5)/float(ANALOG_IN_MAX_VALUE)
     );
 
-  //  }
-  //  else
-  //  {
-  // NEW CODE
-
-    ////// NEW JSON CODE /////
-  /*
-    updateBoardState();
-   aJsonObject *msg = getJsonBoardState();
-   
-   aJson.print(msg, &serial_stream);
-   Serial.println("");
-   aJson.deleteItem(msg);
-   */
-  /*
-    // Creating buffer for WebSockets
-   int n;
-   // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-   // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-   
-   // Get JSON string
-   p = (unsigned char *)(aJson.print(msg));
-   
-   // Free memory
-   aJson.deleteItem(msg);
-   */
-
-
-  //   aJson.print(msg, &serial_stream);
-  //    Serial.println("");
-  //   aJson.deleteItem(msg);
-
-  // }
-
-  //Serial.print("Output Message [sendStatusToWebsite()]:");
-  //Serial.println(n);
   n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
 
   return n;
@@ -468,76 +417,15 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-    /*
-      // Send HW status to website
-     n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-     g_abD[0],
-     g_abD[1],
-     g_abD[2],
-     g_aiP[3],   // Px
-     g_abD[4],
-     g_aiP[5],   // Px
-     g_aiP[6],   // Px
-     g_abD[7],
-     g_abD[8],
-     g_aiP[9],   // Px
-     g_aiP[10],  // Px
-     g_aiP[11],  // Px
-     g_abD[12],
-     g_abD[13],
-     analogRead(A0),
-     analogRead(A1),
-     analogRead(A2),
-     analogRead(A3),
-     analogRead(A4),
-     analogRead(A5)
-     );
-     
-     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-     */
-
-    ////// NEW JSON CODE /////
 
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
-//    Serial.println("HERE0");
-    //p = (char *)(aJson.print(msg));
     char * pTempPointer = aJson.print(msg);
- //   Serial.println("HERE1");
     p = (unsigned char *)pTempPointer;
-    //    Serial.println("");
- //   Serial.println("HERE2");
     aJson.print(msg, &serial_stream);
- //   Serial.println("HERE3");
     aJson.deleteItem(msg);
 
-    /*
-      // Creating buffer for WebSockets
-     int n;
-     // unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-     // unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-     
-     // Get JSON string
-     p = (unsigned char *)(aJson.print(msg));
-     
-     // Free memory
-     aJson.deleteItem(msg);
-     */
-
-    //   aJson.print(msg, &serial_stream);
-    //    Serial.println("");
-    //   aJson.deleteItem(msg);
-
-    // }
-
-    //Serial.print("Output Message [sendStatusToWebsite()]:");
-    //Serial.println(n);
-
     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-//    Serial.println("HERE4");
- //   aJson.deleteItem(msg);
   }
 
   g_luiCounter++;
@@ -545,10 +433,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   return n;
 }
 
-
-
 /* list of supported protocols and callbacks */
-
 static struct libwebsocket_protocols protocols[] = {
   /* first protocol must always be HTTP handler, to serve webpage */
 
@@ -641,55 +526,9 @@ int initWebsocket()
   return 0;
 }
 
-void setup()
-{
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-  Serial.println("Starting WebServer");
-  system("/home/root/startAP");
-
-  // Init Galileo HW
-
-  // Enable all digital pins as outputs
-  for(int i=0; i<14; i++)
-  {
-    pinMode(i, OUTPUT);
-  }
-
-  // Init pins
-  digitalWrite(0, LOW);
-  digitalWrite(1, LOW);
-  digitalWrite(2, LOW);
-  digitalWrite(4, LOW);
-  digitalWrite(7, LOW);
-  digitalWrite(8, LOW);
-  digitalWrite(12, LOW);
-  digitalWrite(13, LOW);
-
-  analogWrite(3, 0);
-  analogWrite(5, 0);
-  analogWrite(6, 0);
-  analogWrite(9, 0);
-  analogWrite(10, 0);
-  analogWrite(11, 0);
-
-  // Init pin state variables
-  int i=0;
-  for(i=0; i<TOTAL_NUM_Dx; i++)    
-    g_abD[i] = false;
-  for(i=0; i<TOTAL_NUM_Px; i++)
-    g_aiP[i] = 0;   
-
-  // JSON protocol code
-  initBoardState();
-
-  Serial.println("Starting WebSocket");
-  initWebsocket();  
-
-}
-
-//////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////////
+// Initialize the HW state datastructure
+//////////////////////////////////////////////////////
 void initBoardState()
 {
 
@@ -724,46 +563,13 @@ void initBoardState()
   }
 
   // Set the HW state
-  setBoardState();
+  updateBoardState();
 
-
-  /*
-  char label[25];
-   boolean is_analog;
-   boolean is_input;
-   float value;
-   int connections[20];
-   } Pin;
-   
-   #define TOTAL_NUM_OF_PINS 20 
-   Pin g_aPins[TOTAL_NUM_OF_PINS];
-   */
 }
 
-void setBoardState()
-{
-  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
-  {
-    if( g_aPins[i].is_input )
-    {
-      pinMode(i, INPUT);
-    }
-    else
-    {
-      pinMode(i, OUTPUT);
-
-      if( g_aPins[i].is_analog )
-      {
-        analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
-      }
-      else
-      {
-        digitalWrite(i, int(g_aPins[i].value) );
-      }
-    }
-  }
-}
-
+//////////////////////////////////////////////////////
+// Update the HW based on the HW state data structure
+//////////////////////////////////////////////////////
 void updateBoardState()
 {
   // Update input pins first
@@ -771,6 +577,7 @@ void updateBoardState()
   {
     if( g_aPins[i].is_input ) // Process input pins
     {
+      pinMode(i, INPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
         g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
@@ -787,24 +594,22 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-       //Serial.println("HERE");
-//       Serial.print("Is Analog: ");Serial.println(g_aPins[i].is_analog);
+      pinMode(i, OUTPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
-        //analogWrite(i, int(g_aPins[i].value*ANALOG_OUT_MAX_VALUE) );
-  //      Serial.print("Analog Pin "); Serial.print(i); Serial.print(": ");Serial.println(getTotalPinAnalogValue(i));
         analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
       }
       else // Process digital pins
       {
-        //digitalWrite(i, int(g_aPins[i].value) );
-  //      Serial.print("Digital Pin "); Serial.print(i); Serial.print(": ");Serial.println(getTotalPinDigitalValue(i));        
         digitalWrite(i, getTotalPinDigitalValue(i) );
       }
     }
   }
 }
 
+////////////////////////////////////////////////////////////////////////////
+// If an output pin has connections, return the sum of all its connections
+////////////////////////////////////////////////////////////////////////////
 float getTotalPinAnalogValue(int _iPinNum)
 {
   float fPinValSum = 0;
@@ -836,6 +641,9 @@ float getTotalPinAnalogValue(int _iPinNum)
   return fPinValSum;
 }
 
+////////////////////////////////////////////////////////////////////////////
+// If an output pin has connections, return the sum of all its connections
+////////////////////////////////////////////////////////////////////////////
 int getTotalPinDigitalValue(int _iPinNum)
 { 
   int iRetValue = 0;
@@ -861,10 +669,11 @@ int getTotalPinDigitalValue(int _iPinNum)
   return iRetValue;
 }
 
+////////////////////////////////////////////////
 // Get the board state and return a JSON object
+////////////////////////////////////////////////
 aJsonObject* getJsonBoardState()
 {
-  //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
 
   aJsonObject* poJsonBoardState = aJson.createObject();
 
@@ -917,28 +726,6 @@ aJsonObject* getJsonBoardState()
     snprintf(buff, sizeof(buff),"%f", g_aPins[i].value);
     aJson.addItemToObject(apoPin[i],"value", aJson.createItem( buff ) );
 
-    // TO DO - Add pin connections array
-   // aJson.addItemToObject(apoPin[i],"connections", aJson.createIntArray(iaPinConnects,0) );
-    /*
-     int analogValues[6];
-     for (int i = 0; i < 6; i++) {
-     analogValues[i] = analogRead(i);
-     }
-     aJsonObject *analog = aJson.createIntArray(analogValues, 6);
-     aJson.addItemToObject(msg, "analog", analog);
-     */
-    /*
-    typedef struct Pin {
-     char label[PIN_LABEL_SIZE];
-     boolean is_analog;
-     boolean is_input;
-     float value;
-     boolean connections[TOTAL_NUM_OF_PINS];
-     } Pin;
-     
-     Pin g_aPins[TOTAL_NUM_OF_PINS];
-     */
-
     // Push to JSON structure
     sprintf(caPinNumBuffer,"%d",i);
     aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
@@ -958,95 +745,8 @@ aJsonObject* getJsonBoardState()
 
 }
 
-/*
-{	"status":<OK,ERROR>,
- 	"pins":{	"<0,1,…,13,A0,…,A5>":
- 				{	"label":"<label text>",
- 					"is_analog":"<true,false>",
- 					"is_input":"<true,false>",
- 					"value":"<0.0,1.0>",
- 				},
- 				...,
- 			},
- 	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
- 						...,
- 					]	
- }
- */
-
-
-//const PROGMEM TEST_STRING[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\";
-// "{"status":OK,"pins":{"13":{"label":"LED ON 13","is_analog":"false","is_input":"false","value":"0.0","connections":[]}},"connections":[]}";
-
-//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"";
-
-unsigned long last_print = 0;
-//aJsonStream serial_stream(&Serial);
-
-
-/* Generate message like: { "analog": [0, 200, 400, 600, 800, 1000] } */
-aJsonObject *createMessage()
-{
-  aJsonObject *msg = aJson.createObject();
-
-  int analogValues[6];
-  for (int i = 0; i < 6; i++) {
-    analogValues[i] = analogRead(i);
-  }
-  aJsonObject *analog = aJson.createIntArray(analogValues, 6);
-  aJson.addItemToObject(msg, "analog", analog);
-
-  return msg;
-}
-
-/*
-if(msg != NULL)
- {
- aJsonObject *pwm = aJson.getObjectItem(msg, "pwm");
- if (!pwm) {
- Serial.println("no pwm data");
- return;
- }
- 
- const static int pins[] = { 8, 9 };
- const static int pins_n = 2;
- for (int i = 0; i < pins_n; i++) {
- char pinstr[3];
- snprintf(pinstr, sizeof(pinstr), "%d", pins[i]);
- 
- aJsonObject *pwmval = aJson.getObjectItem(pwm, pinstr);
- if (!pwmval) continue; // Value not provided, ok.
- if (pwmval->type != aJson_Int) {
- Serial.print("invalid data type ");
- Serial.print(pwmval->type, DEC);
- Serial.print(" for pin ");
- Serial.println(pins[i], DEC);
- continue;
- }
- 
- Serial.print("setting pin ");
- Serial.print(pins[i], DEC);
- Serial.print(" to value ");
- Serial.println(pwmval->valueint, DEC);
- analogWrite(pins[i], pwmval->valueint);
- }
- }
- else
- {
- Serial.println("msg is NULL");      
- }
- */
-
-//char g_acMessage[] = "{\"status\":\"OK\"}";
-//char g_acMessage[] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"}}}"; //,\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
-//char g_acMessage[] = "{\"status\":OK,\"pins\":\"HELLO\"}";//[\"14\":[\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"]]}"; //,\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
-//char g_acMessage[] = "{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"}, \"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"} }}";//, \"pins\": { \"8\": 0, \"9\": 128 } ";
-
 void processMessage(char *_acMsg)
 {
-
-//  Serial.print("Incoming message: "); // debug
-//  Serial.println(_acMsg);  
 
   aJsonObject *poMsg = aJson.parse(_acMsg);
 
@@ -1069,13 +769,7 @@ void processMessage(char *_acMsg)
 
       aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
       if( pJsonConnections )  // Check if there is pin info
-        procConnMsg( pJsonConnections );
-        
-      //      else if( pJsonConnections )  // Check if there is connection info
-      //     {
-      //      procConnMsg( pJsonConnections );  
-      //   } 
-      ///////
+        procConnMsg( pJsonConnections );        
     }
     else if ( strncmp(poStatus->valuestring,"ERROR",5) == 0 )
     {
@@ -1095,6 +789,9 @@ void processMessage(char *_acMsg)
   aJson.deleteItem(poMsg);
 }
 
+///////////////////////////////
+// Process pin value messages
+///////////////////////////////
 void procPinsMsg( aJsonObject *_pJsonPins )
 {
   Serial.println("Processing Pins");
@@ -1107,30 +804,17 @@ void procPinsMsg( aJsonObject *_pJsonPins )
     aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
     if (poPinVals)
     {
-      /*
-      Serial.print("Pin ");
-       Serial.print(pinstr);
-       Serial.println(" found");
-       */
-
       char sPinState[128];
-      //       aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
 
       aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
       if (poLabel)
       {
-        //snprintf(sPinState, sizeof(sPinState), "%s", poLabel->valuestring);
-        //Serial.println(sPinState);
         snprintf(g_aPins[i].label, PIN_LABEL_SIZE, "%s", poLabel->valuestring);
-        //       Serial.println(g_aPins[i].label);
-        //        g_aPins[i].label[PIN_LABEL_SIZE]
       }
 
       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
       if (poIsAnalog)
       {
-        //        snprintf(sPinState, sizeof(sPinState), "%s", poIsAnalog->valuestring);
-        //       Serial.println(sPinState);
         if( 0 == strcmp(poIsAnalog->valuestring,"true") )
           g_aPins[i].is_analog = 1;
         else if( 0 == strcmp(poIsAnalog->valuestring,"false") )
@@ -1142,9 +826,6 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
       if (poIsInput)
       {
-        // snprintf(sPinState, sizeof(sPinState), "%s", poIsInput->valuestring);
-        // Serial.println(sPinState);
-        //  g_aPins[i].is_input = 
         if( 0 == strcmp(poIsInput->valuestring,"true") )
           g_aPins[i].is_input = 1;
         else if( 0 == strcmp(poIsInput->valuestring,"false") )
@@ -1156,22 +837,15 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
       if (poValue)
       {
-        //snprintf(sPinState, sizeof(sPinState), "%s", poValue->valuestring);
-        //Serial.println(sPinState);
         g_aPins[i].value = atof(poValue->valuestring);
       }
-
-      // Print pin value after assigment
-//            Serial.println("Pin Data: ");
-      //      char sPinState[128];
-   //   snprintf(sPinState, sizeof(sPinState), "%s,%i,%i,%f", g_aPins[i].label, g_aPins[i].is_analog, g_aPins[i].is_input, g_aPins[i].value);
-    //  Serial.println(sPinState);
-
     }    
   }
 }
 
-// {"status":<OK,ERROR>,  "connections":[ {"source":"14","target":"3”} ]  }
+///////////////////////////////
+// Process connection messages
+///////////////////////////////
 void procConnMsg( aJsonObject *_pJsonConnections )
 {
   int uiSourcePin = -1;
@@ -1232,34 +906,59 @@ void procConnMsg( aJsonObject *_pJsonConnections )
     // Toggle pin connection
     g_aPins[uiTargetPin].connections[uiSourcePin] = ~g_aPins[uiTargetPin].connections[uiSourcePin];
   
-  }
-/*  
-  // Iterate all pins and check if we have data available
-  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
-  {
-    char pinstr[3];
-    snprintf(pinstr, sizeof(pinstr), "%d", i);    
-    aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
-    
-  }
-  */
-  
+  } 
 }
 
-/*
-typedef struct Pin {
- char label[PIN_LABEL_SIZE];
- boolean is_analog;
- boolean is_input;
- float value;
- boolean connections[TOTAL_NUM_OF_PINS];
- } 
- Pin;
- 
- Pin g_aPins[TOTAL_NUM_OF_PINS];
- */
+/////////////////////////////////////////////////////////////////////////////////
+// Arduino standard funtions
+/////////////////////////////////////////////////////////////////////////////////
+void setup()
+{
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  Serial.println("Starting WebServer");
+  system("/home/root/startAP");
 
-//char g_acMessage[] = "{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"}, \"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"} }}";//, \"pins\": { \"8\": 0, \"9\": 128 } ";
+  // Init Galileo HW
+
+  // Enable all digital pins as outputs
+  for(int i=0; i<14; i++)
+  {
+    pinMode(i, OUTPUT);
+  }
+
+  // Init pins
+  digitalWrite(0, LOW);
+  digitalWrite(1, LOW);
+  digitalWrite(2, LOW);
+  digitalWrite(4, LOW);
+  digitalWrite(7, LOW);
+  digitalWrite(8, LOW);
+  digitalWrite(12, LOW);
+  digitalWrite(13, LOW);
+
+  analogWrite(3, 0);
+  analogWrite(5, 0);
+  analogWrite(6, 0);
+  analogWrite(9, 0);
+  analogWrite(10, 0);
+  analogWrite(11, 0);
+
+  // Init pin state variables
+  int i=0;
+  for(i=0; i<TOTAL_NUM_Dx; i++)    
+    g_abD[i] = false;
+  for(i=0; i<TOTAL_NUM_Px; i++)
+    g_aiP[i] = 0;   
+
+  // JSON protocol code
+  initBoardState();
+
+  Serial.println("Starting WebSocket");
+  initWebsocket();  
+
+}
+
 char g_acMessage[1000];
 int g_ToggleFlag = 0;
 char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
@@ -1270,34 +969,14 @@ char g_acPin13_On_3_Analog[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":
 char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"3\"}]}";
 int g_iDebugState = 0;
 
+unsigned long last_print = 0;
 
 void loop()
 {
 
   if (millis() - last_print > 2000) {
 
-    //aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
-    //    aJsonObject *msg = aJson.parse(g_acMessage);
-
-    // Testing processing pins and connections   
-    //procClientMsg(g_acMessage,512);
-
     ///////////////////////////////////////
-    // Test receiving message
-    /*
-    if(g_ToggleFlag)
-      snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_On);  
-    else
-      snprintf(g_acMessage,sizeof(g_acMessage),g_acPin3_Off);
-    
-    g_ToggleFlag = ~g_ToggleFlag;
-    
-    processMessage(g_acMessage);   
-    updateBoardState();
-    */
-
-    ///////////////////////////////////////
-    
     // Connect/Disconnect
     switch(g_iDebugState)
     {
@@ -1319,7 +998,6 @@ void loop()
     }
    
     updateBoardState();
-    
     ///////////////////////////////////////
 
     //////////////////////////////////////////
@@ -1334,35 +1012,9 @@ void loop()
   }
 }
 
-
-/*
-  if (millis() - last_print > 1000) {
- // One second elapsed, send message.
- aJsonObject *msg = createMessage();
- aJson.print(msg, &serial_stream);
- Serial.println(); // Add newline. 
- aJson.deleteItem(msg);
- last_print = millis();
- }
- 
- if (serial_stream.available()) {
- // First, skip any accidental whitespace like newlines.
- serial_stream.skip();
- }
- */
-
-//if (serial_stream.available()) {
-// Something real on input, let's take a look.
-//aJsonObject *msg = aJson.parse(&serial_stream);
-//aJsonObject *msg = aJson.parse("{\"status\":OK,\"pins\":{\"13\":{\"label\":\"LED ON 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0.0\",\"connections\":[]}},\"connections\":[]}\"");
-// aJsonObject *msg = aJson.parse(g_acMessage);
-// processMessage(msg);
-// aJson.deleteItem(msg);
-// }
-
-
 /////////////////////////////////////////////////////////////////////////////////
 // Parce Serial Commands
+/////////////////////////////////////////////////////////////////////////////////
 void getSerialCommand() 
 {
   if (Serial.available() > 0) {
