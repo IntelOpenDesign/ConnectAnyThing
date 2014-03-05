@@ -102,7 +102,13 @@ static const struct serveable whitelist[] = {
     "/static/css/app.css", "text/css"                                           }
   ,
   { 
+    "/static/css/jquery.mobile-1.4.1.css", "text/css"                                           }
+  ,
+  { 
     "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
+  ,
+  { 
+    "/static/img/loading.gif", "image/gif"                                           }
   ,
   { 
     "/static/js/app.js", "application/javascript"                                           }
@@ -211,6 +217,13 @@ void *in, size_t len)
     // Send Galileo's HW state to ALL clients
     // This function is continuesly called 
     // **********************************
+    iNumBytes = sendStatusToWebsiteNew(wsi);
+    if (iNumBytes < 0) 
+    {
+      lwsl_err("ERROR %d writing to socket\n", iNumBytes);
+      return 1;
+    }
+    /*
     getSerialCommand(); 
     if( !g_iNewCode )
     {    
@@ -230,7 +243,7 @@ void *in, size_t len)
         return 1;
       }
     }
-
+*/
     break;
 
   case LWS_CALLBACK_RECEIVE:
@@ -413,19 +426,72 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
   if( g_luiCounter%100 == 0)
   {
-    Serial.println("NEW CODE");
-
+    Serial.println("NEW CODE - WTF");
+/*
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 
     updateBoardState();
     aJsonObject *msg = getJsonBoardState();
     char * pTempPointer = aJson.print(msg);
+//    String sTempString = aJson.print(msg);
+   // snprintf(buf,sizeof(buf),"%s",aJson.print(msg));
+    
     p = (unsigned char *)pTempPointer;
     aJson.print(msg, &serial_stream);
-    aJson.deleteItem(msg);
+//    aJson.deleteItem(msg);
 
+    //n = sizeof(pTempPointer);
+//    n = sprintf(bufTwo,"%s",pTempPointer);
+    Serial.println("");
+    Serial.print("n: ");
+    Serial.println(n);
+ //   Serial.print("len: ");
+  //  Serial.println(    sTempString.length() );
+//    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+    n = libwebsocket_write(wsi, p, 2000, LWS_WRITE_TEXT); 
+    */
+    
+    /*
+    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 2000 + LWS_SEND_BUFFER_POST_PADDING];
+    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+
+    updateBoardState();
+    aJsonObject *msg = getJsonBoardState();
+    char * pTempPointer = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}  }}"; //aJson.print(msg);
+//    String sTempString = aJson.print(msg);
+   // snprintf(buf,sizeof(buf),"%s",aJson.print(msg));
+    
+    p = (unsigned char *)pTempPointer;
+    aJson.print(msg, &serial_stream);
+//    aJson.deleteItem(msg);
+
+    //n = sizeof(pTempPointer);
+//    n = sprintf(bufTwo,"%s",pTempPointer);
+    Serial.println("");
+    Serial.print("n: ");
+    Serial.println(n);
+ //   Serial.print("len: ");
+  //  Serial.println(    sTempString.length() );
+//    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+    n = libwebsocket_write(wsi, p, 2000, LWS_WRITE_TEXT); 
+    
+    
+    aJson.deleteItem(msg);
+    */
+    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+  
+    //n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"sensitivity\":\"0.5\",\"is_inverted\":\"false\",\"is_visible\":\"true\",\"value\":\"1\"}  }}");
+//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":false,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":1}  }}");
+//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  }}");
+      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  },\"connections\":[{\"source\":\"14\",\"target\":\"3\"}] }");
+  
+  
     n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+
+   
+    
   }
 
   g_luiCounter++;
