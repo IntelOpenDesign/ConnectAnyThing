@@ -50,7 +50,9 @@ int g_aiP[TOTAL_NUM_Px];
 #define ANALOG_OUT_MAX_VALUE 255
 #define ANALOG_IN_MAX_VALUE 1024 //4096
 
-char** g_caaPinNames[20][PIN_LABEL_SIZE];
+#define DIGITAL_VOLTAGE_THRESHOLD  0.5
+
+//char** g_caaPinNames[20][PIN_LABEL_SIZE];
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
@@ -695,7 +697,6 @@ float getTotalPinAnalogValue(int _iPinNum)
 ////////////////////////////////////////////////////////////////////////////
 // If an output pin has connections, return the sum of all its connections
 ////////////////////////////////////////////////////////////////////////////
-float g_fDigitalThreshold = 0.6;
 int getTotalPinDigitalValue(int _iPinNum)
 { 
   int iRetValue = 0;
@@ -709,7 +710,7 @@ int getTotalPinDigitalValue(int _iPinNum)
       if(g_aPins[_iPinNum].connections[i])
       {
         iConnCount++;
-        if(g_aPins[i].value >= g_fDigitalThreshold) // Digital threshold
+        if(g_aPins[i].value >= DIGITAL_VOLTAGE_THRESHOLD) // Digital threshold
         {
           iRetValue = 1;
           break;      

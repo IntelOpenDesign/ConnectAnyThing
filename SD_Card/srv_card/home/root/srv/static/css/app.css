@@ -1,8 +1,8 @@
-/* TODO remove when done debugging*/
 body {
     font-size: 24px;
 }
 
+/* TODO remove when done debugging*/
 #debug-log {
     position: absolute;
     top: 0;
@@ -13,9 +13,6 @@ body {
     word-break: break-all;
 }
 
-.hide {
-    display: none;
-}
 #toggle-debug-log {
     position: absolute;
     top: 0;
@@ -26,6 +23,17 @@ body {
     width: inherit;
     z-index: 10;
     height: 60px;
+}
+
+.hide {
+    display: none;
+}
+
+
+@-webkit-keyframes pulseGlow {
+    from { background-color: rgb(250, 250, 100); -webkit-box-shadow: 0 0 20px rgb(250, 250, 60); }
+    50%  { background-color: rgb(255, 255, 0); -webkit-box-shadow: 0 0 100px rgb(255, 255, 0); }
+    to   { background-color: rgb(250, 250, 100); -webkit-box-shadow: 0 0 20px rgb(250, 250, 60); }
 }
 
 #field {
@@ -123,6 +131,7 @@ body {
     border-width: 20px;
     border-style: solid;
     border-radius: 70px;
+    position: relative;
 }
 .sensor .endpoint {
     border-color: rgb(0, 102, 24);
@@ -138,9 +147,36 @@ body {
 .actuator.activated .endpoint,
 .actuator.activated.connected .endpoint {
     background: rgb(250, 250, 60);
+    -webkit-animation-name: pulseGlow;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-iteration-count: infinite;
 }
 .actuator.connected .endpoint {
     background: rgb(232, 189, 0);
+}
+
+.x-1, .x-2 {
+    position: absolute;
+    top: 40px;
+    left: 10px;
+    width: 80px;
+    height: 20px;
+    background: rgb(50, 50, 50);
+    display: none;
+}
+.x-1 {
+    -webkit-transform: rotate(45deg);
+}
+.x-2 {
+    -webkit-transform: rotate(-45deg);
+}
+.pin.actuator.activated.already-connected-to-activated-sensor .endpoint {
+    -webkit-animation: none;
+    background: rgb(212, 203, 89);
+}
+.pin.actuator.activated.already-connected-to-activated-sensor .x-1,
+.pin.actuator.activated.already-connected-to-activated-sensor .x-2 {
+    display: block;
 }
 
 
@@ -173,13 +209,10 @@ body {
 .settings-inner .pin-name {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 10%;
+    left: 2%;
     height: 30px;
     padding-top: 15px;
-    padding-bottom: 15px
-    line-height: 1em;
-    text-align: center;
+    padding-bottom: 15px;
     line-height: 1em;
     color: rgb(240, 218, 191);
 }
