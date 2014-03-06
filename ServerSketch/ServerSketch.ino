@@ -33,6 +33,9 @@ int sensor1Pin = A0;    // select the input pin for the potentiometer
 // JSON specifics
 aJsonStream serial_stream(&Serial);
 
+// Web sockets
+#define WEB_SOCKET_BUFFER_SIZE 10000
+
 // HW declaration
 #define TOTAL_NUM_Dx 14 
 #define TOTAL_NUM_Px 12
@@ -46,6 +49,8 @@ int g_aiP[TOTAL_NUM_Px];
 
 #define ANALOG_OUT_MAX_VALUE 255
 #define ANALOG_IN_MAX_VALUE 1024 //4096
+
+char** g_caaPinNames[20][PIN_LABEL_SIZE];
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
@@ -423,105 +428,22 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
   if( g_luiCounter%100 == 0)
   {
-    Serial.println("NEW CODE");
-/*
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+
+    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-
+    
     updateBoardState();
-    aJsonObject *msg = getJsonBoardState();
-    char * pTempPointer = aJson.print(msg);
-//    String sTempString = aJson.print(msg);
-   // snprintf(buf,sizeof(buf),"%s",aJson.print(msg));
     
-    p = (unsigned char *)pTempPointer;
-    aJson.print(msg, &serial_stream);
-//    aJson.deleteItem(msg);
-
-    //n = sizeof(pTempPointer);
-//    n = sprintf(bufTwo,"%s",pTempPointer);
-    Serial.println("");
-    Serial.print("n: ");
-    Serial.println(n);
- //   Serial.print("len: ");
-  //  Serial.println(    sTempString.length() );
-//    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-    n = libwebsocket_write(wsi, p, 2000, LWS_WRITE_TEXT); 
-    */
+    aJsonObject *msg = getJsonBoardState();  
     
-    /*
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 2000 + LWS_SEND_BUFFER_POST_PADDING];
-    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-
-    updateBoardState();
-    aJsonObject *msg = getJsonBoardState();
-    char * pTempPointer = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}  }}"; //aJson.print(msg);
-//    String sTempString = aJson.print(msg);
-   // snprintf(buf,sizeof(buf),"%s",aJson.print(msg));
-    
-    p = (unsigned char *)pTempPointer;
-    aJson.print(msg, &serial_stream);
-//    aJson.deleteItem(msg);
-
-    //n = sizeof(pTempPointer);
-//    n = sprintf(bufTwo,"%s",pTempPointer);
-    Serial.println("");
-    Serial.print("n: ");
-    Serial.println(n);
- //   Serial.print("len: ");
-  //  Serial.println(    sTempString.length() );
-//    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-    n = libwebsocket_write(wsi, p, 2000, LWS_WRITE_TEXT); 
-    
+    aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
+    aJson.print(msg, &stringStream);
+    String sTempString((char *)p);
+      
+    n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
     
     aJson.deleteItem(msg);
-    */
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 10000 + LWS_SEND_BUFFER_POST_PADDING];
-    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-  
-    //n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"sensitivity\":\"0.5\",\"is_inverted\":\"false\",\"is_visible\":\"true\",\"value\":\"1\"}  }}");
-//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":false,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":1}  }}");
-//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  }}");
-//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  },\"connections\":[{\"source\":\"14\",\"target\":\"3\"}] }");
 
-      updateBoardState();
-      aJsonObject *msg = getJsonBoardState();  
-//      String sTempString = aJson.print(msg);
-//      Serial.println("");
- //     Serial.print("sTempString :");
- //     Serial.println(sTempString);
-          
-//      String sTempString = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
-//      n = sprintf((char *)p, "%s",aJson.print(msg)); // This funtion can only print 256 characters
-      
-   //   char* outBuf = (char*) malloc(2000); /* XXX: Dynamic size. */
-//      n = sizeof(buf) - LWS_SEND_BUFFER_PRE_PADDING - LWS_SEND_BUFFER_POST_PADDING;
-
-    //  n = sizeof((char *)p);
-      /*
-      int count = 0;
-      while(*(p+n*count) != '\0' || count != 10100)
-      {
-        count++;
-      }
-      */
-
-      aJsonStringStream stringStream(NULL, (char *)p, 10000);
-      aJson.print(msg, &stringStream);
-      String sTempString((char *)p);
-    
-      Serial.println("");
-      Serial.print("sTempString.len:  ");
-      Serial.println(sTempString.length());
-
-      n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
-
-      Serial.println("");
-      Serial.print("n after: ");
-      Serial.println(n);
-
-      aJson.deleteItem(msg);
-    
   }
 
   g_luiCounter++;
@@ -627,12 +549,12 @@ int initWebsocket()
 //////////////////////////////////////////////////////
 void initBoardState()
 {
-
+   
   // Initialize all pins with no lable and 0.0 value
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     memset(g_aPins[i].label, '\0', sizeof(g_aPins[i].label));
-    strcpy(g_aPins[i].label,"None");
+    //strcpy(g_aPins[i].label,"None");
     g_aPins[i].value = 0.0;
     memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
     for(int j=0; j<TOTAL_NUM_OF_PINS; j++)
@@ -643,6 +565,27 @@ void initBoardState()
         g_aPins[i].connections[j] = false;
     }
   }
+
+  strcpy(g_aPins[0].label,"0");
+  strcpy(g_aPins[1].label,"1");
+  strcpy(g_aPins[2].label,"2");
+  strcpy(g_aPins[3].label,"3");
+  strcpy(g_aPins[4].label,"4");
+  strcpy(g_aPins[5].label,"5");
+  strcpy(g_aPins[6].label,"6");
+  strcpy(g_aPins[7].label,"7");
+  strcpy(g_aPins[8].label,"8");
+  strcpy(g_aPins[9].label,"9");
+  strcpy(g_aPins[10].label,"10");
+  strcpy(g_aPins[11].label,"11");
+  strcpy(g_aPins[12].label,"12");
+  strcpy(g_aPins[13].label,"13");
+  strcpy(g_aPins[14].label,"A0");
+  strcpy(g_aPins[15].label,"A1");
+  strcpy(g_aPins[16].label,"A2");
+  strcpy(g_aPins[17].label,"A3");
+  strcpy(g_aPins[18].label,"A4");
+  strcpy(g_aPins[19].label,"A5");
 
   // Initialize pins 0-13 as digital out pins
   for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
@@ -793,7 +736,7 @@ aJsonObject* getJsonBoardState()
   }
 
   // Creating connection JSON object
-  aJsonObject* poConnections = aJson.createObject();
+  aJsonObject* paConnections = aJson.createArray();
 
   // Create STATUS
   poStatus = aJson.createItem("OK");
@@ -826,8 +769,6 @@ aJsonObject* getJsonBoardState()
     }
 
     // Populate sensitivity
-//    snprintf(buff, sizeof(buff),"%f", g_aPins[i].sensitivity);
-//    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( buff ) );
     aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].sensitivity ) );
     
     // Populate pin's inversion
@@ -850,16 +791,7 @@ aJsonObject* getJsonBoardState()
       aJson.addItemToObject(apoPin[i],"is_visible", aJson.createFalse() );
     }
     
-    /*
-      float sensitivity;
-  int is_inverted;
-  int is_visible;
-    */
-
-    // Populate pin's value
-//    snprintf(buff, sizeof(buff),"%f", g_aPins[i].value);
-//    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( buff ) );
-    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].value ) );
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
 
     // Push to JSON structure
     sprintf(caPinNumBuffer,"%d",i);
@@ -879,15 +811,34 @@ aJsonObject* getJsonBoardState()
 "connections":[ {"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>",”is_connected”:”<true,false>”},  ...,  ]  }
   */
   
-
   // Create CONNECTIONS
-  int iaConnections[10];
-  poConnections = aJson.createIntArray(iaConnections, 0);  
+//  int iaConnections[10];
+//  poConnections = aJson.createIntArray(iaConnections, 0); 
+  
+//  paConnections = 
+ 
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    for(int j=0; j<TOTAL_NUM_OF_PINS ;j++)
+    {
+      if(g_aPins[i].connections[j] && i !=j )
+      {
+        aJsonObject* poConnObject = aJson.createObject();
+        sprintf(caPinNumBuffer,"%d",i);      
+        aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
+        sprintf(caPinNumBuffer,"%d",j);        
+        aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+        aJson.addItemToArray(paConnections,poConnObject);
+      }
+    }
+  }
+  
 
   // Push to JSON object
   aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
-  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
+//  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
+  aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
 
   return poJsonBoardState;
 
@@ -895,6 +846,9 @@ aJsonObject* getJsonBoardState()
 
 void processMessage(char *_acMsg)
 {
+  
+  Serial.print("Msg recvd: ");
+  Serial.println(_acMsg);
 
   aJsonObject *poMsg = aJson.parse(_acMsg);
 
@@ -1160,10 +1114,10 @@ void loop()
 
     //////////////////////////////////////////
     // Test sending message
-    //    aJsonObject *msg = getJsonBoardState();
-    //   aJson.print(msg, &serial_stream);
-    //    Serial.println("");
-    //   aJson.deleteItem(msg);
+    aJsonObject *msg = getJsonBoardState();
+    aJson.print(msg, &serial_stream);
+    Serial.println("");
+    aJson.deleteItem(msg);
     //////////////////////////////////////////  
 
     last_print = millis();
