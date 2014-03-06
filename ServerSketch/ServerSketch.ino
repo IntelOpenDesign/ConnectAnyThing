@@ -239,27 +239,7 @@ void *in, size_t len)
       lwsl_err("ERROR %d writing to socket\n", iNumBytes);
       return 1;
     }
-    /*
-    getSerialCommand(); 
-    if( !g_iNewCode )
-    {    
-      iNumBytes = sendStatusToWebsite(wsi);
-      if (iNumBytes < 0) 
-      {
-        lwsl_err("ERROR %d writing to socket\n", iNumBytes);
-        return 1;
-      }
-    }
-    else
-    {
-      iNumBytes = sendStatusToWebsiteNew(wsi);
-      if (iNumBytes < 0) 
-      {
-        lwsl_err("ERROR %d writing to socket\n", iNumBytes);
-        return 1;
-      }
-    }
-*/
+
     break;
 
   case LWS_CALLBACK_RECEIVE:
@@ -270,7 +250,8 @@ void *in, size_t len)
     // Process Data Receieved from the Website
     // Update Galileo's HW    
     // **********************************    
-    procWebMsg((char*) in, len);
+//    procWebMsg((char*) in, len);
+    processMessage((char*) in);
 
     break;
 
@@ -532,20 +513,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
       Serial.println("");
       Serial.print("sTempString.len:  ");
       Serial.println(sTempString.length());
-      
-  //    n = sprintf((char *)p, "%s",outBuf); // This funtion can only print 256 characters      
-      
-//      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
-     // snprintf((char *)p, 2000, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
-//      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
-//      n = sprintf((char *)p, "%s","---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------********************************************************************************************************************************************************************************************");
-/*
-      Serial.println("");
-      Serial.print("n before: ");
-      Serial.println(n);
-  */
-//      n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-//      n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT); 
+
       n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
 
       Serial.println("");
@@ -995,29 +963,37 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
       if (poIsAnalog)
       {
+        g_aPins[i].is_analog = poIsAnalog->valuebool;
+        
+        /*
         if( 0 == strcmp(poIsAnalog->valuestring,"true") )
           g_aPins[i].is_analog = 1;
         else if( 0 == strcmp(poIsAnalog->valuestring,"false") )
           g_aPins[i].is_analog = 0;
         else
           g_aPins[i].is_analog = -1;
+          */
       }       
 
       aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
       if (poIsInput)
       {
+        g_aPins[i].is_input = poIsInput->valuebool;
+        /*
         if( 0 == strcmp(poIsInput->valuestring,"true") )
           g_aPins[i].is_input = 1;
         else if( 0 == strcmp(poIsInput->valuestring,"false") )
           g_aPins[i].is_input = 0;
         else
           g_aPins[i].is_input = -1;
+          */
       }
 
       aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
       if (poValue)
       {
-        g_aPins[i].value = atof(poValue->valuestring);
+//        g_aPins[i].value = atof(poValue->valuestring);
+        g_aPins[i].value = poValue->valuefloat;
       }
     }    
   }
@@ -1158,6 +1134,7 @@ void loop()
 
     ///////////////////////////////////////
     // Connect/Disconnect
+    /*
     switch(g_iDebugState)
     {
       case 0:
@@ -1178,6 +1155,7 @@ void loop()
     }
    
     updateBoardState();
+    */
     ///////////////////////////////////////
 
     //////////////////////////////////////////
