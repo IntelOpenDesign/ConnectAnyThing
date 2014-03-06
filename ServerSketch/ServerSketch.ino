@@ -824,9 +824,9 @@ aJsonObject* getJsonBoardState()
       if(g_aPins[i].connections[j] && i !=j )
       {
         aJsonObject* poConnObject = aJson.createObject();
-        sprintf(caPinNumBuffer,"%d",i);      
+        sprintf(caPinNumBuffer,"%d",j);      
         aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
-        sprintf(caPinNumBuffer,"%d",j);        
+        sprintf(caPinNumBuffer,"%d",i);        
         aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
         aJson.addItemToArray(paConnections,poConnObject);
       }
@@ -1114,10 +1114,12 @@ void loop()
 
     //////////////////////////////////////////
     // Test sending message
+    /*
     aJsonObject *msg = getJsonBoardState();
     aJson.print(msg, &serial_stream);
     Serial.println("");
     aJson.deleteItem(msg);
+    */
     //////////////////////////////////////////  
 
     last_print = millis();
