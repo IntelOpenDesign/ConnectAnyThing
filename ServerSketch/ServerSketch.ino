@@ -680,12 +680,14 @@ float getTotalPinAnalogValue(int _iPinNum)
       }    
     } 
   }
-  
-  if( 1 == iConnCount ) // No other connections found besides itself
-    fPinValSum = g_aPins[_iPinNum].value;    
-  
+   
   if(fPinValSum > 1.0)
     fPinValSum = 1.0;
+  
+  if( 1 == iConnCount ) // No other connections found besides itself
+    fPinValSum = g_aPins[_iPinNum].value;
+  else
+    g_aPins[_iPinNum].value = fPinValSum;
   
   Serial.print("Total Value: "); Serial.println(fPinValSum);
   
@@ -716,6 +718,8 @@ int getTotalPinDigitalValue(int _iPinNum)
   
   if( 1 == iConnCount ) // No other connections found besides itself
     iRetValue = g_aPins[_iPinNum].value;    
+  else
+   g_aPins[_iPinNum].value = iRetValue;    
   
   return iRetValue;
 }
