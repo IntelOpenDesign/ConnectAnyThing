@@ -598,6 +598,7 @@ void initBoardState()
       g_aPins[i].is_analog = false;   
 
     g_aPins[i].is_input = false;
+    pinMode(i, OUTPUT);
     g_aPins[i].sensitivity = 0.5;
     g_aPins[i].is_inverted = false;
     g_aPins[i].is_visible = true;
@@ -608,6 +609,7 @@ void initBoardState()
   {
     g_aPins[i].is_analog = true;
     g_aPins[i].is_input = true;
+    pinMode(i, INPUT);
     g_aPins[i].sensitivity = 0.5;
     g_aPins[i].is_inverted = false;
     g_aPins[i].is_visible = true;
@@ -628,7 +630,7 @@ void updateBoardState()
   {
     if( g_aPins[i].is_input ) // Process input pins
     {
-      pinMode(i, INPUT);
+  //    pinMode(i, INPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
         g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
@@ -645,7 +647,7 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      pinMode(i, OUTPUT);
+ //     pinMode(i, OUTPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
         analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
@@ -689,7 +691,7 @@ float getTotalPinAnalogValue(int _iPinNum)
   else
     g_aPins[_iPinNum].value = fPinValSum;
   
-  Serial.print("Total Value: "); Serial.println(fPinValSum);
+  Serial.print("Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
 }
@@ -1040,7 +1042,7 @@ void setup()
   system("/home/root/startAP");
 
   // Init Galileo HW
-
+/*
   // Enable all digital pins as outputs
   for(int i=0; i<14; i++)
   {
@@ -1070,7 +1072,7 @@ void setup()
     g_abD[i] = false;
   for(i=0; i<TOTAL_NUM_Px; i++)
     g_aiP[i] = 0;   
-
+*/
   // JSON protocol code
   initBoardState();
 
