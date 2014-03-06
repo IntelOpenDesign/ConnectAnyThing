@@ -249,7 +249,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_RECEIVE:
 
-    Serial.println("Cleaning Protocol");
+    Serial.println("Process Incomming Messag");
 
     // **********************************
     // Process Data Receieved from the Website
@@ -434,6 +434,8 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
     
     updateBoardState();
     
+   // delay(1000);
+    
     aJsonObject *msg = getJsonBoardState();  
     
     aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
@@ -590,7 +592,11 @@ void initBoardState()
   // Initialize pins 0-13 as digital out pins
   for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
   {
-    g_aPins[i].is_analog = false;
+    if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 )
+      g_aPins[i].is_analog = true;
+    else  
+      g_aPins[i].is_analog = false;   
+
     g_aPins[i].is_input = false;
     g_aPins[i].sensitivity = 0.5;
     g_aPins[i].is_inverted = false;
@@ -659,7 +665,7 @@ float getTotalPinAnalogValue(int _iPinNum)
 {
   float fPinValSum = 0;
   int iConnCount = 1; // Pins are always connected to themselves
-  
+
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     // Checking what pins are connected to iPinNum
