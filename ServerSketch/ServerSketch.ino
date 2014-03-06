@@ -433,9 +433,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
     
     updateBoardState();
-    
-   // delay(1000);
-    
+        
     aJsonObject *msg = getJsonBoardState();  
     
     aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
@@ -630,7 +628,6 @@ void updateBoardState()
   {
     if( g_aPins[i].is_input ) // Process input pins
     {
-  //    pinMode(i, INPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
         g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
@@ -647,7 +644,6 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
- //     pinMode(i, OUTPUT);
       if( g_aPins[i].is_analog ) // Process analog pins
       {
         analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
@@ -691,7 +687,7 @@ float getTotalPinAnalogValue(int _iPinNum)
   else
     g_aPins[_iPinNum].value = fPinValSum;
   
-  Serial.print("Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
 }
@@ -699,6 +695,7 @@ float getTotalPinAnalogValue(int _iPinNum)
 ////////////////////////////////////////////////////////////////////////////
 // If an output pin has connections, return the sum of all its connections
 ////////////////////////////////////////////////////////////////////////////
+float g_fDigitalThreshold = 0.6;
 int getTotalPinDigitalValue(int _iPinNum)
 { 
   int iRetValue = 0;
@@ -712,8 +709,13 @@ int getTotalPinDigitalValue(int _iPinNum)
       if(g_aPins[_iPinNum].connections[i])
       {
         iConnCount++;
-        if(g_aPins[i].value == 1.0)
+        if(g_aPins[i].value >= g_fDigitalThreshold) // Digital threshold
+        {
           iRetValue = 1;
+          break;      
+        }
+        else
+          iRetValue = 0;          
       }    
     }
   }
@@ -722,6 +724,9 @@ int getTotalPinDigitalValue(int _iPinNum)
     iRetValue = g_aPins[_iPinNum].value;    
   else
    g_aPins[_iPinNum].value = iRetValue;    
+  
+  //g_aPins[_iPinNum].value = iRetValue;
+  Serial.print("Digital Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(iRetValue);
   
   return iRetValue;
 }
