@@ -1,4 +1,8 @@
 /* TODO remove when done debugging*/
+body {
+    font-size: 24px;
+}
+
 #debug-log {
     position: absolute;
     top: 0;
@@ -8,6 +12,7 @@
     background: blanchedalmond;
     word-break: break-all;
 }
+
 .hide {
     display: none;
 }
@@ -28,22 +33,23 @@
 }
 
 .pin {
-    width: 85%;
-    height: 100px;
-    margin-top: 25px;
-    margin-bottom: 25px;
-    position: relative;
+    width: 70%;
+    height: 150px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin: 50px inherit;
 }
 .pin.sensor {
-    margin-left: 10%;
-    margin-right: 5%;
+    margin-left: 5%;
+    margin-right: 25%;
 }
 .pin.actuator {
-    margin-left: 5%;
-    margin-right: 10%;
+    margin-left: 25%;
+    margin-right: 5%;
 }
 
 .pin-box {
+    position: relative;
     height: 100%;
     background: rgb(107,48,0);
     width: 90%;
@@ -57,6 +63,8 @@
     position: absolute;
     top: 5%;
     z-index: 5;
+    color: black;
+    text-shadow: none;
 }
 .sensor .pin-label {
     left: 4px;
@@ -96,24 +104,25 @@
 
 .pin-port {
     position: absolute;
-    top: 0;
-    height: 120px;
-    width: 120px;
-    margin-top: -10px; /* (.pin height - .pin-port height)/2 */
+    top: 50%;
+    height: 140px;
+    width: 140px;
+    margin-top: -70px;
+    z-index: 5;
 }
 .sensor .pin-port {
-    right: 0;
+    right: -70px;
 }
 .actuator .pin-port {
-    .left: 0;
+    left: -70px;
 }
 
 .endpoint {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-width: 20px;
     border-style: solid;
-    border-radius: 60px;
+    border-radius: 70px;
 }
 .sensor .endpoint {
     border-color: rgb(0, 102, 24);
@@ -132,4 +141,123 @@
 }
 .actuator.connected .endpoint {
     background: rgb(232, 189, 0);
+}
+
+
+.settings {
+    position: fixed;
+    width: 90%;
+    height: 94%;
+    top: 3%;
+    left: 5%;
+    z-index: 10;
+    background: rgb(224, 153, 87);
+}
+.settings-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.settings-inner .pin-label {
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 60%;
+    height: 30px;
+    line-height: 1em;
+    padding: .3em 1%;
+    margin-left: 2%;
+    border-width: 0;
+    background: rgb(245, 191, 141);
+}
+.settings-inner .pin-name {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10%;
+    height: 30px;
+    padding-top: 15px;
+    padding-bottom: 15px
+    line-height: 1em;
+    text-align: center;
+    line-height: 1em;
+    color: rgb(240, 218, 191);
+}
+.settings-inner .exit {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 33.3%;
+    height: 30px;
+    text-align: center;
+    line-height: 1em;
+    color: green;
+    padding: 35px 0;
+    background: rgb(86, 199, 86);
+}
+/* TODO use javascript to make this look ok */
+.settings-inner .sensitivity {
+    -webkit-appearance: none;
+    position: absolute;
+    left: 35%;
+    top: 255px;
+    width: 200px;
+    height: 30px;
+    -webkit-transform: rotate(270deg);
+    background: rgb(245, 191, 141);
+    margin: 0;
+    padding: 0;
+}
+.settings-inner .sensitivity::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 30px;
+    height: 45px;
+    -webkit-border-radius: 13px;
+    border-radius: 13px;
+    background: rgb(50, 50, 50);
+}
+.settings-inner .sensitivity-label {
+    position: absolute;
+    left: 36%;
+    top: 130px;
+}
+.settings-inner .pin-value-container {
+    height: 200px;
+    top: 170px;
+    left: 2%;
+    width: 31%;
+}
+.settings-inner .value-label {
+    position: absolute;
+    top: 130px;
+    left: 2%;
+}
+.settings-inner .invert {
+    position: absolute;
+    top: 250px;
+    left: 70%;
+    border: 5px solid rgb(245, 191, 141);
+    width: 50px;
+    height: 50px;
+    background-color: rgb(245, 191, 141);
+    -webkit-appearance: none;
+    border-radius: 25px;
+}
+.settings-inner .invert:checked {
+    background-color: rgb(50, 50, 50);
+}
+.settings-inner .invert-label {
+    position: absolute;
+    top: 220px;
+    left: 70%;
+}
+
+#loading {
+    background: rgb(255, 255, 255) url('../img/loading.gif') center center no-repeat;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
 }

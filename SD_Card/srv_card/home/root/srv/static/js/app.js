@@ -1,11 +1,16 @@
-// TODO remove when done debugging
-function toggle_debug_log() {
-    $('#debug-log').toggleClass('hide');
-}
+// Contain everything within the cat object
+var cat = {};
+
+// the whole app needs to know when jsPlumb is ready because only then can we draw connections
+cat.jsplumb_ready = false;
 
 jsPlumb.bind('ready', function() {
     jsPlumb.Defaults.Container = $('#field');
 
+    cat.jsplumb_ready = true;
+    $(document).trigger('jsplumb-ready');
+
+    // TODO this is for dragging/sorting possibility
     /* some combination of this might work -- laggy/buggy though
      * ALSO: how to do it on mobile?
     $('#sensors').sortable();
@@ -15,12 +20,20 @@ jsPlumb.bind('ready', function() {
     */
 });
 
-var cat = {};
+// TODO remove when done debugging
+function toggle_debug_log() {
+    $('#debug-log').toggleClass('hide');
+}
 
-//cat.server_url = 'ws://192.168.0.192:8001';
-// use this one when you are on the Galileo
-cat.server_url = 'ws://cat/';
+// websocket server
+cat.server_url = 'ws://192.168.0.198:8001';
+// for Galileo
+// cat.server_url = 'ws://cat/';
 
+// parameterize events
+cat.tap = 'mousedown';
+
+// cat.app is the angular app
 cat.app = angular.module('ConnectAnything', []);
 
 cat.app.filter('sensors', function() {
@@ -28,192 +41,242 @@ cat.app.filter('sensors', function() {
         return _.filter(pins, function(pin) {
             return pin.is_input && pin.is_visible;
         });
-    };
+    }
 });
-
 cat.app.filter('actuators', function() {
     return function(pins) {
-        return _.filter(pins, function(pin) {
+        return  _.filter(pins, function(pin) {
             return !pin.is_input && pin.is_visible;
         });
-    };
+    }
 });
 
+// The controller for the whole app. Also handles talking to the server.
+// Eventually probably want to refactor
 cat.app.controller('PinsCtrl', ['$scope', function($scope, server) {
+
+    var $document = $(document);
 
     // TODO take this out when done debugging
     window.$scope = $scope;
-    var pin_order = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5'];
-    var start_data = cat.get_fake_initial_data();
-    $scope.pins = start_data.pins;
-    $scope.connections = start_data.connections;
 
-    // http://clintberry.com/2013/angular-js-websocket-service/
-    //var ws = new WebSocket(cat.server_url);
-    // use this when on the Galileo
-    var ws = new WebSocket(cat.server_url, 'hardware-state-protocol');
+    $scope.got_data = false;
+    $scope.activated_sensor = null;
+    $scope.settings_pin = null;
+    $scope.settings_pin_label_focus = false;
+    $scope.focus_label = function() {
+        $scope.settings_pin_label_focus = true;
+    };
+    $scope.unfocus_label = function() {
+        $scope.settings_pin_label_focus = false;
+    };
+    $scope.pins = {};
+    $scope.connections = [];
+
+    // good resource: http://clintberry.com/2013/angular-js-websocket-service/
+    var ws = new WebSocket(cat.server_url);
+    // for Galileo
+    //var ws = new WebSocket(cat.server_url, 'hardware-state-protocol');
     ws.onopen = function() {
         console.log('socket opened');
     };
+
+    //TODO remove when done debugging
     var $debug_log = $('#debug-log');
-    ws.onmessage = function(message) {
-        console.log('websocket message', message.data);
+
+    ws.onmessage = function(msg) {
         //TODO remove when done debugging
-        $debug_log.html(message.data);
-        var pin_states = message.data.split(',');
-        $scope.$apply(function(){
-            for (var i = 0; i < pin_states.length; i++) {
-                var pin = $scope.pins[pin_order[i]];
-                // for the time being on the sensor pin values from the server are meaningful
-                if (pin.is_input) {
-                    pin.value = parseFloat(pin_states[i])*100;
-                }
+        $debug_log.html(msg.data);
+        var data = JSON.parse(msg.data);
+        console.log('websocket data', data);
+
+        var new_pins = cat.my_pin_format(data.pins, data.connections);
+
+        cat.clear_all_connections();
+        $scope.$apply(function() {
+            $scope.got_data = true;
+            $scope.pins = new_pins;
+            $scope.connections = data.connections;
+        });
+    };
+
+    $scope.send_pin_update = function(pin_ids) {
+        ws.send(JSON.stringify({
+            status: 'OK',
+            pins: cat.server_pin_format($scope.pins, pin_ids),
+        }));
+    };
+
+    var connect = function(sensor, actuator) {
+        $scope.connections.push({
+            source: sensor,
+            target: actuator,
+        });
+        $scope.pins[sensor].is_connected = true;
+        $scope.pins[actuator].is_connected = true;
+        ws.send(JSON.stringify({
+            status: 'OK',
+            connections: [{source: sensor, target: actuator}],
+        }));
+    };
+
+    var disconnect = function(sensor, actuator) {
+        cat.clear_connection(sensor, actuator);
+        $scope.connections = _.filter($scope.connections, function(c) {
+            return !(c.source === sensor && c.target === actuator);
+        });
+        _.each([{pin: sensor, end: 'source'}, {pin: actuator, end: 'target'}], function(o) {
+            var remaining_connections = _.filter($scope.connections, function(c) {
+                return c[o.end] === o.pin;
+            });
+            if (remaining_connections.length === 0) {
+                $scope.pins[o.pin].is_connected = false;
+            }
+        });
+        ws.send(JSON.stringify({
+            status: 'OK',
+            connections: [{source: sensor, target: actuator}],
+        }));
+    };
+
+    $scope.toggle_activated = function(sensor) {
+        $scope.$apply(function() {
+            if ($scope.activated_sensor === sensor) {
+                $scope.activated_sensor = null;
+            } else {
+                $scope.activated_sensor = sensor;
             }
         });
     };
 
-    $scope.connect = function(sensor, actuator) {
-        console.log('connect sensor', sensor, 'actuator', actuator);
-        // TODO server
-        $scope.connections.push({
-            sensor: sensor,
-            actuator: actuator,
+    $scope.connect_or_disconnect = function(actuator) {
+        $scope.$apply(function() {
+            if ($scope.activated_sensor === null) {
+                return;
+            }
+            var sensor = $scope.activated_sensor;
+            var existing_connection = _.filter($scope.connections, function(c) {
+                return c.source === sensor && c.target === actuator;
+            });
+            if (existing_connection.length === 0) {
+                connect(sensor, actuator);
+            } else {
+                var msg = 'Do you want to delete the ' + $scope.pins[sensor].name + ' - ' + $scope.pins[actuator].name + ' connection?';
+                if (confirm(msg)) {
+                    disconnect(sensor, actuator);
+                }
+            }
+            $scope.activated_sensor = null;
         });
-        $scope.pins[sensor].connected_to.push(actuator);
-        $scope.pins[actuator].connected_to.push(sensor);
     };
 
-    $scope.disconnect = function(sensor, actuator) {
-        // TODO server
-        console.log('before disconnect we have', $scope.connections.length, 'connections');
-        $scope.connections = _.filter($scope.connections, function(c) {
-            return !(c.sensor === sensor && c.actuator === actuator);
+    $scope.show_settings_for = function(pin) {
+        $scope.$apply(function() {
+            $scope.activated_pin = null;
+            $scope.settings_pin = pin;
         });
-        console.log('midway disconnect we have', $scope.connections.length, 'connections');
-        $scope.pins[sensor].connected_to = _.filter($scope.pins[sensor].connected_to, function(pin) {
-            return !(pin === actuator);
-        });
-        $scope.pins[actuator].connected_to = _.filter($scope.pins[actuator].connected_to, function(pin) {
-            return !(pin === sensor);
-        });
-        console.log('after disconnect we have', $scope.connections.length, 'connections');
-    }
+    };
 
+    $scope.close_settings = function() {
+        $scope.settings_pin = null;
+    };
 }]);
 
-// shared between sensors and actuators
-cat.pin_initializer = function($document, $scope, $el, attrs) {
-    var that = {};
-    that.$endpoint = $el.find('.endpoint');
-    that.clickevent = 'mousedown';
-    that.id = attrs.id;
-    return that;
+// sensor and actuator directives both inherit from cat.pin_base
+cat.pin_base = function(click_callback_maker) {
+
+    return function($scope, $el, attrs) {
+        var $endpoint = $el.find('.endpoint');
+        var $box = $el.find('.pin-box');
+        var $settings_label = $el.find('input.pin-label');
+
+        // TODO preserve the cursor position within the input somehow?
+        if ($scope.settings_pin_label_focus &&
+            $scope.settings_pin === attrs.id) {
+            setTimeout(function() {
+                $settings_label.focus();
+            }, 0);
+        }
+
+        $endpoint.on(cat.tap, click_callback_maker($scope, $el, attrs));
+        $box.on(cat.tap, function(e) {
+            $scope.show_settings_for(attrs.id);
+
+        });
+
+        $el.on('$destroy', function() {
+            $endpoint.off(cat.tap);
+            $box.off(cat.tap);
+        });
+
+    }
 };
 
 cat.app.directive('sensor', function($document) {
-    function link($scope, $el, attrs) {
+// TODO can I just do this with ng-click?
+    var sensor_callback_maker = function($scope, $el, attrs) {
+        return function(e) {
+            e.stopPropagation();
+            $scope.toggle_activated(attrs.id);
+        }
+    };
 
-        var that = cat.pin_initializer($document, $scope, $el, attrs);
-
-        that.$endpoint.on(that.clickevent, function(e) {
-            var already_activated = $el.hasClass('activated');
-            $('.pin').removeClass('activated');
-            if (!already_activated) {
-                $el.addClass('activated');
-                $('.actuator').addClass('activated');
-            }
-        });
-
-        $el.on('$destroy', function() {
-            that.$endpoint.off(that.clickevent);
-        });
-    }
-
-    // TODO is there an unlink function i should write so that i can remove listeners when this gets deleted?
-
-    return {
-        link: link,
-    }
+    return {link: cat.pin_base(sensor_callback_maker)};
 });
 
 cat.app.directive('actuator', function($document) {
-    function link($scope, $el, attrs) {
 
-        var that = cat.pin_initializer($document, $scope, $el, attrs);
+    var actuator_callback_maker = function($scope, $el, attrs) {
+        return function(e) {
+            e.stopPropagation();
+            $scope.connect_or_disconnect(attrs.id);
+        }
+    };
 
-        that.$endpoint.on(that.clickevent, function(e) {
-            if (!$el.hasClass('activated')) {
-                return;
-            }
-            var $sensor = $('.sensor.activated').first();
-            var sensor = $sensor.attr('id'); // pin id
-            if ($scope.pins[attrs.id].connected_to.indexOf(sensor) >= 0) {
-                // already connected, so ask if they want to delete the connection
-                $('#connect-' + sensor + '-' + attrs.id).trigger('mousedown');
-            } else {
-                $scope.$apply(function() {
-                    $scope.connect(sensor, attrs.id);
-                });
-            }
-            $('.pin').removeClass('activated');
-        });
-
-        $el.on('$destroy', function() {
-            that.$endpoint.off(that.clickevent);
-        });
-    }
-
-    return {
-        link: link,
-    }
+    return {link: cat.pin_base(actuator_callback_maker)};
 });
 
 cat.app.directive('connection', function($document) {
     function link($scope, $el, attrs) {
 
-        var $sensor = $('#'+attrs.sensor);
-        var $actuator = $('#'+attrs.actuator);
+        var $sensor, $actuator, connection, msg;
+        $sensor = $actuator = connection = msg = null;
 
-        var connection = jsPlumb.connect({
-            source: attrs.sensor,
-            target: attrs.actuator,
-            connector: ['Bezier', {curviness: 70}],
-            cssClass: 'connection pins-'+attrs.sensor+'-'+attrs.actuator,
-            endpoint: 'Blank',
-            endpointClass: 'endpoint pins-'+attrs.sensor+'-'+attrs.actuator,
-            anchors: ['Right', 'Left'],
-            paintStyle: {
-                lineWidth: 15,
-                strokeStyle: 'rgb(232, 189, 0)',
-                outlineWidth: 2,
-                outlineColor: 'antiquewhite',
-            },
-            endpointStyle: {
-                fillStyle: '#a7b04b',
-            },
-            hoverPaintStyle: {
-                strokeStyle: 'rgb(250, 250, 60)',
-            },
-        });
-
-        var msg = 'Do you want to delete the ' + $sensor.attr('id') + ' - ' + $actuator.attr('id') + ' connection?';
-
-        function remove_self(e) {
-            if (confirm(msg)) {
-                connection.unbind('mousedown');
-                $scope.$apply(function() {
-                    $scope.disconnect(attrs.sensor, attrs.actuator);
-                });
+        function find_my_pins() {
+            $sensor = $('#'+attrs.sensorId);
+            $actuator = $('#'+attrs.actuatorId);
+            if ($sensor.length === 0 || $actuator.length === 0) {
+                setTimeout(find_my_pins, 10);
+            } else {
+                render();
             }
         }
 
-        connection.bind('mousedown', remove_self);
-        $el.on('mousedown', remove_self);
+        function render() {
+            connection = jsPlumb.connect({
+                source: attrs.sensorId,
+                target: attrs.actuatorId,
+                connector: ['Bezier', {curviness: 70}],
+                cssClass: 'connection pins-'+attrs.sensorId+'-'+attrs.actuatorId,
+                endpoint: 'Blank',
+                endpointClass: 'endpoint pins-'+attrs.sensorId+'-'+attrs.actuatorId,
+                anchors: ['Right', 'Left'],
+                paintStyle: {
+                    lineWidth: 15,
+                    strokeStyle: 'rgb(232, 189, 0)',
+                    outlineWidth: 2,
+                    outlineColor: 'antiquewhite',
+                },
+                endpointStyle: {
+                    fillStyle: '#a7b04b',
+                },
+                hoverPaintStyle: {
+                    strokeStyle: 'rgb(250, 250, 60)',
+                },
+            });
+        }
 
-        $el.on('$destroy', function() {
-            connection.unbind('mousedown');
-            jsPlumb.detach(connection);
-        });
+        find_my_pins();
     }
 
     return {
@@ -221,62 +284,63 @@ cat.app.directive('connection', function($document) {
     };
 });
 
-cat.get_fake_initial_data = function() {
+cat.clear_all_connections = function() {
+    $('._jsPlumb_endpoint').remove();
+    $('._jsPlumb_connector').remove();
+};
 
-    var pin_defaults = {
-        'input': {
-            'analog': [0, 1, 2, 3, 4, 5],
-        },
-        'output': {
-            'analog': [3, 5, 6, 9, 10, 11],
-            'digital': [0, 1, 2, 4, 7, 8, 12, 13],
-        },
-    };
+cat.clear_connection = function(sensor, actuator) {
+    console.log('clear connection', sensor, actuator);
+    $('.connection.pins-'+sensor+'-'+actuator).remove();
+};
 
-    function pin_name(number, is_analog, is_input) {
-        if (!is_analog) { // digital
-            return number.toString();
-        }
-        // is_analog === true
-        if (is_input) {
-            return 'A' + number;
-        } else {
-            return '~' + number;
-        }
-    }
+// translate between client side and server side format for pins
+cat.my_pin_format = function(server_pins, server_connections) {
+    var pins = {};
 
-    function pin_id(number, is_analog, is_input) {
-        if (is_input && is_analog) {
-            return 'A' + number;
-        } else {
-            return number.toString();
-        }
-    }
+    _.each(server_pins, function(pin, id) {
+        var name = id;
+        if (pin.is_analog && !pin.is_input)   // analog out:
+            name = '~' + id;                  // ex. '~3'
+        if (pin.is_analog && pin.is_input)    // analog in:
+            name = 'A' + (parseInt(id) - 14); // 14 = A0, 15 = A1, etc
 
-    pins = {};
-    _.each(pin_defaults, function(obj, IorO) { // input or output
-        _.each(obj, function(nums, AorD) { // analog or digital
-            _.each(nums, function(num) { // all pin numbers of this type
-                var is_input = IorO === 'input';
-                var is_analog = AorD === 'analog';
-                var id = pin_id(num, is_analog, is_input);
-                var name = pin_name(num, is_analog, is_input);
-                pins[id] = {
-                    'id': id,
-                    'name': name,
-                    'label': 'Label for ' + name,
-                    'is_analog': is_analog,
-                    'is_input': is_input,
-                    'value': 0,
-                    'is_visible': true,
-                    'connected_to': [],
-                };
-            });
-        });
+        pins[id] = {
+            id: id,
+            name: name,
+            label: pin.label,
+            value: pin.value * 100,
+            is_visible: pin.is_visible,
+            is_analog: pin.is_analog,
+            is_input: pin.is_input,
+            sensitivity: pin.sensitivity.toString(),
+            is_inverted: pin.is_inverted,
+        };
     });
 
-    // TODO merge in sync-connections branch so that you can start with some connections
-    connections = [];
+    _.each(server_connections, function(c) {
+        pins[c.source].is_connected = true;
+        pins[c.target].is_connected = true;
+    });
 
-    return {pins: pins, connections: connections};
+    return pins;
+};
+
+cat.server_pin_format = function(my_pins, my_pin_ids) {
+    var pins = {};
+
+    _.each(my_pin_ids, function(id) {
+        var pin = my_pins[id];
+        pins[id] = {
+            label: pin.label,
+            value: pin.value / 100,
+            is_visible: pin.is_visible,
+            is_analog: pin.is_analog,
+            is_input: pin.is_input,
+            sensitivity: parseFloat(pin.sensitivity),
+            is_inverted: pin.is_inverted,
+        };
+    });
+
+    return pins;
 };
