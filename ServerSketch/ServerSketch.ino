@@ -51,10 +51,26 @@ typedef struct Pin {
   char label[PIN_LABEL_SIZE];
   int is_analog;
   int is_input;
+  float sensitivity;
+  int is_inverted;
+  int is_visible;
   float value;
   boolean connections[TOTAL_NUM_OF_PINS];
 } 
 Pin;
+
+  /*
+  {"status":<OK,ERROR>,  "pins":{"<0,1,…,13,A0,…,A5>":  {
+  "label":"<label text>",  
+	"is_analog":"<true,false>",  
+	"is_input":"<true,false>", 
+“sensitivity”:”<0.0,1.0>”, 
+“is_inverted”:”<true,false>”, 
+“is_visible”:”<true,false>”,
+"value":"<0.0,1.0>",  },  ...,  }, 
+"connections":[ {"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>",”is_connected”:”<true,false>”},  ...,  ]  }
+  */
+
 
 Pin g_aPins[TOTAL_NUM_OF_PINS];
 
@@ -426,7 +442,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
   if( g_luiCounter%100 == 0)
   {
-    Serial.println("NEW CODE - WTF");
+    Serial.println("NEW CODE");
 /*
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
@@ -479,18 +495,64 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
     
     aJson.deleteItem(msg);
     */
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
+    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 10000 + LWS_SEND_BUFFER_POST_PADDING];
     unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
   
     //n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"sensitivity\":\"0.5\",\"is_inverted\":\"false\",\"is_visible\":\"true\",\"value\":\"1\"}  }}");
 //    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":false,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":1}  }}");
 //    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  }}");
-      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  },\"connections\":[{\"source\":\"14\",\"target\":\"3\"}] }");
-  
-  
-    n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+//    n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"14\":{\"label\":\"A0\",\"is_analog\":true,\"is_input\":true,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.5}, \"3\":{\"label\":\"~3\",\"is_analog\":true,\"is_input\":false,\"sensitivity\":0.5,\"is_inverted\":false,\"is_visible\":true,\"value\":0.6}  },\"connections\":[{\"source\":\"14\",\"target\":\"3\"}] }");
 
-   
+      updateBoardState();
+      aJsonObject *msg = getJsonBoardState();  
+//      String sTempString = aJson.print(msg);
+//      Serial.println("");
+ //     Serial.print("sTempString :");
+ //     Serial.println(sTempString);
+          
+//      String sTempString = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
+//      n = sprintf((char *)p, "%s",aJson.print(msg)); // This funtion can only print 256 characters
+      
+   //   char* outBuf = (char*) malloc(2000); /* XXX: Dynamic size. */
+//      n = sizeof(buf) - LWS_SEND_BUFFER_PRE_PADDING - LWS_SEND_BUFFER_POST_PADDING;
+
+    //  n = sizeof((char *)p);
+      /*
+      int count = 0;
+      while(*(p+n*count) != '\0' || count != 10100)
+      {
+        count++;
+      }
+      */
+
+      aJsonStringStream stringStream(NULL, (char *)p, 10000);
+      aJson.print(msg, &stringStream);
+      String sTempString((char *)p);
+    
+      Serial.println("");
+      Serial.print("sTempString.len:  ");
+      Serial.println(sTempString.length());
+      
+  //    n = sprintf((char *)p, "%s",outBuf); // This funtion can only print 256 characters      
+      
+//      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
+     // snprintf((char *)p, 2000, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
+//      n = sprintf((char *)p, "%s","{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}");
+//      n = sprintf((char *)p, "%s","---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------********************************************************************************************************************************************************************************************");
+/*
+      Serial.println("");
+      Serial.print("n before: ");
+      Serial.println(n);
+  */
+//      n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
+//      n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT); 
+      n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
+
+      Serial.println("");
+      Serial.print("n after: ");
+      Serial.println(n);
+
+      aJson.deleteItem(msg);
     
   }
 
@@ -619,6 +681,9 @@ void initBoardState()
   {
     g_aPins[i].is_analog = false;
     g_aPins[i].is_input = false;
+    g_aPins[i].sensitivity = 0.5;
+    g_aPins[i].is_inverted = false;
+    g_aPins[i].is_visible = true;
   }
 
   // Initialize pins A0-A5 as analog in pins
@@ -626,6 +691,9 @@ void initBoardState()
   {
     g_aPins[i].is_analog = true;
     g_aPins[i].is_input = true;
+    g_aPins[i].sensitivity = 0.5;
+    g_aPins[i].is_inverted = false;
+    g_aPins[i].is_visible = true;
   }
 
   // Set the HW state
@@ -741,6 +809,8 @@ int getTotalPinDigitalValue(int _iPinNum)
 aJsonObject* getJsonBoardState()
 {
 
+  char buff[100];
+  
   aJsonObject* poJsonBoardState = aJson.createObject();
 
   // Creating status JSON object
@@ -770,33 +840,77 @@ aJsonObject* getJsonBoardState()
     // Populate the pin's type    
     if( g_aPins[i].is_analog )
     {
-      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createItem("true") );
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createTrue() );
     }
     else
     {
-      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createItem("false") );
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
     }
 
     // Populate the pin's direction
     if( g_aPins[i].is_input )
     {
-      aJson.addItemToObject(apoPin[i],"is_input", aJson.createItem("true") );
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createTrue() );
     }
     else
     {
-      aJson.addItemToObject(apoPin[i],"is_input", aJson.createItem("false") );
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
     }
 
+    // Populate sensitivity
+//    snprintf(buff, sizeof(buff),"%f", g_aPins[i].sensitivity);
+//    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( buff ) );
+    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].sensitivity ) );
+    
+    // Populate pin's inversion
+    if( g_aPins[i].is_inverted )
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createFalse() );
+    }
+    
+    // Populate pin's visibility
+    if( g_aPins[i].is_visible )
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createFalse() );
+    }
+    
+    /*
+      float sensitivity;
+  int is_inverted;
+  int is_visible;
+    */
+
     // Populate pin's value
-    char buff[20];
-    snprintf(buff, sizeof(buff),"%f", g_aPins[i].value);
-    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( buff ) );
+//    snprintf(buff, sizeof(buff),"%f", g_aPins[i].value);
+//    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( buff ) );
+    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].value ) );
 
     // Push to JSON structure
     sprintf(caPinNumBuffer,"%d",i);
     aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
 
   }
+  
+  /*
+  {"status":<OK,ERROR>,  "pins":{"<0,1,…,13,A0,…,A5>":  {
+  "label":"<label text>",  
+	"is_analog":"<true,false>",  
+	"is_input":"<true,false>", 
+“sensitivity”:”<0.0,1.0>”, 
+“is_inverted”:”<true,false>”, 
+“is_visible”:”<true,false>”,
+"value":"<0.0,1.0>",  },  ...,  }, 
+"connections":[ {"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>",”is_connected”:”<true,false>”},  ...,  ]  }
+  */
+  
 
   // Create CONNECTIONS
   int iaConnections[10];
