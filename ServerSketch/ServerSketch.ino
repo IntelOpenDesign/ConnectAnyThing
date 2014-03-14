@@ -125,11 +125,41 @@ static const struct serveable whitelist[] = {
     "/static/css/app.css", "text/css"                                           }
   ,
   { 
+    "/static/css/bootstrap.min.css", "text/css"                                           }
+  ,
+  { 
     "/static/css/jquery.mobile-1.4.1.css", "text/css"                                           }
   ,
   { 
     "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
   ,
+  { 
+    "/static/fonts/droid-sans/DroidSans.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/droid-sans/DroidSans-Bold.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Italic.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Light.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel-LightItalic.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Medium.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/NeoSansIntel/NeoSansIntel-MediumItalic.ttf", "text/ttf"                                           }
+  ,
+  { 
+    "/static/fonts/glyphicons-halflings-regular.ttf", "text/ttf"                                           }
+  ,  
   { 
     "/static/img/loading.gif", "image/gif"                                           }
   ,
