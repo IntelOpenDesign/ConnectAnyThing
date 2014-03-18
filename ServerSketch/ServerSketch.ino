@@ -184,7 +184,12 @@ static const struct serveable whitelist[] = {
   { 
     "/static/js/underscore-min.js", "application/javascript"                                           }
   ,
-
+  { 
+    "/templates/pin.html", "text/html"                                           }
+  ,
+  { 
+    "/templates/pin_settings.html", "text/html"                                           }
+  ,
   /* last one is the default served if no match */
   { 
     "/index.html", "text/html"                                           }
