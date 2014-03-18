@@ -1,19 +1,9 @@
-console.log('javascript file is here!');
-
-$(document).ready(function() {
-    console.log('document is ready');
-});
-
-$(window).load(function() {
-    console.log('window had loaded');
-});
-
 // Contain everything within the cat object
 var cat = {};
 
 // server connection settings
 cat.on_hardware = true; // to switch to Galileo, just change this to true
-cat.test_server_url = 'ws://192.168.0.196:8001';
+cat.test_server_url = 'ws://localhost:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
 
@@ -23,7 +13,6 @@ cat.jsplumb_ready = false;
 jsPlumb.bind('ready', function() {
     jsPlumb.Defaults.Container = $('#connections-container');
     cat.jsplumb_ready = true;
-    console.log('jsPlumb is ready');
 });
 
 // TODO remove when done debugging
@@ -36,8 +25,6 @@ cat.app = angular.module('ConnectAnything', []);
 
 // The controller for the whole app. Also handles talking to the server.
 cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
-
-    console.log('app controller init');
 
     var $document = $(document);
 
@@ -105,44 +92,11 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
         Galileo.update_pins($scope.pins, pin_ids);
     };
 
-    
     if (cat.on_hardware) {
         Galileo.connect(cat.hardware_server_url, cat.hardware_server_protocol);
     } else {
         Galileo.connect(cat.test_server_url);
     }
-/*
-    $scope.pins["0"] = {
-        is_visible: true,
-        value: 1.0,
-        is_input: false,
-        is_analog: false,
-        is_connected: false,
-        damping: 1.0,
-        input_min: 0.0,
-        input_max: 1.0,
-        is_timer_on: false,
-        timer_value: 0.0,
-        id: "0",
-        label: "Pin 0 Label",
-        name: "0",
-    };
-    $scope.pins["14"] = {
-        is_visible: true,
-        value: 0.5,
-        is_input: true,
-        is_analog: true,
-        is_connected: false,
-        damping: 1.0,
-        input_min: 0.0,
-        input_max: 1.0,
-        is_timer_on: false,
-        timer_value: 0.0,
-        id: "14",
-        label: "Pin 14 Label",
-        name: "A0",
-    };
-    */
 
     // HOW THE APP ADDS/REMOVES CONNECTIONS
     // updating $scope.connections and $scope.pins[<id>].is_connected
@@ -248,7 +202,6 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
 cat.pin_template = 'templates/pin.html';
 
 cat.app.directive('sensor', function($document) {
-    console.log('making app directive sensor');
     function link($scope, $el, attrs) {
         console.log('sensor link', attrs.id);
     }
@@ -270,7 +223,6 @@ cat.app.directive('actuator', function($document) {
 
 // PIN SETTINGS
 cat.app.directive('pinSettings', function($document) {
-    console.log('making app directive pinSettings');
     function link($scope, $el, attrs) {
 
         var $pin_label = $el.find('input.pin-label');
@@ -282,7 +234,6 @@ cat.app.directive('pinSettings', function($document) {
             }
         };
         $scope.update_pin_label = function() {
-            console.log('update pin label!!!!!!!!!!!!!!!!!!');
             $scope.truncate_label();
             $scope.pin.label = $scope.pin_label.substring();
             $scope.send_pin_update([$scope.pin.id]);
@@ -409,30 +360,24 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     };
 
     var connect = function(_url, _protocol) {
-        console.log('Galileo is trying to connect');
         url = _url;
         protocol = _protocol;
         try {
             if (!protocol) {
-                console.log('Galileo is trying to connect with url', _url, 'and no protocol');
                 ws = new WebSocket(url);
             } else {
-                console.log('Galileo is trying to connect with url', _url, 'and protocol', protocol);
                 ws = new WebSocket(url, protocol);
             }
-            console.log('Galileo is assigning callbacks to onopen, onmessage, onclose');
             ws.onopen = onopen;
             ws.onmessage = onmessage;
             ws.onclose = onclose;
             start_waiting();
-            console.log('Galileo finished assigning callbacks');
         } catch(err) {
             console.log(name + ".connect failed with error", err, "Trying again in", wait, " ms...");
             setTimeout(function() {
                 connect(url, protocol);
             }, wait);
         }
-        console.log('end of Galileo\'s connect method');
     };
 
     var onopen = function() {
@@ -492,14 +437,12 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     // and so we do the slowness callback
     var slowness_timeout_id = null;
     var start_waiting = function() {
-        console.log('Galileo start waiting with slowness_time', slowness_time);
         slowness_timeout_id = setTimeout(function() {
             console.log(name, 'is being too slow');
             do_callback('slowness');
         }, slowness_time);
     };
     var stop_waiting = function() {
-        console.log('Galileo stop waiting');
         if(slowness_timeout_id !== null) {
             clearTimeout(slowness_timeout_id);
             slowness_timeout_id = null;

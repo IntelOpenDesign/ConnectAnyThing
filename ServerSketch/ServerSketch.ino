@@ -134,31 +134,31 @@ static const struct serveable whitelist[] = {
     "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
   ,
   { 
-    "/static/fonts/droid-sans/DroidSans.ttf", "text/ttf"                                           }
+    "/static/fonts/droid-sans/DroidSans.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/droid-sans/DroidSans-Bold.ttf", "text/ttf"                                           }
+    "/static/fonts/droid-sans/DroidSans-Bold.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel-Italic.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Italic.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel-Light.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Light.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel-LightItalic.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel-LightItalic.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel-Medium.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel-Medium.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/NeoSansIntel/NeoSansIntel-MediumItalic.ttf", "text/ttf"                                           }
+    "/static/fonts/NeoSansIntel/NeoSansIntel-MediumItalic.ttf", "application/x-font-ttf"                                           }
   ,
   { 
-    "/static/fonts/glyphicons-halflings-regular.ttf", "text/ttf"                                           }
+    "/static/fonts/glyphicons-halflings-regular.ttf", "application/x-font-ttf"                                           }
   ,  
   { 
     "/static/img/loading.gif", "image/gif"                                           }
@@ -463,7 +463,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 
   int n = 0;
 
-  if( g_luiCounter%100 == 0)
+//  if( g_luiCounter%100 == 0)
   {
 
     unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];

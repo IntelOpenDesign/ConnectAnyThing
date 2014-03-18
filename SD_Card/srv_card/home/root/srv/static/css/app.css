@@ -1,4 +1,4 @@
-/*@font-face {
+@font-face {
     font-family: 'Neo Sans Intel';
     font-weight: normal;
     font-style: normal;
@@ -11,13 +11,13 @@
     font-style: normal;
     src: url('../fonts/droid-sans/DroidSans.ttf');
 }
-*/
+
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
     font-size: 24px;
-    /*font-family: 'Neo Sans Intel';*/
+    font-family: 'Neo Sans Intel';
 }
 
 .hide {
