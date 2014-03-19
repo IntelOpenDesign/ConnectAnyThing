@@ -2,7 +2,7 @@
 var cat = {};
 
 // server connection settings
-cat.on_hardware = true; // to switch to Galileo, just change this to true
+cat.on_hardware = false; // to switch to Galileo, just change this to true
 cat.test_server_url = 'ws://localhost:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
@@ -517,8 +517,8 @@ cat.server_pin_format = function(my_pins, my_pin_ids) {
             is_visible: pin.is_visible,
             is_analog: pin.is_analog,
             is_input: pin.is_input,
-            input_min: parseFloat(pin.input_min) / 100,
-            input_max: parseFloat(pin.input_max) / 100,
+            input_min: parseInt(pin.input_min) / 100,
+            input_max: parseInt(pin.input_max) / 100,
             damping: parseInt(pin.damping),
             is_inverted: pin.is_inverted,
             is_timer_on: pin.is_timer_on,
@@ -527,8 +527,6 @@ cat.server_pin_format = function(my_pins, my_pin_ids) {
     });
 
     console.log('client is sending damping values', _.pluck(_.values(pins), 'damping'), 'to server');
-    console.log('client is sending input_min values', _.pluck(_.values(pins), 'input_min'));
-    console.log('client is sending input_max values', _.pluck(_.values(pins), 'input_max'));
 
     return pins;
 };
