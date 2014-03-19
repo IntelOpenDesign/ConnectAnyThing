@@ -1103,15 +1103,31 @@ void procConnMsg( aJsonObject *_pJsonConnections )
     {
       Serial.println("No target in connections");
       continue;
+    }   
+    
+    // Get target
+    aJsonObject* poConnect = aJson.getObjectItem(poItem, "connect");
+    if (poConnect)
+    {
+      switch(poConnect->type)
+      {
+        case aJson_False:
+        case aJson_True:
+          g_aPins[uiTargetPin].connections[uiSourcePin] = poConnect->valuebool;
+        break;
+        default:
+          Serial.print("Error: 'Connect' member value is the wrong type: ");Serial.println((int)(poConnect->type));
+          Serial.print("Msg: ");Serial.println(poConnect->valuestring);
+        break;        
+      }
     }
     
     Serial.print("Source: ");        
     Serial.println(String(uiSourcePin));        
     Serial.print("Target: "); 
-    Serial.println(String(uiTargetPin));        
-    
-    // Toggle pin connection
-    g_aPins[uiTargetPin].connections[uiSourcePin] = ~g_aPins[uiTargetPin].connections[uiSourcePin];
+    Serial.println(String(uiTargetPin));   
+    Serial.print("Connect: "); 
+    Serial.println(String(uiTargetPin));   
   
   } 
 }
@@ -1247,20 +1263,3 @@ void getSerialCommand()
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
