@@ -58,10 +58,15 @@ typedef struct Pin {
   char label[PIN_LABEL_SIZE];
   int is_analog;
   int is_input;
-  float sensitivity;
+  float input_min;
+  float input_max;
+//  float sensitivity;
   int is_inverted;
   int is_visible;
   float value;
+  int is_timer_on;
+  float timer_value;
+  int damping;
   boolean connections[TOTAL_NUM_OF_PINS];
 } 
 Pin;
@@ -310,20 +315,30 @@ void *in, size_t len)
 void procClientMsg(char* _in, size_t _len) {
 
   /*
-{	"status":<OK,ERROR>,
-   	"pins":{	"<0,1,…,13,A0,…,A5>":
-   				{	"label":"<label text>",
-   					"is_analog":"<true,false>",
-   					"is_input":"<true,false>",
-   					"value":"<0.0,1.0>",
-   				},
-   				...,
-   			},
-   	"connections":	[	{"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>"},
-   						...,
-   					]	
-   }
-   */
+  {
+     "status": "<OK, ERROR>",  
+     "pins": {
+        "<0,1,…,13,14,…,19>": {
+           "label": "<label text>",
+           "is_analog": <true,false>,
+           "is_input": <true,false>,
+           “input_min”: <0.0,1.0>,
+           "input_max": <0.0,1.0>,
+           “is_inverted”: <true,false>,
+           “is_visible”: <true,false>,
+           "value": <0.0,1.0>,
+           "is_timer_on": <true, false>,
+           "timer_value": <float>,
+           "damping": <0,9>, 
+        }, ..., 
+     },
+     "connections": [
+        {"source": "<0,1,…,13,14,…,19>",
+         "target": "<0,1,…,13,14…,19>"} ,
+          ...,
+     ]
+  }
+  */
 
   Serial.println("procClientMsg()");
   Serial.println(String(_in));
@@ -591,8 +606,18 @@ void initBoardState()
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     memset(g_aPins[i].label, '\0', sizeof(g_aPins[i].label));
-    //strcpy(g_aPins[i].label,"None");
+    strcpy(g_aPins[i].label,"");
+
+    g_aPins[i].input_min = 0.0;
+    g_aPins[i].input_max = 1.0;
+    g_aPins[i].is_inverted = false;
+    g_aPins[i].is_visible = true;
     g_aPins[i].value = 0.0;
+    g_aPins[i].is_timer_on = false;
+    g_aPins[i].timer_value = 0.0;
+    g_aPins[i].damping = 0;
+    
+    // Set pin connections
     memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
     for(int j=0; j<TOTAL_NUM_OF_PINS; j++)
     {
@@ -601,53 +626,24 @@ void initBoardState()
       else
         g_aPins[i].connections[j] = false;
     }
-  }
 
-  strcpy(g_aPins[0].label,"0");
-  strcpy(g_aPins[1].label,"1");
-  strcpy(g_aPins[2].label,"2");
-  strcpy(g_aPins[3].label,"3");
-  strcpy(g_aPins[4].label,"4");
-  strcpy(g_aPins[5].label,"5");
-  strcpy(g_aPins[6].label,"6");
-  strcpy(g_aPins[7].label,"7");
-  strcpy(g_aPins[8].label,"8");
-  strcpy(g_aPins[9].label,"9");
-  strcpy(g_aPins[10].label,"10");
-  strcpy(g_aPins[11].label,"11");
-  strcpy(g_aPins[12].label,"12");
-  strcpy(g_aPins[13].label,"13");
-  strcpy(g_aPins[14].label,"A0");
-  strcpy(g_aPins[15].label,"A1");
-  strcpy(g_aPins[16].label,"A2");
-  strcpy(g_aPins[17].label,"A3");
-  strcpy(g_aPins[18].label,"A4");
-  strcpy(g_aPins[19].label,"A5");
-
-  // Initialize pins 0-13 as digital out pins
-  for(int i=0; i<(TOTAL_NUM_OF_PINS-NUM_OF_ANALOG_PINS); i++)
-  {
-    if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 )
+    // Initialize analog pins 3,5,6,9,10,11,A0,A1,A2,A3,A4,A5
+    if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 || i==14 || i==15 || i==16 || i==17 || i==18 || i==19 )
       g_aPins[i].is_analog = true;
     else  
       g_aPins[i].is_analog = false;   
-
-    g_aPins[i].is_input = false;
-    pinMode(i, OUTPUT);
-    g_aPins[i].sensitivity = 0.5;
-    g_aPins[i].is_inverted = false;
-    g_aPins[i].is_visible = true;
-  }
-
-  // Initialize pins A0-A5 as analog in pins
-  for(int i=NUM_OF_DIGITAL_PINS; i<TOTAL_NUM_OF_PINS; i++)
-  {
-    g_aPins[i].is_analog = true;
-    g_aPins[i].is_input = true;
-    pinMode(i, INPUT);
-    g_aPins[i].sensitivity = 0.5;
-    g_aPins[i].is_inverted = false;
-    g_aPins[i].is_visible = true;
+       
+    // Initialize digital pins as outputs
+    if( i < NUM_OF_DIGITAL_PINS ) 
+    {
+      g_aPins[i].is_input = false;
+      pinMode(i, OUTPUT);
+    }
+    else // Setting A0-A5 pins as inputs
+    {
+      g_aPins[i].is_input = true;
+      pinMode(i, INPUT);
+    }        
   }
 
   // Set the HW state
@@ -724,7 +720,7 @@ float getTotalPinAnalogValue(int _iPinNum)
   else
     g_aPins[_iPinNum].value = fPinValSum;
   
-  Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  //Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
 }
@@ -762,7 +758,7 @@ int getTotalPinDigitalValue(int _iPinNum)
    g_aPins[_iPinNum].value = iRetValue;    
   
   //g_aPins[_iPinNum].value = iRetValue;
-  Serial.print("Digital Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(iRetValue);
+//  Serial.print("Digital Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(iRetValue);
   
   return iRetValue;
 }
@@ -821,8 +817,13 @@ aJsonObject* getJsonBoardState()
       aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
     }
 
+    aJson.addItemToObject(apoPin[i],"input_min", aJson.createItem( g_aPins[i].input_min ) );
+    
+//    Serial.print("Creating JSON Str. Pin: "); Serial.print(i); Serial.print(" input_max: "); Serial.println(g_aPins[i].input_max);
+    aJson.addItemToObject(apoPin[i],"input_max", aJson.createItem( g_aPins[i].input_max ) );
+
     // Populate sensitivity
-    aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].sensitivity ) );
+ //   aJson.addItemToObject(apoPin[i],"sensitivity", aJson.createItem( g_aPins[i].sensitivity ) );
     
     // Populate pin's inversion
     if( g_aPins[i].is_inverted )
@@ -845,6 +846,20 @@ aJsonObject* getJsonBoardState()
     }
     
     aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
+
+    // Populate pin's timer state
+    if( g_aPins[i].is_timer_on )
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createFalse() );
+    }
+
+    aJson.addItemToObject(apoPin[i],"timer_value", aJson.createItem( g_aPins[i].timer_value ) );
+    
+    aJson.addItemToObject(apoPin[i],"damping", aJson.createItem( g_aPins[i].damping ) );
 
     // Push to JSON structure
     sprintf(caPinNumBuffer,"%d",i);
@@ -900,8 +915,8 @@ aJsonObject* getJsonBoardState()
 void processMessage(char *_acMsg)
 {
   
-  Serial.print("Msg recvd: ");
-  Serial.println(_acMsg);
+//  Serial.print("Msg recvd: ");
+//  Serial.println(_acMsg);
 
   aJsonObject *poMsg = aJson.parse(_acMsg);
 
@@ -949,7 +964,7 @@ void processMessage(char *_acMsg)
 ///////////////////////////////
 void procPinsMsg( aJsonObject *_pJsonPins )
 {
-  Serial.println("Processing Pins");
+//  Serial.println("Processing Pins");
 
   // Iterate all pins and check if we have data available
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
@@ -963,47 +978,76 @@ void procPinsMsg( aJsonObject *_pJsonPins )
 
       aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
       if (poLabel)
-      {
         snprintf(g_aPins[i].label, PIN_LABEL_SIZE, "%s", poLabel->valuestring);
-      }
 
       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
       if (poIsAnalog)
-      {
-        g_aPins[i].is_analog = poIsAnalog->valuebool;
-        
-        /*
-        if( 0 == strcmp(poIsAnalog->valuestring,"true") )
-          g_aPins[i].is_analog = 1;
-        else if( 0 == strcmp(poIsAnalog->valuestring,"false") )
-          g_aPins[i].is_analog = 0;
-        else
-          g_aPins[i].is_analog = -1;
-          */
-      }       
+        g_aPins[i].is_analog = poIsAnalog->valuebool;        
 
       aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
       if (poIsInput)
-      {
         g_aPins[i].is_input = poIsInput->valuebool;
-        /*
-        if( 0 == strcmp(poIsInput->valuestring,"true") )
-          g_aPins[i].is_input = 1;
-        else if( 0 == strcmp(poIsInput->valuestring,"false") )
-          g_aPins[i].is_input = 0;
-        else
-          g_aPins[i].is_input = -1;
-          */
-      }
+        
+      aJsonObject *poInputMin = aJson.getObjectItem(poPinVals, "input_min");
+      if (poInputMin)
+          g_aPins[i].input_min = getFloat(poInputMin);    
+//        g_aPins[i].input_min = poInputMin->valuefloat;
+          
+      aJsonObject *poInputMax = aJson.getObjectItem(poPinVals, "input_max");
+//      Serial.print("Recieved JSON Str. Pin: "); Serial.print(i); Serial.print(" input_max: "); Serial.println(poInputMax->valuefloat);
+      if (poInputMax)
+          g_aPins[i].input_max = getFloat(poInputMax);
+//        g_aPins[i].input_max = poInputMax->valuefloat;
+
+      aJsonObject *poIsInverted = aJson.getObjectItem(poPinVals, "is_inverted");
+      if (poIsInverted)
+        g_aPins[i].is_inverted = poIsInverted->valuebool;  
+
+      aJsonObject *poIsVisible = aJson.getObjectItem(poPinVals, "is_visible");
+      if (poIsVisible)
+        g_aPins[i].is_visible = poIsVisible->valuebool;  
 
       aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
       if (poValue)
-      {
-//        g_aPins[i].value = atof(poValue->valuestring);
-        g_aPins[i].value = poValue->valuefloat;
-      }
+          g_aPins[i].value = getFloat(poValue);      
+//        g_aPins[i].value = poValue->valuefloat;
+     
+      aJsonObject *poIsTimerOn = aJson.getObjectItem(poPinVals, "is_timer_on");
+      if (poIsTimerOn)
+        g_aPins[i].is_timer_on = poIsTimerOn->valuebool;  
+
+      aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
+      if (poTimerValue)
+          g_aPins[i].timer_value = getFloat(poTimerValue);      
+//        g_aPins[i].timer_value = poTimerValue->valuefloat;
+        
+      aJsonObject *poDamping = aJson.getObjectItem(poPinVals, "damping");
+      if (poDamping)
+        g_aPins[i].damping = poDamping->valueint;
+     
     }    
   }
+}
+
+float getFloat(aJsonObject * _poJsonObj)
+{
+ float fRet = 0.0; 
+ switch(_poJsonObj->type)
+ {
+  case aJson_Int:
+    fRet = float(_poJsonObj->valueint);
+  break;  
+  case aJson_Float:
+    fRet = _poJsonObj->valuefloat;
+  break;  
+  default:
+    // None 
+  break;
+ }
+ 
+//  Serial.print("Type: ");Serial.print(_poJsonObj->type); Serial.print(" Int: ");Serial.print(_poJsonObj->valueint);Serial.print(" Float: ");Serial.println(_poJsonObj->valuefloat);
+ 
+ return fRet;
 }
 
 ///////////////////////////////
