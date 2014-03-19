@@ -472,33 +472,27 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
   return n;
 }
 
-static long unsigned int g_luiCounter = 0;
+
 int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 {
 
   int n = 0;
 
-//  if( g_luiCounter%100 == 0)
-  {
-
-    unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
-    unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-    
-    updateBoardState();
-        
-    aJsonObject *msg = getJsonBoardState();  
-    
-    aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
-    aJson.print(msg, &stringStream);
-    String sTempString((char *)p);
+  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
+  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+  
+  updateBoardState();
       
-    n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
+  aJsonObject *msg = getJsonBoardState();  
+  
+  aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
+  aJson.print(msg, &stringStream);
+  String sTempString((char *)p);
     
-    aJson.deleteItem(msg);
+  n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
+  
+  aJson.deleteItem(msg);
 
-  }
-
-  g_luiCounter++;
 
   return n;
 }
@@ -663,11 +657,17 @@ void updateBoardState()
     {
       if( g_aPins[i].is_analog ) // Process analog pins
       {
-        g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
+        if( g_aPins[i].is_inverted )
+          g_aPins[i].value = 1.0 - analogRead(i)/float(ANALOG_IN_MAX_VALUE);
+        else
+          g_aPins[i].value = analogRead(i)/float(ANALOG_IN_MAX_VALUE);
       }
       else // Process digital pins
       {
-        g_aPins[i].value = digitalRead(i);
+        if( g_aPins[i].is_inverted )
+          g_aPins[i].value = 1.0 - digitalRead(i);
+        else
+          g_aPins[i].value = digitalRead(i);       
       }
     }
   }
@@ -990,13 +990,13 @@ void procPinsMsg( aJsonObject *_pJsonPins )
         
       aJsonObject *poInputMin = aJson.getObjectItem(poPinVals, "input_min");
       if (poInputMin)
-          g_aPins[i].input_min = getFloat(poInputMin);    
+          g_aPins[i].input_min = getJsonFloat(poInputMin);    
 //        g_aPins[i].input_min = poInputMin->valuefloat;
           
       aJsonObject *poInputMax = aJson.getObjectItem(poPinVals, "input_max");
 //      Serial.print("Recieved JSON Str. Pin: "); Serial.print(i); Serial.print(" input_max: "); Serial.println(poInputMax->valuefloat);
       if (poInputMax)
-          g_aPins[i].input_max = getFloat(poInputMax);
+          g_aPins[i].input_max = getJsonFloat(poInputMax);
 //        g_aPins[i].input_max = poInputMax->valuefloat;
 
       aJsonObject *poIsInverted = aJson.getObjectItem(poPinVals, "is_inverted");
@@ -1009,7 +1009,7 @@ void procPinsMsg( aJsonObject *_pJsonPins )
 
       aJsonObject *poValue = aJson.getObjectItem(poPinVals, "value");
       if (poValue)
-          g_aPins[i].value = getFloat(poValue);      
+          g_aPins[i].value = getJsonFloat(poValue);      
 //        g_aPins[i].value = poValue->valuefloat;
      
       aJsonObject *poIsTimerOn = aJson.getObjectItem(poPinVals, "is_timer_on");
@@ -1018,7 +1018,7 @@ void procPinsMsg( aJsonObject *_pJsonPins )
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
       if (poTimerValue)
-          g_aPins[i].timer_value = getFloat(poTimerValue);      
+          g_aPins[i].timer_value = getJsonFloat(poTimerValue);      
 //        g_aPins[i].timer_value = poTimerValue->valuefloat;
         
       aJsonObject *poDamping = aJson.getObjectItem(poPinVals, "damping");
@@ -1029,7 +1029,7 @@ void procPinsMsg( aJsonObject *_pJsonPins )
   }
 }
 
-float getFloat(aJsonObject * _poJsonObj)
+float getJsonFloat(aJsonObject * _poJsonObj)
 {
  float fRet = 0.0; 
  switch(_poJsonObj->type)
@@ -1121,14 +1121,14 @@ void procConnMsg( aJsonObject *_pJsonConnections )
         break;        
       }
     }
-    
+    /*
     Serial.print("Source: ");        
     Serial.println(String(uiSourcePin));        
     Serial.print("Target: "); 
     Serial.println(String(uiTargetPin));   
     Serial.print("Connect: "); 
     Serial.println(String(uiTargetPin));   
-  
+    */
   } 
 }
 
