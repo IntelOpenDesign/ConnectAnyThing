@@ -2,7 +2,7 @@
 var cat = {};
 
 // server connection settings
-cat.on_hardware = false; // to switch to Galileo, just change this to true
+cat.on_hardware = true; // to switch to Galileo, just change this to true
 cat.test_server_url = 'ws://192.168.15.122:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
@@ -434,6 +434,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
                 connect: true,
             });
         });
+        console.log('sending add connection message', msg);
         send(msg);
     };
     var remove_connections = function(connections) {
@@ -445,6 +446,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
                 connect: false,
             });
         });
+        console.log('sending remove connection message', msg);
         send(msg);
     };
 
