@@ -679,11 +679,13 @@ void updateBoardState()
     {
       if( g_aPins[i].is_analog ) // Process analog pins
       {
-        analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
+        analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+        //analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
       }
       else // Process digital pins
       {
-        digitalWrite(i, getTotalPinDigitalValue(i) );
+        digitalWrite(i, getTotalPinValue(i) );
+        //digitalWrite(i, getTotalPinDigitalValue(i) );        
       }
     }
   }
@@ -692,6 +694,50 @@ void updateBoardState()
 ////////////////////////////////////////////////////////////////////////////
 // If an output pin has connections, return the sum of all its connections
 ////////////////////////////////////////////////////////////////////////////
+float getTotalPinValue(int _iOutPinNum)
+{
+  float fPinValSum = 0;
+  int iConnCount = 1; // Pins are always connected to themselves
+
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    // Checking what pins are connected to iPinNum
+    if( _iOutPinNum != i) // Ignore the value set to the pin and only use connected pin values
+    {
+      if(g_aPins[_iOutPinNum].connections[i])
+      {
+        iConnCount++;
+        //fPinValSum += g_aPins[i].value;  
+        fPinValSum += (g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);  // Adding the Max/Min formula
+
+        if( !g_aPins[_iOutPinNum].is_analog && fPinValSum >= DIGITAL_VOLTAGE_THRESHOLD) // Digital threshold
+          fPinValSum = 1.0;
+        else
+          fPinValSum = 0.0;
+        
+        Serial.print(i); Serial.print(" --> "); Serial.println(_iOutPinNum);
+        Serial.print(" Min: "); Serial.println(g_aPins[i].input_min);
+        Serial.print(" Max: "); Serial.println(g_aPins[i].input_max);
+        Serial.print(" Value: "); Serial.println(g_aPins[i].value);
+        Serial.print(" Scales value: "); Serial.println(g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);        
+        Serial.print(" -fPinValSum: "); Serial.println(fPinValSum);
+      }    
+    } 
+  }
+   
+  if(fPinValSum > 1.0)
+    fPinValSum = 1.0;
+  
+  if( 1 == iConnCount ) // No other connections found besides itself
+    fPinValSum = g_aPins[_iOutPinNum].value;
+  else
+    g_aPins[_iOutPinNum].value = fPinValSum;
+  
+  //Serial.print("Analog Pin #: "); Serial.print(_iOutPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  
+  return fPinValSum;
+}
+
 float getTotalPinAnalogValue(int _iPinNum)
 {
   float fPinValSum = 0;
@@ -705,7 +751,7 @@ float getTotalPinAnalogValue(int _iPinNum)
       if(g_aPins[_iPinNum].connections[i])
       {
         iConnCount++;
-        fPinValSum += g_aPins[i].value;  
+        fPinValSum += g_aPins[i].value;       
         Serial.print(i); Serial.print(" --> "); Serial.print(_iPinNum);
         Serial.print(" value: "); Serial.println(g_aPins[i].value);
       }    
@@ -720,7 +766,7 @@ float getTotalPinAnalogValue(int _iPinNum)
   else
     g_aPins[_iPinNum].value = fPinValSum;
   
-  //Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
 }
