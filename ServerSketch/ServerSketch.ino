@@ -710,17 +710,21 @@ float getTotalPinValue(int _iOutPinNum)
         //fPinValSum += g_aPins[i].value;  
         fPinValSum += (g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);  // Adding the Max/Min formula
 
-        if( !g_aPins[_iOutPinNum].is_analog && fPinValSum >= DIGITAL_VOLTAGE_THRESHOLD) // Digital threshold
-          fPinValSum = 1.0;
-        else
-          fPinValSum = 0.0;
-        
+       if( !g_aPins[_iOutPinNum].is_analog )
+       {
+         if( fPinValSum >= DIGITAL_VOLTAGE_THRESHOLD) // Digital threshold
+           fPinValSum = 1.0;
+         else
+           fPinValSum = 0.0;
+       }
+        /*
         Serial.print(i); Serial.print(" --> "); Serial.println(_iOutPinNum);
         Serial.print(" Min: "); Serial.println(g_aPins[i].input_min);
         Serial.print(" Max: "); Serial.println(g_aPins[i].input_max);
         Serial.print(" Value: "); Serial.println(g_aPins[i].value);
         Serial.print(" Scales value: "); Serial.println(g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);        
         Serial.print(" -fPinValSum: "); Serial.println(fPinValSum);
+        */
       }    
     } 
   }
