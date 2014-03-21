@@ -52,6 +52,8 @@ int g_aiP[TOTAL_NUM_Px];
 
 #define DIGITAL_VOLTAGE_THRESHOLD  0.5
 
+#define TOTAL_NUM_OF_PAST_VALUES  10 // Filtering buffer
+
 //char** g_caaPinNames[20][PIN_LABEL_SIZE];
 
 typedef struct Pin {
@@ -68,6 +70,7 @@ typedef struct Pin {
   float timer_value;
   int damping;
   boolean connections[TOTAL_NUM_OF_PINS];
+  float past_values[TOTAL_NUM_OF_PAST_VALUES];
 } 
 Pin;
 
@@ -607,6 +610,10 @@ void initBoardState()
     g_aPins[i].is_inverted = false;
     g_aPins[i].is_visible = true;
     g_aPins[i].value = 0.0;
+    
+    for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)
+      g_aPins[i].past_values[j] = 0.0;
+    
     g_aPins[i].is_timer_on = false;
     g_aPins[i].timer_value = 0.0;
     g_aPins[i].damping = 0;
@@ -677,16 +684,10 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins
-      {
+      if( g_aPins[i].is_analog ) // Process analog pins      
         analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
-        //analogWrite(i, getTotalPinAnalogValue(i)*ANALOG_OUT_MAX_VALUE );
-      }
-      else // Process digital pins
-      {
+      else // Process digital pins     
         digitalWrite(i, getTotalPinValue(i) );
-        //digitalWrite(i, getTotalPinDigitalValue(i) );        
-      }
     }
   }
 }
@@ -707,8 +708,9 @@ float getTotalPinValue(int _iOutPinNum)
       if(g_aPins[_iOutPinNum].connections[i])
       {
         iConnCount++;
-        //fPinValSum += g_aPins[i].value;  
-        fPinValSum += (g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);  // Adding the Max/Min formula
+
+        //fPinValSum += (g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);  // Adding the Max/Min formula
+        fPinValSum += getScaledPinValue(i);  // Adding the Max/Min formula
 
        if( !g_aPins[_iOutPinNum].is_analog )
        {
@@ -717,14 +719,6 @@ float getTotalPinValue(int _iOutPinNum)
          else
            fPinValSum = 0.0;
        }
-        /*
-        Serial.print(i); Serial.print(" --> "); Serial.println(_iOutPinNum);
-        Serial.print(" Min: "); Serial.println(g_aPins[i].input_min);
-        Serial.print(" Max: "); Serial.println(g_aPins[i].input_max);
-        Serial.print(" Value: "); Serial.println(g_aPins[i].value);
-        Serial.print(" Scales value: "); Serial.println(g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);        
-        Serial.print(" -fPinValSum: "); Serial.println(fPinValSum);
-        */
       }    
     } 
   }
@@ -740,6 +734,34 @@ float getTotalPinValue(int _iOutPinNum)
   //Serial.print("Analog Pin #: "); Serial.print(_iOutPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
   
   return fPinValSum;
+}
+
+float getScaledPinValue(int _iInPinNum)
+{
+  //return (g_aPins[_iInPinNum].value - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+  return (getFilteredPinValue(_iInPinNum) - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+}
+
+float getFilteredPinValue(int _iInPinNum)
+{
+  // Update tap value
+  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping+1); // The sampling rate is so slow this filter can see it.
+  Serial.print("fFilterTab: "); Serial.println(fFilterTab);
+  // Shift previous values
+  for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES-1; i++)
+  {
+      g_aPins[_iInPinNum].past_values[i+1] = g_aPins[_iInPinNum].past_values[i];
+  }
+  
+  // Add new data
+  g_aPins[_iInPinNum].past_values[0] = g_aPins[_iInPinNum].value;
+    Serial.print("value: "); Serial.println(g_aPins[_iInPinNum].value);
+  // Multiply and accumulate
+  float fMultAndAccum = 0.0;
+  for(int i=0; i<=g_aPins[_iInPinNum].damping; i++)
+      fMultAndAccum += fFilterTab*g_aPins[_iInPinNum].past_values[i];
+  Serial.print("MultAndAccum: "); Serial.println(fMultAndAccum);    
+  return fMultAndAccum;
 }
 
 float getTotalPinAnalogValue(int _iPinNum)
@@ -1072,9 +1094,12 @@ void procPinsMsg( aJsonObject *_pJsonPins )
 //        g_aPins[i].timer_value = poTimerValue->valuefloat;
         
       aJsonObject *poDamping = aJson.getObjectItem(poPinVals, "damping");
-      if (poDamping)
+      if (poDamping){
         g_aPins[i].damping = poDamping->valueint;
-     
+        Serial.print("poDamping->valueint: "); Serial.println(poDamping->valueint);
+        Serial.print("poDamping->valuefloat: "); Serial.println(poDamping->valuefloat);
+       // Serial.print("poDamping->valuestring: "); Serial.println(poDamping->valuestring);
+      }
     }    
   }
 }
