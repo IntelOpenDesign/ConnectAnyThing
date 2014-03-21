@@ -52,9 +52,9 @@ int g_aiP[TOTAL_NUM_Px];
 
 #define DIGITAL_VOLTAGE_THRESHOLD  0.5
 
-#define TOTAL_NUM_OF_PAST_VALUES  10 // Filtering buffer
+#define TOTAL_NUM_OF_PAST_VALUES  1000 // Filtering buffer
 
-//char** g_caaPinNames[20][PIN_LABEL_SIZE];
+float g_afFilterDeltas[] = {1,0.8,0.6,0.4,0.2,0.1,0.075,0.050,0.025,0.010};
 
 typedef struct Pin {
   char label[PIN_LABEL_SIZE];
@@ -69,23 +69,12 @@ typedef struct Pin {
   int is_timer_on;
   float timer_value;
   int damping;
+  int prev_damping;
   boolean connections[TOTAL_NUM_OF_PINS];
-  float past_values[TOTAL_NUM_OF_PAST_VALUES];
+//  float past_values[TOTAL_NUM_OF_PAST_VALUES];
+  float prev_values;
 } 
 Pin;
-
-  /*
-  {"status":<OK,ERROR>,  "pins":{"<0,1,…,13,A0,…,A5>":  {
-  "label":"<label text>",  
-	"is_analog":"<true,false>",  
-	"is_input":"<true,false>", 
-“sensitivity”:”<0.0,1.0>”, 
-“is_inverted”:”<true,false>”, 
-“is_visible”:”<true,false>”,
-"value":"<0.0,1.0>",  },  ...,  }, 
-"connections":[ {"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>",”is_connected”:”<true,false>”},  ...,  ]  }
-  */
-
 
 Pin g_aPins[TOTAL_NUM_OF_PINS];
 
@@ -258,7 +247,7 @@ void *in, size_t len)
 }
 
 // Testing
-char pcTestBuffer[512] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"},\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
+//char pcTestBuffer[512] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"},\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
 
 /* lyt_protocol*/
 static int
@@ -441,6 +430,7 @@ void procWebMsg(char* _in, size_t _len) {
 // **********************************
 // Send pin status to the Website    
 // **********************************
+/*
 int  sendStatusToWebsite(struct libwebsocket *wsi)
 {
   int n;
@@ -474,7 +464,7 @@ int  sendStatusToWebsite(struct libwebsocket *wsi)
 
   return n;
 }
-
+*/
 
 int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 {
@@ -611,12 +601,14 @@ void initBoardState()
     g_aPins[i].is_visible = true;
     g_aPins[i].value = 0.0;
     
-    for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)
-      g_aPins[i].past_values[j] = 0.0;
+ //   for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)
+  //    g_aPins[i].past_values[j] = 0.0;
+    g_aPins[i].prev_values = 0.0;
     
     g_aPins[i].is_timer_on = false;
     g_aPins[i].timer_value = 0.0;
     g_aPins[i].damping = 0;
+    g_aPins[i].prev_damping = 0;
     
     // Set pin connections
     memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
@@ -744,96 +736,85 @@ float getScaledPinValue(int _iInPinNum)
 
 float getFilteredPinValue(int _iInPinNum)
 {
+  static float fFiltered = 0.0;
+
+//  float fDelta = 1.0/pow(10,g_aPins[_iInPinNum].damping);
+//  float fDelta = 1.0 - 0.99/9.0*float(g_aPins[_iInPinNum].damping);
+  float fDelta = g_afFilterDeltas[g_aPins[_iInPinNum].damping];
+
+  Serial.print("fDelta: "); Serial.println(fDelta);    
+
+  if( fFiltered < g_aPins[_iInPinNum].value )
+  {
+    fFiltered += fDelta;
+    if(fFiltered>g_aPins[_iInPinNum].value)
+      fFiltered = g_aPins[_iInPinNum].value;
+  }
+  else if( fFiltered > g_aPins[_iInPinNum].value )  
+  {
+    fFiltered -= fDelta;
+    if( fFiltered < g_aPins[_iInPinNum].value)
+      fFiltered = g_aPins[_iInPinNum].value;
+  }
+  else
+  {
+    fFiltered = g_aPins[_iInPinNum].value;
+  }
+
+Serial.print("fFiltered: "); Serial.println(fFiltered);  
+Serial.print("Value: "); Serial.println(g_aPins[_iInPinNum].value);  
+
+    
+  /*
+  // Check if the damping value has changed
+  if( g_aPins[_iInPinNum].damping != g_aPins[_iInPinNum].prev_damping )
+  {
+    // Clear the history values
+    for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES; i++)
+      g_aPins[_iInPinNum].past_values[i] = 0.0;
+  }
+  
+  g_aPins[_iInPinNum].damping
+  
+  g_aPins[_iInPinNum].value
+  g_aPins[_iInPinNum].prev_value  
+ */
+  return fFiltered; 
+}
+
+/*
+float getFilteredPinValue(int _iInPinNum)
+{
+  // Check if the damping value has changed
+  if( g_aPins[_iInPinNum].damping != g_aPins[_iInPinNum].prev_damping )
+  {
+    // Clear the history values
+    for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES; i++)
+      g_aPins[_iInPinNum].past_values[i] = 0.0;
+  }
+  
+  // Update 
+  g_aPins[_iInPinNum].prev_damping =   g_aPins[_iInPinNum].damping;
+  
   // Update tap value
-  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping+1); // The sampling rate is so slow this filter can see it.
+//  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping+1); // The sampling rate is so slow this filter can see it.
+  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping*100+1); // The sampling rate is so slow this filter can see it.
   Serial.print("fFilterTab: "); Serial.println(fFilterTab);
   // Shift previous values
   for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES-1; i++)
-  {
       g_aPins[_iInPinNum].past_values[i+1] = g_aPins[_iInPinNum].past_values[i];
-  }
   
   // Add new data
   g_aPins[_iInPinNum].past_values[0] = g_aPins[_iInPinNum].value;
     Serial.print("value: "); Serial.println(g_aPins[_iInPinNum].value);
   // Multiply and accumulate
   float fMultAndAccum = 0.0;
-  for(int i=0; i<=g_aPins[_iInPinNum].damping; i++)
+  for(int i=0; i<=g_aPins[_iInPinNum].damping*100; i++)
       fMultAndAccum += fFilterTab*g_aPins[_iInPinNum].past_values[i];
   Serial.print("MultAndAccum: "); Serial.println(fMultAndAccum);    
   return fMultAndAccum;
 }
-
-float getTotalPinAnalogValue(int _iPinNum)
-{
-  float fPinValSum = 0;
-  int iConnCount = 1; // Pins are always connected to themselves
-
-  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
-  {
-    // Checking what pins are connected to iPinNum
-    if( _iPinNum != i) // Ignore the value set to the pin and only use connected pin values
-    {
-      if(g_aPins[_iPinNum].connections[i])
-      {
-        iConnCount++;
-        fPinValSum += g_aPins[i].value;       
-        Serial.print(i); Serial.print(" --> "); Serial.print(_iPinNum);
-        Serial.print(" value: "); Serial.println(g_aPins[i].value);
-      }    
-    } 
-  }
-   
-  if(fPinValSum > 1.0)
-    fPinValSum = 1.0;
-  
-  if( 1 == iConnCount ) // No other connections found besides itself
-    fPinValSum = g_aPins[_iPinNum].value;
-  else
-    g_aPins[_iPinNum].value = fPinValSum;
-  
-  Serial.print("Analog Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
-  
-  return fPinValSum;
-}
-
-////////////////////////////////////////////////////////////////////////////
-// If an output pin has connections, return the sum of all its connections
-////////////////////////////////////////////////////////////////////////////
-int getTotalPinDigitalValue(int _iPinNum)
-{ 
-  int iRetValue = 0;
-  int iConnCount = 1; // Pins are always connected to themselves
-    
-  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
-  {
-    // Checking what pins are connected to iPinNum
-    if( _iPinNum != i) // Ignore the value set to the pin and only use connected pin values
-    {
-      if(g_aPins[_iPinNum].connections[i])
-      {
-        iConnCount++;
-        if(g_aPins[i].value >= DIGITAL_VOLTAGE_THRESHOLD) // Digital threshold
-        {
-          iRetValue = 1;
-          break;      
-        }
-        else
-          iRetValue = 0;          
-      }    
-    }
-  }
-  
-  if( 1 == iConnCount ) // No other connections found besides itself
-    iRetValue = g_aPins[_iPinNum].value;    
-  else
-   g_aPins[_iPinNum].value = iRetValue;    
-  
-  //g_aPins[_iPinNum].value = iRetValue;
-//  Serial.print("Digital Pin #: "); Serial.print(_iPinNum); Serial.print(" Total Value: "); Serial.println(iRetValue);
-  
-  return iRetValue;
-}
+*/
 
 ////////////////////////////////////////////////
 // Get the board state and return a JSON object
@@ -1256,7 +1237,7 @@ void setup()
   initWebsocket();  
 
 }
-
+/*
 char g_acMessage[1000];
 int g_ToggleFlag = 0;
 char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
@@ -1266,7 +1247,7 @@ char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\
 char g_acPin13_On_3_Analog[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}  }}";
 char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"3\"}]}";
 int g_iDebugState = 0;
-
+*/
 unsigned long last_print = 0;
 
 void loop()
