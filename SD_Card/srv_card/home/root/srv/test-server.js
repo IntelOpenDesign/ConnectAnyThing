@@ -14,15 +14,19 @@ var msg = {
     status: 'OK', // TODO test client side with "error" status
     pins: {},
     connections: [],
+    count: 0, // TODO remove when done debugging
+    message_ids_processed: {},
 };
+
+var N_CLIENTS = 0;
 
 function pin_setter(is_analog, is_input) {
     return function(id) {
         msg.pins[id] = {
-            label: 'Pin ' + id,
+            label: '',
             value: 0,
-            //is_visible: Math.random() > 0.5 ? true : false,
-            is_visible: true,
+            is_visible: Math.random() > 0.5 ? true : false,
+            //is_visible: true,
             is_analog: is_analog,
             is_input: is_input,
             input_min: 0.0,
@@ -78,45 +82,65 @@ function update() {
 setInterval(update, 6000);
 
 var server = ws.createServer(function(conn){
-    console.log('new connection');
+
+    N_CLIENTS += 1;
+    console.log('new connection, N_CLIENTS', N_CLIENTS);
+
+    setInterval(function() {
+        msg.count += 1;
+        console.log('broadcasting message #', msg.count, 'which has message IDs', JSON.stringify(msg.message_ids_processed));
+        conn.sendText(JSON.stringify(msg));
+
+        _und.each(_und.keys(msg.message_ids_processed), function(id) {
+            msg.message_ids_processed[id] += 1;
+        });
+        var message_ids_to_delete = _und.filter(_und.keys(msg.message_ids_processed),
+            function(id) { return msg.message_ids_processed[id] >= N_CLIENTS; });
+        _und.each(message_ids_to_delete, function(id) {
+            delete msg.message_ids_processed[id];
+        });
+    }, 1000);
+
     conn.on('text', function(str) {
         console.log('received ' + str);
-        var d = JSON.parse(str);
-        _und.each(d.connections, function(dc) {
-            var index = -1;
-            _und.each(msg.connections, function(mc, i) {
-                if (mc.source === dc.source && mc.target === dc.target) {
-                    index = i;
+        setTimeout(function() {
+            //console.log('processing ' + str);
+            var d = JSON.parse(str);
+            _und.each(d.connections, function(dc) {
+                var index = -1;
+                _und.each(msg.connections, function(mc, i) {
+                    if (mc.source === dc.source && mc.target === dc.target) {
+                        index = i;
+                    }
+                });
+                // if client wants to add connection && we don't already have it
+                if (dc.connect && index < 0) {
+                    msg.connections.push({
+                        source: dc.source,
+                        target: dc.target
+                    });
+                // if client wants to remove connection && we have it
+                } else if (!dc.connect && index >= 0) {
+                    msg.connections.splice(index, 1);
                 }
             });
-            // if client wants to add connection && we don't already have it
-            if (dc.connect && index < 0) {
-                msg.connections.push({
-                    source: dc.source,
-                    target: dc.target
-                });
-            // if client wants to remove connection && we have it
-            } else if (!dc.connect && index >= 0) {
-                msg.connections.splice(index, 1);
-            }
-        });
-        _und.each(d.pins, function(pin, id) {
-            msg.pins[id].label = pin.label;
-            msg.pins[id].is_visible = pin.is_visible;
-            msg.pins[id].is_analog = pin.is_analog;
-            msg.pins[id].is_input = pin.is_input;
-            msg.pins[id].is_inverted = pin.is_inverted;
-            msg.pins[id].input_min = pin.input_min;
-            msg.pins[id].input_max = pin.input_max;
-            msg.pins[id].damping = pin.damping;
-            msg.pins[id].is_timer_on = pin.is_timer_on;
-            msg.pins[id].timer_value = pin.timer_value;
-        });
+            _und.each(d.pins, function(pin, id) {
+                msg.pins[id].label = pin.label;
+                msg.pins[id].is_visible = pin.is_visible;
+                msg.pins[id].is_analog = pin.is_analog;
+                msg.pins[id].is_input = pin.is_input;
+                msg.pins[id].is_inverted = pin.is_inverted;
+                msg.pins[id].input_min = pin.input_min;
+                msg.pins[id].input_max = pin.input_max;
+                msg.pins[id].damping = pin.damping;
+                msg.pins[id].is_timer_on = pin.is_timer_on;
+                msg.pins[id].timer_value = pin.timer_value;
+            });
+            console.log('processing message ID', d.message_id);
+            msg.message_ids_processed[d.message_id] = 0;
+        }, 3000);
     });
-    setInterval(function() {
-        console.log('broadcasting state');
-        conn.sendText(JSON.stringify(msg));
-    }, 3000);
+
     conn.on('close', function(code, reason) {
         try {
             console.log('close - try');

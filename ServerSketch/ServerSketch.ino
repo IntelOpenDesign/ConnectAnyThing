@@ -54,6 +54,68 @@ int g_aiP[TOTAL_NUM_Px];
 
 #define TOTAL_NUM_OF_PAST_VALUES  1000 // Filtering buffer
 
+#define MESSAGES_PROCESSED_TOTAL_SIZE 1000
+#define PROCESSED_MESSAGE_ID_MAX_SIZE 100
+#define MAX_N_CLIENTS 100
+
+class MessageManager
+{
+  typedef struct _Msg_Id {
+    char id[PROCESSED_MESSAGE_ID_MAX_SIZE];
+    int count;
+  }
+  Msg_Id;
+  
+public:
+  Msg_Id m_MessagesProcessed[MESSAGES_PROCESSED_TOTAL_SIZE];
+ 
+  MessageManager()
+  {
+    for(int i=0; i<MESSAGES_PROCESSED_TOTAL_SIZE; i++)
+    {
+      *m_MessagesProcessed[i].id = NULL;
+      m_MessagesProcessed[i].count = 0;
+    }
+  }
+  
+  ~MessageManager(){}
+
+  void newProcessedMsg(char* _sId)
+  {
+    int index = -1;
+    for(int i=0; i<MESSAGES_PROCESSED_TOTAL_SIZE; i++)
+    {
+      if (*m_MessagesProcessed[i].id == NULL) {
+        index = i;
+        break; 
+      }
+    }
+    if (index < 0) {
+      //Serial.print("ERROR! The MessageManager's array of messages is ALL FULL. Make it bigger. The current size is "); Serial.println(MESSAGES_PROCESSED_TOTAL_SIZE);
+      return;
+    }
+    
+    sprintf(m_MessagesProcessed[index].id,"%s",_sId);
+  }
+  
+  void sent()
+  {
+    for (int i = 0; i<MESSAGES_PROCESSED_TOTAL_SIZE; i++)
+    {
+      if (*m_MessagesProcessed[i].id != NULL) {
+        m_MessagesProcessed[i].count += 1;
+        if (m_MessagesProcessed[i].count > MAX_N_CLIENTS) {
+          *m_MessagesProcessed[i].id = NULL;
+          m_MessagesProcessed[i].count = 0;
+        } 
+      }
+    }
+  }
+   
+};
+
+MessageManager g_oMessageManager;
+
 float g_afFilterDeltas[] = {1,0.8,0.6,0.4,0.2,0.1,0.075,0.050,0.025,0.010};
 
 typedef struct Pin {
@@ -128,9 +190,6 @@ static const struct serveable whitelist[] = {
     "/static/css/jquery.mobile-1.4.1.css", "text/css"                                           }
   ,
   { 
-    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
-  ,
-  { 
     "/static/fonts/droid-sans/DroidSans.ttf", "application/x-font-ttf"                                           }
   ,
   { 
@@ -164,19 +223,13 @@ static const struct serveable whitelist[] = {
     "/static/js/app.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                           }
-  ,
-  { 
-    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                           }
+    "/static/js/d3.min.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/angular.min.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/jquery.min.js", "application/javascript"                                           }
-  ,
-  { 
-    "/static/js/jquery-ui.min.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/underscore-min.js", "application/javascript"                                           }
@@ -187,6 +240,9 @@ static const struct serveable whitelist[] = {
   { 
     "/templates/pin_settings.html", "text/html"                                           }
   ,
+  { 
+    "/templates/pin_stub.html", "text/html"                                           }
+  ,  
   /* last one is the default served if no match */
   { 
     "/index.html", "text/html"                                           }
@@ -283,7 +339,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_RECEIVE:
 
-    Serial.println("Process Incomming Messag");
+    //Serial.println("Process Incomming Messag");
 
     // **********************************
     // Process Data Receieved from the Website
@@ -332,14 +388,14 @@ void procClientMsg(char* _in, size_t _len) {
   }
   */
 
-  Serial.println("procClientMsg()");
-  Serial.println(String(_in));
+  //Serial.print//Serial.println("procClientMsg()");
+  //Serial.println(String(_in));
 
   // Create JSON message
   aJsonObject *pJsonMsg = aJson.parse(_in);
   if( pJsonMsg == NULL )
   {
-    Serial.println("ERROR: No JSON message to process");
+    //Serial.println("ERROR: No JSON message to process");
     return;
   }
 
@@ -359,7 +415,7 @@ void procClientMsg(char* _in, size_t _len) {
   }
   else
   {
-    Serial.println("No JSON message to process");
+    //Serial.println("No JSON message to process");
   }
 
 }
@@ -373,18 +429,18 @@ void procWebMsg(char* _in, size_t _len) {
 
   sMsg.toLowerCase();
 
-  Serial.print("input: "); 
-  Serial.println(sMsg);
-  Serial.print("_len: "); 
-  Serial.println(String(_len));
+  //Serial.print("input: "); 
+  //Serial.println(sMsg);
+  //Serial.print("_len: "); 
+  //Serial.println(String(_len));
 
   // Parse incomming message
   if(  sMsg.startsWith("d") && _len <= 3 )
   {
     // Check if we are setting a Dx pin
     int iPin = sMsg.substring(1,sMsg.length()).toInt();
-    Serial.print("Pin: ");
-    Serial.println(String(iPin));
+    //Serial.print("Pin: ");
+    //Serial.println(String(iPin));
     g_abD[iPin] = ~g_abD[iPin]; // Toggle state
     digitalWrite(iPin, g_abD[iPin]); // Set state
   }
@@ -408,22 +464,22 @@ void procWebMsg(char* _in, size_t _len) {
     }
     else
     {
-      Serial.print("Error. Unrecongnized message: ");   
-      Serial.println(sMsg);
+      //Serial.print("Error. Unrecongnized message: ");   
+      //Serial.println(sMsg);
     }
 
     // Set pin value
-    Serial.print("Pin: ");
-    Serial.println(String(iPin));
-    Serial.print("Value: ");
-    Serial.println(String(iValue));
+    //Serial.print("Pin: ");
+    //Serial.println(String(iPin));
+    //Serial.print("Value: ");
+    //Serial.println(String(iValue));
     g_aiP[iPin] = iValue; // Toggle state
     analogWrite(iPin, g_aiP[iPin]); // Set state
   }
   else
   {
-    Serial.print("Error. Unrecongnized message: ");   
-    Serial.println(sMsg);
+    //Serial.print("Error. Unrecongnized message: ");   
+    //Serial.println(sMsg);
   }
 }
 
@@ -483,7 +539,9 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   String sTempString((char *)p);
     
   n = libwebsocket_write(wsi, p, sTempString.length(), LWS_WRITE_TEXT);
-  
+
+  g_oMessageManager.sent(); // Updating Message Manager
+   
   aJson.deleteItem(msg);
 
 
@@ -742,7 +800,7 @@ float getFilteredPinValue(int _iInPinNum)
 //  float fDelta = 1.0 - 0.99/9.0*float(g_aPins[_iInPinNum].damping);
   float fDelta = g_afFilterDeltas[g_aPins[_iInPinNum].damping];
 
-  Serial.print("fDelta: "); Serial.println(fDelta);    
+  //Serial.print("fDelta: "); Serial.println(fDelta);    
 
   if( fFiltered < g_aPins[_iInPinNum].value )
   {
@@ -761,8 +819,8 @@ float getFilteredPinValue(int _iInPinNum)
     fFiltered = g_aPins[_iInPinNum].value;
   }
 
-Serial.print("fFiltered: "); Serial.println(fFiltered);  
-Serial.print("Value: "); Serial.println(g_aPins[_iInPinNum].value);  
+//Serial.print("fFiltered: "); //Serial.println(fFiltered);  
+//Serial.print("Value: "); Serial.println(g_aPins[_iInPinNum].value);  
 
     
   /*
@@ -819,9 +877,13 @@ float getFilteredPinValue(int _iInPinNum)
 ////////////////////////////////////////////////
 // Get the board state and return a JSON object
 ////////////////////////////////////////////////
+int g_iMsgCount = 0; // debug
+
 aJsonObject* getJsonBoardState()
 {
 
+   g_iMsgCount++; // debug
+    
   char buff[100];
   
   aJsonObject* poJsonBoardState = aJson.createObject();
@@ -839,6 +901,9 @@ aJsonObject* getJsonBoardState()
 
   // Creating connection JSON object
   aJsonObject* paConnections = aJson.createArray();
+
+  // Creating message IDs JSON object
+  aJsonObject* paMsgIds = aJson.createArray();
 
   // Create STATUS
   poStatus = aJson.createItem("OK");
@@ -933,11 +998,6 @@ aJsonObject* getJsonBoardState()
   */
   
   // Create CONNECTIONS
-//  int iaConnections[10];
-//  poConnections = aJson.createIntArray(iaConnections, 0); 
-  
-//  paConnections = 
- 
   for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
   {
     for(int j=0; j<TOTAL_NUM_OF_PINS ;j++)
@@ -954,12 +1014,26 @@ aJsonObject* getJsonBoardState()
     }
   }
   
+  // Create MSG IDs 
+  for(int i=0; i<MESSAGES_PROCESSED_TOTAL_SIZE; i++)
+  {
+    if( *g_oMessageManager.m_MessagesProcessed[i].id != NULL )
+    {
+      aJson.addItemToArray(paMsgIds,aJson.createItem(g_oMessageManager.m_MessagesProcessed[i].id));
+    }
+  }
+  
+  ////// debug
+    aJson.addItemToObject(poJsonBoardState,"Msg_Count", aJson.createItem( g_iMsgCount ) );
+  //////
 
   // Push to JSON object
   aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
 //  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
   aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
+  aJson.addItemToObject(poJsonBoardState,"message_ids_processed",paMsgIds);
+  
 
   return poJsonBoardState;
 
@@ -975,15 +1049,26 @@ void processMessage(char *_acMsg)
 
   if(poMsg != NULL)
   {
+    aJsonObject *poMsgId = aJson.getObjectItem(poMsg, "message_id");
+    if (!poMsgId) {
+      //Serial.println("ERROR: Invalid Msg Id.");
+      return;
+    }
+    else
+    {
+      g_oMessageManager.newProcessedMsg(poMsgId->valuestring);
+    }
+    
+    
     aJsonObject *poStatus = aJson.getObjectItem(poMsg, "status");
     if (!poStatus) {
-      Serial.println("ERROR: No Status data.");
+      //Serial.println("ERROR: No Status data.");
       return;
     }
     else if ( strncmp(poStatus->valuestring,"OK",2) == 0 )
     {
       // Process if status is OK
-      Serial.println("STATUS: OK");
+      //Serial.println("STATUS: OK");
 
       // Check if the message has pin data
       aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
@@ -997,16 +1082,16 @@ void processMessage(char *_acMsg)
     else if ( strncmp(poStatus->valuestring,"ERROR",5) == 0 )
     {
       // Process if status is ERROR
-      Serial.println("STATUS: ERROR");
+      //Serial.println("STATUS: ERROR");
     }
     else
     {
-      Serial.println("ERROR: Unknown status");      
+      //Serial.println("ERROR: Unknown status");      
     } 
   }
   else
   {
-    Serial.println("Client message is NULL");
+    //Serial.println("Client message is NULL");
   }
 
   aJson.deleteItem(poMsg);
@@ -1077,8 +1162,8 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poDamping = aJson.getObjectItem(poPinVals, "damping");
       if (poDamping){
         g_aPins[i].damping = poDamping->valueint;
-        Serial.print("poDamping->valueint: "); Serial.println(poDamping->valueint);
-        Serial.print("poDamping->valuefloat: "); Serial.println(poDamping->valuefloat);
+        //Serial.print("poDamping->valueint: "); Serial.println(poDamping->valueint);
+        //Serial.print("poDamping->valuefloat: "); Serial.println(poDamping->valuefloat);
        // Serial.print("poDamping->valuestring: "); Serial.println(poDamping->valuestring);
       }
     }    
@@ -1115,9 +1200,9 @@ void procConnMsg( aJsonObject *_pJsonConnections )
   int uiTargetPin = -1;
   unsigned char ucNumOfConns = aJson.getArraySize(_pJsonConnections);
   
-  Serial.print("Processing ");
-  Serial.print(String(ucNumOfConns));
-  Serial.println(" Connections");
+  //Serial.print("Processing ");
+  //Serial.print(String(ucNumOfConns));
+  //Serial.println(" Connections");
 
   for(int i=0; i<ucNumOfConns; i++)
   {
@@ -1134,13 +1219,13 @@ void procConnMsg( aJsonObject *_pJsonConnections )
       uiSourcePin = atoi(poSource->valuestring);
       if( poSource->valueint < 0 || poSource->valueint <= TOTAL_NUM_OF_PINS)
       {
-        Serial.println("Source pin out of bounds");
+        //Serial.println("Source pin out of bounds");
         continue;
       }
     }
     else
     {
-      Serial.println("No source in connections");
+      //Serial.println("No source in connections");
       continue;
     }
     
@@ -1151,13 +1236,13 @@ void procConnMsg( aJsonObject *_pJsonConnections )
         uiTargetPin = atoi(poTarget->valuestring);
        if( poTarget->valueint < 0 || poTarget->valueint <= TOTAL_NUM_OF_PINS)
       {
-        Serial.println("Target pin out of bounds");
+        //Serial.println("Target pin out of bounds");
         continue;
       }
     }
     else
     {
-      Serial.println("No target in connections");
+      //Serial.println("No target in connections");
       continue;
     }   
     
@@ -1172,8 +1257,8 @@ void procConnMsg( aJsonObject *_pJsonConnections )
           g_aPins[uiTargetPin].connections[uiSourcePin] = poConnect->valuebool;
         break;
         default:
-          Serial.print("Error: 'Connect' member value is the wrong type: ");Serial.println((int)(poConnect->type));
-          Serial.print("Msg: ");Serial.println(poConnect->valuestring);
+          //Serial.print("Error: 'Connect' member value is the wrong type: ");Serial.println((int)(poConnect->type));
+          //Serial.print("Msg: ");Serial.println(poConnect->valuestring);
         break;        
       }
     }
@@ -1195,45 +1280,18 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  Serial.println("Starting WebServer");
+  //Serial.println("Starting WebServer");
   system("/home/root/startAP");
 
-  // Init Galileo HW
-/*
-  // Enable all digital pins as outputs
-  for(int i=0; i<14; i++)
-  {
-    pinMode(i, OUTPUT);
-  }
+  // Initilize data structures to control client/server protocol
+  //Serial.println("Initilzie Client/Server protocol");
+  //initCommProtocol();
 
-  // Init pins
-  digitalWrite(0, LOW);
-  digitalWrite(1, LOW);
-  digitalWrite(2, LOW);
-  digitalWrite(4, LOW);
-  digitalWrite(7, LOW);
-  digitalWrite(8, LOW);
-  digitalWrite(12, LOW);
-  digitalWrite(13, LOW);
-
-  analogWrite(3, 0);
-  analogWrite(5, 0);
-  analogWrite(6, 0);
-  analogWrite(9, 0);
-  analogWrite(10, 0);
-  analogWrite(11, 0);
-
-  // Init pin state variables
-  int i=0;
-  for(i=0; i<TOTAL_NUM_Dx; i++)    
-    g_abD[i] = false;
-  for(i=0; i<TOTAL_NUM_Px; i++)
-    g_aiP[i] = 0;   
-*/
-  // JSON protocol code
+  // Initialize HW and JSON protocol code
+  //Serial.println("Initilize Hardware");
   initBoardState();
 
-  Serial.println("Starting WebSocket");
+  //Serial.println("Starting WebSocket");
   initWebsocket();  
 
 }
@@ -1303,7 +1361,7 @@ void getSerialCommand()
   if (Serial.available() > 0) {
     // get incoming byte:
     g_iByte = Serial.read();
-    Serial.println(g_iByte);
+    //Serial.println(g_iByte);
 
     switch (g_iByte)
     {

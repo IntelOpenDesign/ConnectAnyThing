@@ -3,22 +3,135 @@ var cat = {};
 
 // server connection settings
 cat.on_hardware = true; // to switch to Galileo, just change this to true
-cat.test_server_url = 'ws://192.168.15.122:8001';
+cat.test_server_url = 'ws://192.168.0.195:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
 
-// connections can only draw themselves once jsPlumb is ready
-cat.jsplumb_ready = false;
+// PINS AND CONNECTIONS DATA STRUCTURE
+cat.d = function() {
+    var that = {};
+    // pins and connections are the primary app state
+    that.pins = {};
+    that.connections = [];
+    // these are convenient for templates, and are kept in sync with pins
+    that.visible_sensors = [];
+    that.visible_actuators = [];
+    that.hidden_sensors = [];
+    that.hidden_actuators = [];
 
-jsPlumb.bind('ready', function() {
-    jsPlumb.Defaults.Container = $('#connections-container');
-    cat.jsplumb_ready = true;
-});
+    var sync_pin_lists = function() {
+        var vissen = [], visact = [], hidsen = [], hidact = [];
+        _.each(that.pins, function(pin, id) {
+            if (pin.is_visible) {
+                if (pin.is_input) vissen.push(pin);
+                else              visact.push(pin);
+            } else {
+                if (pin.is_input) hidsen.push(pin);
+                else              hidact.push(pin);
+            }
+        });
+        that.visible_sensors = vissen;
+        that.visible_actuators = visact;
+        that.hidden_sensors = hidsen;
+        that.hidden_actuators = hidact;
+    };
 
-// TODO remove when done debugging
-function toggle_debug_log() {
-    $('#debug-log').toggleClass('hide');
-}
+    var sync_pin_connectedness = function() {
+        _.each(that.pins, function(pin) {
+            pin.is_connected = false;
+        });
+        _.each(that.connections, function(c) {
+            that.pins[c.source].is_connected = true;
+            that.pins[c.target].is_connected = true;
+        });
+    };
+
+    that.reset = function(data) {
+        that.pins = data.pins;
+        that.connections = data.connections;
+        sync_pin_lists();
+    };
+
+    that.update = function(data) {
+        _.each(data.pins, function(pin, id) {
+            _.each(pin, function(val, attr) {
+                that.pins[id][attr] = val;
+            });
+        });
+
+        var my_tokens = _.map(that.connections, cat.tokenize_connection_object);
+        var new_tokens = _.map(data.connections, cat.tokenize_connection_object);
+        var tokens_to_remove = _.difference(my_tokens, new_tokens);
+        var tokens_to_add = _.difference(new_tokens, my_tokens);
+        var conns_to_remove = _.map(tokens_to_remove, cat.detokenize_connection);
+        var conns_to_add = _.map(tokens_to_add, cat.detokenize_connection);
+
+        that.disconnect(conns_to_remove);
+        that.connect(conns_to_add);
+
+        sync_pin_lists();
+    };
+
+    that.disconnect = function(connections) {
+        var conns_dict = {};
+        _.each(connections, function(c) {
+            if (conns_dict[c.source] === undefined)
+                conns_dict[c.source] = {};
+            conns_dict[c.source][c.target] = true;
+        });
+        var indices = [];
+        _.each(that.connections, function(c, i) {
+            if (conns_dict[c.source] && conns_dict[c.source][c.target]) {
+                indices.push(i);
+            }
+        });
+        indices.sort(function(x, y) { return y - x; }); // descending order
+        _.each(indices, function(index) {
+            that.connections.splice(index, 1);
+        });
+        sync_pin_connectedness();
+    };
+
+    that.connect = function(connections) {
+        that.connections.push.apply(that.connections, connections);
+        sync_pin_connectedness();
+    };
+
+    that.are_connected = function(sensor, actuator) {
+        for (var i = 0; i < that.connections.length; i++) {
+            var c = that.connections[i];
+            if (c.source === sensor && c.target === actuator) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    that.show_pins = function(ids) {
+        _.each(ids, function(id) {
+            that.pins[id].is_visible = true;
+        });
+        sync_pin_lists();
+    };
+
+    that.hide_pins = function(ids) {
+        var conns_to_remove = [];
+        _.each(ids, function(id) {
+            that.pins[id].is_visible = false;
+            var end = that.pins[id].is_input ? 'source' : 'target';
+            var more_to_remove = _.filter(that.connections, function(c) {
+                return c[end] === id;
+            });
+            conns_to_remove.push.apply(conns_to_remove, more_to_remove);
+        });
+
+        sync_pin_lists();
+        that.disconnect(conns_to_remove);
+        return conns_to_remove;
+    };
+
+    return that;
+};
 
 // cat.app is the angular app
 cat.app = angular.module('ConnectAnything', []);
@@ -34,50 +147,23 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
     // whether we have yet received any data from the server
     $scope.got_data = false;
 
-    // pins and connections are the primary state of the app. it determines the
-    // hardware's behavior. we sync this with the server because other users
-    // are updating this on their screens too.
-    $scope.pins = {};
-    $scope.connections = [];
-
-    // save lists of sensors and actuators for efficiency in directives
-    $scope.visible_sensors = [];
-    $scope.visible_actuators = [];
+    // pins and connections
+    $scope.d = cat.d();
 
     // TALKING WITH GALILEO
 
-    Galileo.on('update', function(d) {
+    Galileo.set_all_pins_getter(function() {
+        return $scope.d.pins;
+    });
+
+    Galileo.on('update', function(data) {
         if (!$scope.got_data) { // first time initialization
             $scope.got_data = true;
-            $scope.pins = d.pins;
-            cat.clear_all_connections();
-            $scope.connections = d.connections;
+            $scope.d.reset(data);
          } else { // after that just update changes
             $scope.got_data = true;
-
-            // update pins
-            _.each(d.pins, function(pin, id) {
-                _.each(pin, function(val, attr) {
-                    $scope.pins[id][attr] = val;
-                });
-            });
-
-            // update connections
-            var my_tokens = _.map($scope.connections, cat.tokenize_connection);
-            var new_tokens = _.map(d.connections, cat.tokenize_connection);
-            var tokens_to_remove = _.difference(my_tokens, new_tokens);
-            var tokens_to_add = _.difference(new_tokens, my_tokens);
-            var connections_to_remove = _.map(tokens_to_remove, cat.detokenize_connection);
-            var connections_to_add = _.map(tokens_to_add, cat.detokenize_connection);
-            disconnect_on_client(connections_to_remove);
-            connect_on_client(connections_to_add);
-         }
-        $scope.visible_sensors = _.filter($scope.pins, function(pin) {
-            return pin.is_visible && pin.is_input;
-        });
-        $scope.visible_actuators = _.filter($scope.pins, function(pin) {
-            return pin.is_visible && !pin.is_input;
-        });
+            $scope.d.update(data);
+        }
     });
 
     Galileo.on('slowness', function() {
@@ -88,8 +174,8 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
         $scope.got_data = false;
     });
 
-    $scope.send_pin_update = function(pin_ids) {
-        Galileo.update_pins($scope.pins, pin_ids);
+    $scope.send_pin_update = function(pin_ids, attr) {
+        Galileo.update_pins(pin_ids, attr);
     };
 
     if (cat.on_hardware) {
@@ -97,39 +183,6 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
     } else {
         Galileo.connect(cat.test_server_url);
     }
-
-    // HOW THE APP ADDS/REMOVES CONNECTIONS
-    // updating $scope.connections and $scope.pins[<id>].is_connected
-
-    var connect_on_client = function(connections) {
-        $scope.connections.push.apply($scope.connections, connections);
-        _.each(connections, function(c) {
-            $scope.pins[c.source].is_connected = true;
-            $scope.pins[c.target].is_connected = true;
-        });
-    };
-
-    var disconnect_on_client = function(connections) {
-        var delc = cat.connections_dict(connections); // connections to delete
-        var indices = [];
-        _.each($scope.connections, function(c, i) {
-            if (delc[c.source] && delc[c.source][c.target]) {
-                cat.clear_connection(c.source, c.target);
-                indices.push(i);
-            }
-        });
-        indices.sort(function(x, y) { return y - x; }); // descending order
-        _.each(indices, function(index) {
-            $scope.connections.splice(index, 1);
-        });
-
-        var allc = cat.connections_dict($scope.connections); // remaining conns
-        _.each($scope.pins, function(pin, id) {
-            if (allc[id] === undefined) {
-                $scope.pins[id].is_connected = false;
-            }
-        });
-    };
 
     // HOW THE USER ADDS/REMOVES CONNECTIONS
     // When the user taps a sensor's endpoint, we activate that sensor,
@@ -159,16 +212,13 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
             return;
         }
         var sensor = $scope.activated_sensor;
-        var existing_connection = _.filter($scope.connections, function(c) {
-            return c.source === sensor && c.target === actuator;
-        });
         var connections = [{source: sensor, target: actuator}];
-        if (existing_connection.length === 0) {
-            connect_on_client(connections);
-            Galileo.add_connections(connections);
-        } else {
-            disconnect_on_client(connections);
+        if ($scope.d.are_connected(sensor, actuator)) {
+            $scope.d.disconnect(connections);
             Galileo.remove_connections(connections);
+        } else {
+            $scope.d.connect(connections);
+            Galileo.add_connections(connections);
         }
         $scope.activated_sensor = null;
     };
@@ -189,11 +239,63 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
     };
 
     $scope.close_settings = function(history_state_already_popped) {
-        // TODO make sure this does not accumulate history states so that the user would have to hit back many times to exit the whole CAT website
         $scope.settings_pin = null;
         if (!history_state_already_popped) {
             window.history.back();
         }
+    };
+
+    // HOW THE USER SHOWS/HIDES PINS
+    // Tapping a "+" button at the bottom of the screen opens or closes the add
+    // pins menu. In this menu, tapping a pin selects it. Leaving the menu adds
+    // the selected pins.
+    // In the settings window for each pin, tapping "Remove" removes that pin
+    // and all its connections, after asking the user for confirmation.
+
+    $scope.adding_pins = null; // 'sensors' or 'actuators'
+    $scope.show_remove_confirmation = false;
+    $scope.pins_to_show = {};
+    $scope.toggle_add_pins_menu_for = function(type) {
+        var prev_type = $scope.adding_pins;
+        // add_pins_menu was closed, so open it
+        if (prev_type === null) {
+            $scope.adding_pins = type;
+            window.history.pushState();
+            window.onpopstate = function() {
+                $scope.close_add_pins_menu(true);
+            };
+        }
+        // add_pins_menu was already open
+        else {
+            if (prev_type === type) {
+                $scope.close_add_pins_menu();
+            } else {
+                $scope.adding_pins = type;
+            }
+        }
+    };
+    $scope.close_add_pins_menu = function(history_state_already_popped) {
+        $scope.show_pins(_.keys($scope.pins_to_show));
+        $scope.pins_to_show = {};
+        $scope.adding_pins = null;
+        if (!history_state_already_popped) {
+            window.history.back();
+        }
+    };
+    $scope.toggle_pin_show = function(id) {
+        if ($scope.pins_to_show[id])
+            delete $scope.pins_to_show[id];
+        else
+            $scope.pins_to_show[id] = true;
+    };
+    $scope.show_pins = function(ids) {
+        $scope.d.show_pins(ids);
+        $scope.send_pin_update(ids, 'is_visible');
+    };
+    $scope.hide_pins = function(ids) {
+        var connections_to_remove = $scope.d.hide_pins(ids);
+        $scope.send_pin_update(ids, 'is_visible');
+        Galileo.remove_connections(connections_to_remove);
     };
 }]);
 
@@ -203,28 +305,27 @@ cat.pin_template = 'templates/pin.html';
 
 cat.app.directive('sensor', function($document) {
     function link($scope, $el, attrs) {
-        console.log('sensor link', attrs.id);
     }
     return { templateUrl: cat.pin_template, link: link };
 });
 
 cat.app.directive('actuator', function($document) {
     function link($scope, $el, attrs) {
-        console.log('actuator link', attrs.id);
-
         $scope.already_connected_to_activated_sensor = function() {
-            return _.filter($scope.connections, function(c) {
-                return c.source === $scope.activated_sensor && c.target === attrs.id;
-            }).length > 0;
+            if ($scope.activated_sensor === null) return false;
+            return $scope.d.are_connected($scope.activated_sensor, $scope.pin.id);
         };
     }
     return { templateUrl: cat.pin_template, link: link };
 });
 
+cat.app.directive('pinStub', function($document) {
+    return { templateUrl: 'templates/pin_stub.html' };
+});
+
 // PIN SETTINGS
 cat.app.directive('pinSettings', function($document) {
     function link($scope, $el, attrs) {
-
         var $pin_label = $el.find('input.pin-label');
         $scope.label_limit_length = 20;
         $scope.pin_label = $scope.pin.label.substring();
@@ -236,7 +337,7 @@ cat.app.directive('pinSettings', function($document) {
         $scope.update_pin_label = function() {
             $scope.truncate_label();
             $scope.pin.label = $scope.pin_label.substring();
-            $scope.send_pin_update([$scope.pin.id]);
+            $scope.send_pin_update([$scope.pin.id], 'label');
         };
 
         var $min = $('.vertical-slider.min');
@@ -249,8 +350,8 @@ cat.app.directive('pinSettings', function($document) {
             var max = $scope.pin.input_max;
             $scope.pin.input_max = Math.max(min, max);
             $scope.pin.input_min = Math.min(min, max);
-            // TODO throttle this
-            $scope.send_pin_update([$scope.pin.id]);
+            $scope.send_pin_update([$scope.pin.id], 'input_min');
+            $scope.send_pin_update([$scope.pin.id], 'input_max');
         };
     }
     return { templateUrl: 'templates/pin_settings.html', link: link };
@@ -260,18 +361,22 @@ cat.app.directive('pinSettings', function($document) {
 cat.app.directive('connection', function($document) {
     function link($scope, $el, attrs) {
 
-        console.log('connection link', attrs.sensorId, '-', attrs.actuatorId);
+        var stroke_w = 15;
+        var bg_stroke_w = stroke_w + 4; // background/outline
 
-        var $sensor, $actuator, connection, msg;
-        $sensor = $actuator = connection = msg = null;
+        var $start, $end;
+        $start = $end = null;
 
-        // a connection can only draw itself after jsPlumb is ready and its
-        // endpoints are drawn on the DOM. so, a connection keeps checking to
-        // see if these things are ready, and once they are it renders itself
+        var line = d3.svg.line()
+                    .x(function(d) { return d.x; })
+                    .y(function(d) { return d.y; })
+                    .interpolate('linear');
+
+        // can only draw connection after its endpoints (pins) are drawn
         function find_my_pins() {
-            $sensor = $('#'+attrs.sensorId);
-            $actuator = $('#'+attrs.actuatorId);
-            if (!cat.jsplumb_ready || $sensor.length === 0 || $actuator.length === 0) {
+            $start = $('#' + attrs.sensorId + ' .endpoint');
+            $end = $('#' + attrs.actuatorId + ' .endpoint');
+            if ($start.length === 0 || $end.length === 0) {
                 setTimeout(find_my_pins, 10);
             } else {
                 render();
@@ -279,73 +384,107 @@ cat.app.directive('connection', function($document) {
         }
 
         function render() {
-            connection = jsPlumb.connect({
-                source: attrs.sensorId+'-endpoint',
-                target: attrs.actuatorId+'-endpoint',
-                connector: 'Straight',
-                cssClass: 'connection pins-'+attrs.sensorId+'-'+attrs.actuatorId,
-                endpoint: 'Blank',
-                endpointClass: 'endpoint pins-'+attrs.sensorId+'-'+attrs.actuatorId,
-                anchors: ['Center', 'Center'],
-                paintStyle: {
-                    lineWidth: 15,
-                    strokeStyle: 'rgb(44, 38, 33)',
-                    outlineWidth: 2,
-                    outlineColor: 'white',
-                },
-                endpointStyle: {
-                    fillStyle: '#a7b04b',
-                },
-                //hoverPaintStyle: {
-                 //   strokeStyle: 'rgb(250, 250, 60)',
-                //},
-            });
+            var start_pos = $start.offset();
+            var end_pos = $end.offset();
+
+            var $left = start_pos.left < end_pos.left ? $start : $end;
+            var $right = start_pos.left < end_pos.left ? $end : $start;
+            var $top = start_pos.top < end_pos.top ? $start : $end;
+            var $bottom = start_pos.top < end_pos.top ? $end : $start;
+
+            var xmin = Math.min(start_pos.left, end_pos.left);
+            var xmax = Math.max(start_pos.left, end_pos.left);
+            var ymin = Math.min(start_pos.top, end_pos.top);
+            var ymax = Math.max(start_pos.top, end_pos.top);
+
+            var padding = bg_stroke_w / 2;
+
+            var left   = xmin + $left.width()/2    - padding;
+            var right  = xmax + $right.width()/2   + padding;
+            var top    = ymin + $top.height()/2    - padding;
+            var bottom = ymax + $bottom.height()/2 + padding;
+
+            var w = right - left;
+            var h = bottom - top;
+
+            var points = [{x:0, y:0}, {x:0, y:0}];
+            points[0].x = start_pos.left < end_pos.left ? padding : w - padding;
+            points[1].x = start_pos.left < end_pos.left ? w - padding : padding;
+            points[0].y = start_pos.top < end_pos.top ? padding : h - padding;
+            points[1].y = start_pos.top < end_pos.top ? h - padding : padding;
+
+
+            var selector = '#connect-' + attrs.sensorId + '-' + attrs.actuatorId + ' svg';
+            setTimeout(function() {
+                var svg = d3.select(selector)
+                    .attr('width', w)
+                    .attr('height', h)
+                    .style('left', left + 'px')
+                    .style('top', top + 'px');
+                svg.select('path.edge-bg')
+                    .attr('stroke-width', bg_stroke_w);
+                svg.select('path.edge')
+                    .attr('stroke-width', stroke_w);
+                svg.selectAll('path')
+                    .attr('d', line(points));
+            }, 0);
+
+            assign_watches();
         }
 
+        var rerender = _.throttle(render, 50, {leading: false});
+
+        // if the endpoints change size or position, need to re-render
+        function watch_callback(newval, oldval) {
+            if (newval !== oldval)
+                rerender();
+        }
+        var assign_watches = _.once(function() {
+            _.each([$start, $end], function($endpoint) {
+                $scope.$watch(function() {
+                    return $endpoint.offset().left + $endpoint.width()/2;
+                }, watch_callback);
+                $scope.$watch(function() {
+                    return $endpoint.offset().top + $endpoint.height()/2;
+                }, watch_callback);
+            });
+        });
+
         find_my_pins();
+
     }
 
     return { link: link };
 });
 
-cat.clear_all_connections = function() {
-    $('._jsPlumb_endpoint').remove();
-    $('._jsPlumb_connector').remove();
-};
-
-cat.clear_connection = function(sensor, actuator) {
-    console.log('clear connection', sensor, actuator);
-    $('.connection.pins-'+sensor+'-'+actuator).remove();
-};
-
 // SERVER COMMUNICATION
 
 cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
 
-    var name = 'Galileo'; // to match the module name, for logging purposes
-    var ws;               // websocket
-    var url, protocol;
+    //Settings:
+    //  used in log statements, should match the module name
+    var name = 'Galileo';
+    //  wait this long between attempts to connect with server
+    var reconnect_attempts_period = 500;
+    //  if the we go all of slowness_time without getting an update from the
+    //  server, we start to get suspicious that the server is malfunctioning
+    var slowness_time = 15000;
+    //  we send updates to the server at most once every update_period
+    var update_period = 500;
+    //(end of settings)
 
-    // TODO it's confusing that this one is called wait but start_waiting() and stop_waiting() use slowness_time
-    var wait = 500; // wait this long between attempts to connect
-    var slowness_time = 15000; // max acceptable wait time between server
-                               // messages, in milliseconds.
-
-    //TODO remove when done debugging
-    var $debug_log = $('#debug-log');
-
+    // Callback Functions
     // for certain "events" you can assign exactly one callback function. they
     // are not real events; the strings just describe the situation in which
     // that callback function will be done
     var callbacks = {
         'websocket-opened': function() {}, // no args
-        'update': function() {}, // gets one arg, the update data
-        'slowness': function() {}, // no args
+        'update': function() {},           // gets one arg, the update data
+        'slowness': function() {},         // no args
         'websocket-closed': function() {}, // no args
     };
 
-    // assign callback functions
-    var on = function(e, f) {
+    var on = function(e, f) { // assign callback functions
         if (!_.has(callbacks, e)) {
             throw name + ".on: " + e + " is not a valid callback type. You can assign exactly one callback for each of the types in " + JSON.stringify(_.keys(callbacks));
         } else {
@@ -355,9 +494,13 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
 
     var do_callback = function(e, arg) {
         $rootScope.$apply(function() {
-            callbacks[e](arg); // TODO how to handle multiple args
-         });
+            callbacks[e](arg);
+        });
     };
+
+    // Maintaining Connection with Server
+
+    var ws, url, protocol; // websocket, URL, protocol
 
     var connect = function(_url, _protocol) {
         url = _url;
@@ -373,15 +516,20 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             ws.onclose = onclose;
             start_waiting();
         } catch(err) {
-            console.log(name + ".connect failed with error", err, "Trying again in", wait, " ms...");
-            setTimeout(function() {
-                connect(url, protocol);
-            }, wait);
+            reconnect('.connect failed with error', err);
         }
+    };
+
+    var reconnect = function(error_description) {
+        console.log(name, error_description, 'Trying again in', reconnect_attempts_period, 'ms...');
+        setTimeout(function() {
+            connect(url, protocol);
+        }, reconnect_attempts_period);
     };
 
     var onopen = function() {
         console.log(name, 'websocket opened');
+        messages = {};
         do_callback('websocket-opened');
     };
 
@@ -390,64 +538,130 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         // server is not running, that will trigger onclose and will not throw
         // an error
         stop_waiting();
-        console.log(name, 'websocket closed, trying to reconnect in', wait, 'ms...');
         do_callback('websocket-closed');
-        setTimeout(function() {
-            connect(url, protocol);
-        }, wait);
+        reconnect('websocket closed');
     };
 
-    var onmessage = function(msg) {
+    // Sending Updates to Server
+    var messages = {}; // messages client side has sent to server
+    var batch = null;  // the next batch of updates we will send to server
+    var client_id = Date.now().toString();
+    var message_count = 0;
+
+    var _send = function() {
+        var now = Date.now();
+        message_count += 1; // TODO roll back to 0 at some point
+        var message_id = message_count + '-' + client_id + '-' + now;
+        messages[message_id] = {
+            time: now,
+            message_id: message_id,
+            stringified_updates: JSON.stringify(batch),
+        };
+        // TODO i think i used to just send connections or pins if there were updates for them.
+        var msg_for_server = {
+            status: 'OK',
+            message_id: message_id,
+            pins: cat.server_pin_format(get_all_pins(), _.keys(batch.pins)),
+            connections: batch.connections,
+        };
+        ws.send(JSON.stringify(msg_for_server));
+        batch = null;
+    };
+
+    var send = _.throttle(_send, update_period);
+
+    var add_to_batch = function(updates) {
+        console.log('add to batch', JSON.stringify(updates));
+        batch = _.extend({ pins: {}, connections: [] }, batch);
+        _.each(updates.pins, function(pin, id) {
+            batch.pins[id] = _.extend({}, batch.pins[id], pin);
+        });
+        batch.connections.push.apply(batch.connections, updates.connections);
+        send();
+    };
+
+    var update_pins = function(ids, attr) {
+        var all_pins = get_all_pins();
+        var updates = { pins: {} };
+        _.each(ids, function(id) {
+            updates.pins[id] = {};
+            updates.pins[id][attr] = all_pins[id][attr];
+        });
+        add_to_batch(updates);
+    };
+
+    var update_connections = function(connections, bool) {
+        var updates = { connections: [] };
+        updates.connections = _.map(connections, function(c) {
+            return { source: c.source, target: c.target, connect: bool };
+        });
+        add_to_batch(updates);
+    };
+
+    var add_connections = function(connections) {
+        update_connections(connections, true);
+    };
+
+    var remove_connections = function(connections) {
+        update_connections(connections, false);
+    };
+
+    // Processing Updates from Server
+    var onmessage = function(server_msg) {
         stop_waiting();
 
-        console.log('websocket message', msg);
-        var data = JSON.parse(msg.data);
+        console.log('websocket message', server_msg);
+        var data = JSON.parse(server_msg.data);
         console.log('websocket data', data);
 
-        //TODO remove when done debugging
-        $debug_log.html(msg.data);
+        //debug
+        console.log('data.Msg_Count', data.Msg_Count);
+        console.log('data.message_ids_processed', JSON.stringify(data.message_ids_processed));
 
-        var d = {
-            pins: cat.my_pin_format(data.pins, data.connections),
-            connections: data.connections,
-        };
+        // forget about the messages we created that the server has processed
+        _.each(data.message_ids_processed, function(message_id) {
+            delete messages[message_id];
+        });
 
-        do_callback('update', d);
+        // the remaining messages, and the batch of updates that we have not
+        // even sent to the server yet, are all ways in which the data from the
+        // server is out of date. so, first we take the data from the server,
+        // and then we update it based on our remaining messages and the batch
+
+        var pins = cat.my_pin_format(data.pins, data.connections);
+        var conns = _.object(_.map(data.connections, function(c) {
+            return [cat.tokenize_connection_object(c), true];
+        }));
+
+        function update(d) {
+            _.each(d.pins, function(pin_updates, pin_id) {
+                pins[pin_id] = _.extend(pins[pin_id], pin_updates);
+            });
+            _.each(d.connections, function(c) {
+                conns[cat.tokenize_connection_object(c)] = c.connect;
+            });
+        }
+
+        var messages_in_order = _.sortBy(_.values(messages), function(msg) {
+            return msg.time;
+        });
+        _.each(messages_in_order, function(msg) {
+            console.log('updating server data with message id', msg.message_id, 'which has updates', msg.stringified_updates);
+            update(JSON.parse(msg.stringified_updates));
+        });
+        if (batch !== null) {
+            update(batch);
+        }
+
+        var connections = [];
+        _.each(conns, function(val, token) {
+            if (val)
+                connections.push(cat.detokenize_connection(token));
+        });
+
+        do_callback('update', {pins: pins, connections: connections});
 
         start_waiting();
-    };
-
-    // sending websocket messages
-    // TODO for slider inputs and stuff like that, we need to throttle how often we send stuff to the server.
-    var send = function(data) {
-        ws.send(JSON.stringify(_.extend({status: 'OK'}, data)));
-    };
-    var update_pins = function(pins, pin_ids) {
-        send({pins: cat.server_pin_format(pins, pin_ids)});
-    };
-    var add_connections = function(connections) {
-        var msg = { connections: [] };
-        _.each(connections, function(c) {
-            msg.connections.push({
-                source: c.source,
-                target: c.target,
-                connect: true,
-            });
-        });
-        console.log('sending add connection message', msg);
-        send(msg);
-    };
-    var remove_connections = function(connections) {
-        var msg = { connections: [] };
-        _.each(connections, function(c) {
-            msg.connections.push({
-                source: c.source,
-                target: c.target,
-                connect: false,
-            });
-        });
-        console.log('sending remove connection message', msg);
-        send(msg);
     };
 
     // if there is a big lag time (>= slowness_time) between messages from the
@@ -457,6 +671,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var start_waiting = function() {
         slowness_timeout_id = setTimeout(function() {
             console.log(name, 'is being too slow');
+            messages = {};
             do_callback('slowness');
         }, slowness_time);
     };
@@ -467,17 +682,40 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         }
     };
 
+    // it's convenient to be able to tell Galileo to only update certain pins
+    // by passing in the IDs of those pins, not the whole pin object. but that
+    // means Galileo needs to be able to access a pin object from just its ID.
+    // so, the controller exposes a way to let Galileo see the pins dict.
+    // Galileo should only use this in a read only way.
+    var get_all_pins = null;
+    var set_all_pins_getter = function(f) {
+        get_all_pins = f;
+    };
+
     return {
         on: on,
         connect: connect,
         update_pins: update_pins,
         add_connections: add_connections,
         remove_connections: remove_connections,
+        set_all_pins_getter: set_all_pins_getter,
     };
 
 }]);
 
 // UTILITY FUNCTIONS
+
+// tokenize connections
+cat.tokenize_connection_pins = function(sensor, actuator) {
+    return sensor + '-' + actuator;
+};
+cat.tokenize_connection_object = function(c) {
+    return cat.tokenize_connection_pins(c.source, c.target);
+};
+cat.detokenize_connection = function(s) {
+    var pins = s.split('-');
+    return {source: pins[0], target: pins[1]};
+};
 
 // translate the server's pin format into my pin format
 cat.my_pin_format = function(server_pins, server_connections) {
@@ -544,39 +782,8 @@ cat.server_pin_format = function(my_pins, my_pin_ids) {
         };
     });
 
-    console.log('client is sending damping values', _.pluck(_.values(pins), 'damping'), 'to server');
-
     return pins;
 };
-
-// a dictionary representation of connections that makes it easy to check if a
-// connection exists. for each connection in connections_list, the resulting
-// dict will have
-// d[source][target] = true
-// and
-// d[target][source] = true
-cat.connections_dict = function(connections_list) {
-    var d = {};
-    _.each(connections_list, function(c) {
-        _.each([[c.source, c.target], [c.target, c.source]], function(o) {
-            if (d[o[0]] === undefined) {
-                d[o[0]] = {};
-            }
-            d[o[0]][o[1]] = true;
-        });
-    });
-    return d;
-};
-
-// represent connections as strings so they can easily be compared for equality
-cat.tokenize_connection = function(c) {
-    return c.source + '-' + c.target;
-}
-// translate back from string to connection object
-cat.detokenize_connection = function(s) {
-    var pins = s.split('-');
-    return {source: pins[0], target: pins[1]};
-}
 
 // OTHER NOTES
 // good resource: http://clintberry.com/2013/angular-js-websocket-service/

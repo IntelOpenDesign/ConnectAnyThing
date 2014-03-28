@@ -29,6 +29,10 @@ html, body {
 
 }
 
+#app-container {
+    position: relative;
+}
+
 /* COLORS */
 .yellow-bg {
     background-color: rgb(247, 193, 40);
@@ -54,6 +58,9 @@ html, body {
 .gray-border {
     border-color: rgb(183, 169, 152);
 }
+.gray-text {
+    color: rgba(0, 0, 0, .5);
+}
 
 #settings-button {
     position: absolute;
@@ -70,7 +77,7 @@ html, body {
 }
 
 #column-divider {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 50%;
     height: 100%;
@@ -91,15 +98,19 @@ html, body {
     padding-bottom: 50px;
 }
 
-.empty-column-label {
+.column-title {
     text-align: center;
     padding: 1em 0;
     font-size: 200%;
 }
-#sensors .empty-column-label {
+#add-pins-menu .column-title {
+    text-align: left;
+    padding: .3em 0 0 .5em;
+}
+.sensors.column-title {
     color: rgb(147, 106, 24);
 }
-#actuators .empty-column-label {
+.actuators.column-title {
     color: rgb(45, 104, 84);
 }
 
@@ -134,6 +145,7 @@ html, body {
     position: relative;
     height: 100%;
     width: 100%;
+    background: white;
 }
 .actuator .pin-box {
     float: right;
@@ -612,18 +624,18 @@ label[for=checkbox] {
     cursor: default;
 }
 .button.square {
-    width: 60px;
+    max-width: 60px;
+    width: 100%;
 }
 .button.wide {
-    width: 250px;
+    max-width: 250px;
+    width: 100%;
 }
 
 #play-button {
-    margin-left: -125px !important;
-    line-height: 55px;
+    margin-left: auto;
+    margin-right: auto;
     font-size: 125%;
-    position: relative;
-    left: 50%;
 }
 #play-button .glyphicon-play {
     font-size: 80%;
@@ -637,4 +649,107 @@ label[for=checkbox] {
 }
 #add-actuators-button {
     float: right;
+}
+
+/* SHOWING AND HIDING PINS */
+.confirm-remove-container {
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    background: rgba(255, 255, 255, .95);
+    height: 100%;
+    width: 100%;
+}
+.confirm-remove-row {
+    position: fixed;
+    width: 100%;
+    top: 50%;
+    margin-top: -80px;
+}
+.confirm-remove {
+    padding: 30px 50px;
+    background: rgb(198, 188, 175);
+}
+
+#add-pins-menu {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 10px 15px 110px;
+}
+#add-pins-menu-bg {
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    position: fixed;
+    z-index: -1;
+    box-sizing: border-box;
+    border-color: white;
+    border-top-width: 15px;
+    border-left-width: 15px;
+    border-right-width: 15px;
+    border-bottom-width: 110px;
+    border-style: solid;
+}
+#add-pins-menu-bg,
+#add-pins-menu-pins-container {
+    background: rgb(198, 188, 175);
+}
+#add-pins-menu-pins-container {
+    margin-bottom: 10px;
+}
+#add-pins-menu-bg-footer {
+    width: 0;
+    height: 0;
+    background: transparent;
+    position: fixed;
+    bottom: 85px;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-top: 30px solid rgb(198, 188, 175);
+    z-index: 20;
+}
+#add-pins-menu-bg-footer.sensors {
+    left: 40px;
+}
+#add-pins-menu-bg-footer.actuators {
+    right: 40px;
+}
+.pin.will-be-shown .pin-box:before {
+    content: "\e013";
+    font-family: 'Glyphicons Halflings';
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100px;
+    margin-left: -50%;
+    margin-top: -50px;
+    text-align: center;
+    line-height: 100px;
+    -webkit-font-smoothing: antialiased;
+    font-size: 80px;
+}
+.pin.sensor.will-be-shown .pin-box:before {
+    background: rgba(247, 193, 40, .4);
+    /*color: rgb(147, 106, 24);*/
+    color: rgb(247, 193, 40);
+    opacity: .9;
+}
+.pin.actuator.will-be-shown .pin-box:before {
+    background: rgba(45, 104, 84, .4);
+    color: rgb(45, 104, 84);
+    opacity: .85;
+}
+
+/* CONNECTIONS */
+.connection path.edge {
+    stroke: #2c2621;
+}
+.connection path.edge-bg {
+    stroke: white;
 }
