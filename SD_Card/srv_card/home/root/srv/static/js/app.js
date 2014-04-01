@@ -2,8 +2,8 @@
 var cat = {};
 
 // server connection settings
-cat.on_hardware = true; // to switch to Galileo, just change this to true
-cat.test_server_url = 'ws://192.168.0.195:8001';
+cat.on_hardware = false; // to switch to Galileo, just change this to true
+cat.test_server_url = 'ws://192.168.0.197:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
 
@@ -134,14 +134,31 @@ cat.d = function() {
 };
 
 // cat.app is the angular app
-cat.app = angular.module('ConnectAnything', []);
+cat.app = angular.module('ConnectAnything', ['ngRoute']);
 
-// The controller for the whole app. Also handles talking to the server.
-cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
+cat.app.config(['$routeProvider', function($routeProvider) {
+    $routeProvider
+        .when('/', {
+            templateUrl: 'templates/connect.html',
+            controller: 'ConnectModeCtrl',
+        })
+        .when('/play', {
+            templateUrl: 'templates/play.html',
+            controller: 'PlayModeCtrl',
+        })
+        .otherwise({
+            redirectTo: '/',
+        });
+}]);
 
-    var $document = $(document);
+// The highest level app controller.
+cat.app.controller('AppCtrl', ['$scope', '$location', 'Galileo', function($scope, $location, Galileo) {
 
-    // TODO take this out when done debugging
+    $scope.$location = $location;
+
+    $scope.parseInt = parseInt;
+
+    // TODO debug
     window.$scope = $scope;
 
     // whether we have yet received any data from the server
@@ -183,6 +200,70 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
     } else {
         Galileo.connect(cat.test_server_url);
     }
+
+    // this is used primarily by ConnectModeCtrl, but AppCtrl needs to see it
+    // too, because #footer is only shown when settings_pin === null
+    $scope.settings_pin = null;
+
+    // HOW THE USER SHOWS/HIDES PINS
+    // Tapping a "+" button at the bottom of the screen opens or closes the add
+    // pins menu. In this menu, tapping a pin selects it. Leaving the menu adds
+    // the selected pins.
+    // In the settings window for each pin, tapping "Remove" removes that pin
+    // and all its connections, after asking the user for confirmation.
+
+    $scope.adding_pins = null; // 'sensors' or 'actuators'
+    $scope.show_remove_confirmation = false;
+    $scope.clicked_pin_stubs = {};
+    $scope.toggle_add_pins_menu_for = function(type) {
+        var prev_type = $scope.adding_pins;
+        // add_pins_menu was closed, so open it
+        if (prev_type === null) {
+            $scope.adding_pins = type;
+            window.history.pushState();
+            window.onpopstate = function() {
+                $scope.close_add_pins_menu(true);
+            };
+        }
+        // add_pins_menu was already open
+        else {
+            if (prev_type === type) {
+                $scope.close_add_pins_menu();
+            } else {
+                $scope.adding_pins = type;
+            }
+        }
+    };
+    $scope.close_add_pins_menu = function(history_state_already_popped) {
+        $scope.show_pins(_.keys($scope.clicked_pin_stubs));
+        $scope.clicked_pin_stubs = {};
+        $scope.adding_pins = null;
+        if (!history_state_already_popped) {
+            window.history.back();
+        }
+    };
+    $scope.pin_stub_click = function(id) {
+        if ($scope.clicked_pin_stubs[id])
+            delete $scope.clicked_pin_stubs[id];
+        else
+            $scope.clicked_pin_stubs[id] = true;
+    };
+    $scope.show_pins = function(ids) {
+        $scope.d.show_pins(ids);
+        $scope.send_pin_update(ids, 'is_visible');
+    };
+    $scope.hide_pins = function(ids) {
+        var connections_to_remove = $scope.d.hide_pins(ids);
+        $scope.send_pin_update(ids, 'is_visible');
+        Galileo.remove_connections(connections_to_remove);
+    };
+}]);
+
+// The controller for Connect Mode.
+cat.app.controller('ConnectModeCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
+
+    // DEBUG
+    window.ConnectModeScope = $scope;
 
     // HOW THE USER ADDS/REMOVES CONNECTIONS
     // When the user taps a sensor's endpoint, we activate that sensor,
@@ -228,7 +309,6 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
     // settings for that pin. Hitting the OK button in the settings window or
     // hitting the back button in the browser will exit out of pin settings.
 
-    $scope.settings_pin = null;
     $scope.show_settings_for = function(pin) {
         $scope.activated_pin = null;
         $scope.settings_pin = pin;
@@ -245,57 +325,21 @@ cat.app.controller('PinsCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
         }
     };
 
-    // HOW THE USER SHOWS/HIDES PINS
-    // Tapping a "+" button at the bottom of the screen opens or closes the add
-    // pins menu. In this menu, tapping a pin selects it. Leaving the menu adds
-    // the selected pins.
-    // In the settings window for each pin, tapping "Remove" removes that pin
-    // and all its connections, after asking the user for confirmation.
+}]);
 
-    $scope.adding_pins = null; // 'sensors' or 'actuators'
-    $scope.show_remove_confirmation = false;
-    $scope.pins_to_show = {};
-    $scope.toggle_add_pins_menu_for = function(type) {
-        var prev_type = $scope.adding_pins;
-        // add_pins_menu was closed, so open it
-        if (prev_type === null) {
-            $scope.adding_pins = type;
-            window.history.pushState();
-            window.onpopstate = function() {
-                $scope.close_add_pins_menu(true);
-            };
-        }
-        // add_pins_menu was already open
-        else {
-            if (prev_type === type) {
-                $scope.close_add_pins_menu();
-            } else {
-                $scope.adding_pins = type;
-            }
-        }
-    };
-    $scope.close_add_pins_menu = function(history_state_already_popped) {
-        $scope.show_pins(_.keys($scope.pins_to_show));
-        $scope.pins_to_show = {};
-        $scope.adding_pins = null;
-        if (!history_state_already_popped) {
-            window.history.back();
-        }
-    };
-    $scope.toggle_pin_show = function(id) {
-        if ($scope.pins_to_show[id])
-            delete $scope.pins_to_show[id];
+// The controller for Play Mode.
+// TODO this is a bad copy of PinsCtrl
+cat.app.controller('PlayModeCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
+
+    // DEBUG
+    window.PlayModeScope = $scope;
+
+    $scope.pin_button_click = function(id) {
+        if ($scope.d.pins[id].value === 100)
+            $scope.d.pins[id].value = 0;
         else
-            $scope.pins_to_show[id] = true;
-    };
-    $scope.show_pins = function(ids) {
-        $scope.d.show_pins(ids);
-        $scope.send_pin_update(ids, 'is_visible');
-    };
-    $scope.hide_pins = function(ids) {
-        var connections_to_remove = $scope.d.hide_pins(ids);
-        $scope.send_pin_update(ids, 'is_visible');
-        Galileo.remove_connections(connections_to_remove);
+            $scope.d.pins[id].value = 100;
+        $scope.send_pin_update([id], 'value');
     };
 }]);
 
@@ -321,6 +365,10 @@ cat.app.directive('actuator', function($document) {
 
 cat.app.directive('pinStub', function($document) {
     return { templateUrl: 'templates/pin_stub.html' };
+});
+
+cat.app.directive('pinButton', function($document) {
+    return { templateUrl: 'templates/pin_button.html' };
 });
 
 // PIN SETTINGS
@@ -571,7 +619,6 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var send = _.throttle(_send, update_period);
 
     var add_to_batch = function(updates) {
-        console.log('add to batch', JSON.stringify(updates));
         batch = _.extend({ pins: {}, connections: [] }, batch);
         _.each(updates.pins, function(pin, id) {
             batch.pins[id] = _.extend({}, batch.pins[id], pin);
@@ -613,10 +660,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         console.log('websocket message', server_msg);
         var data = JSON.parse(server_msg.data);
         console.log('websocket data', data);
-
-        //debug
-        console.log('data.Msg_Count', data.Msg_Count);
-        console.log('data.message_ids_processed', JSON.stringify(data.message_ids_processed));
+        console.log('\tdata.message_ids_processed', JSON.stringify(data.message_ids_processed));
 
         // forget about the messages we created that the server has processed
         _.each(data.message_ids_processed, function(message_id) {
@@ -646,7 +690,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             return msg.time;
         });
         _.each(messages_in_order, function(msg) {
-            console.log('updating server data with message id', msg.message_id, 'which has updates', msg.stringified_updates);
+            console.log('updating server data with message_id', msg.message_id, 'update', msg.stringified_updates);
             update(JSON.parse(msg.stringified_updates));
         });
         if (batch !== null) {
@@ -661,6 +705,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
 
         do_callback('update', {pins: pins, connections: connections});
 
+        console.log('\n\n');
         start_waiting();
     };
 

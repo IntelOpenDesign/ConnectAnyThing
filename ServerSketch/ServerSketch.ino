@@ -191,6 +191,12 @@ static const struct serveable whitelist[] = {
     "/static/css/jquery.mobile-1.4.1.css", "text/css"                                           }
   ,
   { 
+    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
+  ,
+  { 
+    "/static/css/play_mode.css", "text/css"                                           }
+  ,
+  { 
     "/static/fonts/droid-sans/DroidSans.ttf", "application/x-font-ttf"                                           }
   ,
   { 
@@ -221,29 +227,56 @@ static const struct serveable whitelist[] = {
     "/static/img/loading.gif", "image/gif"                                           }
   ,
   { 
+    "/static/img/loading_inverted.gif", "image/gif"                                           }
+  ,
+  { 
+    "/static/img/loading_old.gif", "image/gif"                                           }
+  ,
+  { 
+    "/static/js/angular.min.js", "application/javascript"                                           }
+  ,
+  { 
+    "/static/js/angular-route.min.js", "application/javascript"                                           }
+  ,
+  { 
     "/static/js/app.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/d3.min.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/angular.min.js", "application/javascript"                                           }
+    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/jquery.min.js", "application/javascript"                                           }
   ,
   { 
+    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                           }
+  ,
+  { 
+    "/static/js/jquery-ui.min.js", "application/javascript"                                           }
+  ,
+  { 
     "/static/js/underscore-min.js", "application/javascript"                                           }
   ,
   { 
+    "/templates/connect.html", "text/html"                                           }
+  ,
+  { 
     "/templates/pin.html", "text/html"                                           }
+  ,
+  { 
+    "/templates/pin_button.html", "text/html"                                           }
   ,
   { 
     "/templates/pin_settings.html", "text/html"                                           }
   ,
   { 
     "/templates/pin_stub.html", "text/html"                                           }
-  ,  
+  ,
+  { 
+    "/templates/play.html", "text/html"                                           }
+  ,
   /* last one is the default served if no match */
   { 
     "/index.html", "text/html"                                           }
@@ -657,7 +690,7 @@ void initBoardState()
     g_aPins[i].input_min = 0.0;
     g_aPins[i].input_max = 1.0;
     g_aPins[i].is_inverted = false;
-    g_aPins[i].is_visible = true;
+    g_aPins[i].is_visible = false;
     g_aPins[i].value = 0.0;
     
  //   for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)

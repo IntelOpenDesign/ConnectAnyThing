@@ -1,0 +1,15 @@
+<link rel="stylesheet" href="static/css/play_mode.css">
+
+<div id="play-pins"
+  class="container-fluid"
+  ng-hide="settings_pin !== null || adding_pins !== null">
+    <div class="row">
+        <div class="col-xs-6"
+          ng-repeat="pin in d.visible_actuators"
+          ng-hide="pin.is_connected">
+            <div class="pin-outer pin-id-mod-5-is-{{parseInt(pin.id) % 5}}"
+              pin-button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -31,6 +31,7 @@ html, body {
 
 #app-container {
     position: relative;
+    padding-bottom: 50px;
 }
 
 /* COLORS */
@@ -95,7 +96,6 @@ html, body {
 #pins-container {
     min-height: 100%;
     padding-top: 50px;
-    padding-bottom: 50px;
 }
 
 .column-title {
@@ -220,9 +220,9 @@ html, body {
 .endpoint-container {
     position: absolute;
     top: 50%;
-    height: 100px;
-    width: 100px;
-    margin-top: -50px;
+    height: 90px;
+    width: 90px;
+    margin-top: -45px;
     z-index: 5;
     background: white;
     border-radius: 50px;
@@ -235,15 +235,15 @@ html, body {
 }
 
 .endpoint {
-    width: 70px;
-    height: 70px;
-    border-radius: 35px;
+    width: 74px;
+    height: 74px;
+    border-radius: 37px;
     position: relative;
     box-sizing: content-box;
     top: 50%;
     left: 50%;
-    margin-top: -35px;
-    margin-left: -35px;
+    margin-top: -37px;
+    margin-left: -37px;
 }
 .actuator .endpoint-inner {
     position: absolute;
@@ -573,11 +573,12 @@ label[for=checkbox] {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 300px;
-    margin-left: -150px;
+    width: 500px;
+    margin-left: -250px;
     text-align: center;
-    color: rgb(228, 228, 25);
+    color: rgb(100, 100, 100);
     padding-top: 70px;
+    font-size: 40px;
 }
 
 /* TODO remove when done debugging*/
@@ -632,10 +633,24 @@ label[for=checkbox] {
     width: 100%;
 }
 
-#play-button {
+#play-button,
+#connect-button {
     margin-left: auto;
     margin-right: auto;
     font-size: 125%;
+    display: block;
+}
+#connect-button {
+    background: rgb(250, 250, 250);
+    color: rgb(44, 38, 33);
+}
+#connect-button:hover {
+    color: rgb(44, 38, 33);
+    text-decoration: none;
+}
+#play-button:hover {
+    color: white;
+    text-decoration: none;
 }
 #play-button .glyphicon-play {
     font-size: 80%;
@@ -718,7 +733,7 @@ label[for=checkbox] {
 #add-pins-menu-bg-footer.actuators {
     right: 40px;
 }
-.pin.will-be-shown .pin-box:before {
+.pin.clicked .pin-box:before {
     content: "\e013";
     font-family: 'Glyphicons Halflings';
     position: absolute;
@@ -734,13 +749,13 @@ label[for=checkbox] {
     -webkit-font-smoothing: antialiased;
     font-size: 80px;
 }
-.pin.sensor.will-be-shown .pin-box:before {
+.pin.sensor.clicked .pin-box:before {
     background: rgba(247, 193, 40, .4);
     /*color: rgb(147, 106, 24);*/
     color: rgb(247, 193, 40);
     opacity: .9;
 }
-.pin.actuator.will-be-shown .pin-box:before {
+.pin.actuator.clicked .pin-box:before {
     background: rgba(45, 104, 84, .4);
     color: rgb(45, 104, 84);
     opacity: .85;
