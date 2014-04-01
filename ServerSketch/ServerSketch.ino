@@ -736,41 +736,13 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins
-      {
-        if( g_aPins[i].is_timer_on ) // Process timer
-        {
-          Serial.print("Pin ");Serial.print(i);Serial.print(" timer ON");
-          Serial.print(" Start Time: ");Serial.println(g_aPins[i].timer_start_time);
-          if( (millis() - g_aPins[i].timer_start_time) >= g_aPins[i].timer_value*1000 ) // Timer expired
-          {
-            Serial.println("EXPIRED...!!!");
-            analogWrite(i, 0.0);
-          }
-          else
-          {
-            analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
-          }
-        }
-        else // Timer is off
-        {
-          //Serial.print("Pin ");Serial.print(i);Serial.println(" timer OFF");
-          analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
-        }
-      } 
+      if( g_aPins[i].is_analog ) // Process analog pins      
+        analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
       else // Process digital pins     
-      {
-        if( g_aPins[i].is_timer_on ) // Process timer
-        {
-          digitalWrite(i, getTotalPinValue(i) );
-        }
-        else
-        {
-          digitalWrite(i, getTotalPinValue(i) );
-        }
-      }
+        digitalWrite(i, getTotalPinValue(i) );
     }
   }
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -813,6 +785,19 @@ float getTotalPinValue(int _iOutPinNum)
     g_aPins[_iOutPinNum].value = fPinValSum;
   
   //Serial.print("Analog Pin #: "); Serial.print(_iOutPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+
+  // Set pin value to zero if timer expired
+  if( g_aPins[_iOutPinNum].is_timer_on ) 
+  {
+//    Serial.print("Pin ");Serial.print(_iOutPinNum);Serial.print(" timer ON");
+//    Serial.print(" Start Time: ");Serial.println(g_aPins[_iOutPinNum].timer_start_time);
+    if( (millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000 ) // Timer expired
+    {
+//      Serial.println("EXPIRED...!!!");
+      fPinValSum = 0.0;
+      g_aPins[_iOutPinNum].value = fPinValSum;      
+    }
+  }
   
   return fPinValSum;
 }
