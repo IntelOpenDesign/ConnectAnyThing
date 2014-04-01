@@ -130,6 +130,7 @@ typedef struct Pin {
   float value;
   int is_timer_on;
   float timer_value;
+  unsigned long timer_start_time;
   int damping;
   int prev_damping;
   boolean connections[TOTAL_NUM_OF_PINS];
@@ -665,6 +666,7 @@ void initBoardState()
     
     g_aPins[i].is_timer_on = false;
     g_aPins[i].timer_value = 0.0;
+    g_aPins[i].timer_start_time = 0;
     g_aPins[i].damping = 0;
     g_aPins[i].prev_damping = 0;
     
@@ -734,10 +736,39 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins      
-        analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+      if( g_aPins[i].is_analog ) // Process analog pins
+      {
+        if( g_aPins[i].is_timer_on ) // Process timer
+        {
+          Serial.print("Pin ");Serial.print(i);Serial.print(" timer ON");
+          Serial.print(" Start Time: ");Serial.println(g_aPins[i].timer_start_time);
+          if( (millis() - g_aPins[i].timer_start_time) >= g_aPins[i].timer_value*1000 ) // Timer expired
+          {
+            Serial.println("EXPIRED...!!!");
+            analogWrite(i, 0.0);
+          }
+          else
+          {
+            analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+          }
+        }
+        else // Timer is off
+        {
+          //Serial.print("Pin ");Serial.print(i);Serial.println(" timer OFF");
+          analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+        }
+      } 
       else // Process digital pins     
-        digitalWrite(i, getTotalPinValue(i) );
+      {
+        if( g_aPins[i].is_timer_on ) // Process timer
+        {
+          digitalWrite(i, getTotalPinValue(i) );
+        }
+        else
+        {
+          digitalWrite(i, getTotalPinValue(i) );
+        }
+      }
     }
   }
 }
@@ -1152,7 +1183,11 @@ void procPinsMsg( aJsonObject *_pJsonPins )
      
       aJsonObject *poIsTimerOn = aJson.getObjectItem(poPinVals, "is_timer_on");
       if (poIsTimerOn)
-        g_aPins[i].is_timer_on = poIsTimerOn->valuebool;  
+      {
+        g_aPins[i].is_timer_on = poIsTimerOn->valuebool; 
+        if(g_aPins[i].is_timer_on)
+          g_aPins[i].timer_start_time = millis();
+      } 
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
       if (poTimerValue)
