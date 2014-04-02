@@ -11,6 +11,8 @@ ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo us
 
 Good for tinkering, classroom activities, testing sensors, etc. 
 
+For more information, photos and video links, please visit: https://communities.intel.com/thread/48358
+
 The first version of this system was created during an Intel internal hackthon in December of 2013.
 
 ### Uses
