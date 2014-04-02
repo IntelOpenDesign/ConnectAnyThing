@@ -3,10 +3,23 @@ ConnectAnyThing
 
 # Overview
 
-ConnectAnyThing is an open platform intended for easy prototyping of connected appliances, devices, and installations using Intel’s Galileo development board.  When you load ConnectAnyThing onto the Galileo’s SD card, Galileo broadcasts a WiFi network and hosts an HTML5 webpage that allows anyone to connect, read inputs and control outputs from their mobile device. The first version of this system was created during an Intel internal hackthon in December of 2013.
+ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
 
-### Potential Uses
+1)	Put the ConnectAnyThing software onto a Galileo’s SD card, and power on. 
+2)	Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.”  Join with your mobile device.
+3)	Open a web browser on your device, go to http://CAT.  Webpage lets you read inputs and control outputs in real-time from your mobile device.
 
+Good for tinkering, classroom activities, testing sensors, etc. 
+
+The first version of this system was created during an Intel internal hackthon in December of 2013.
+
+### Uses
+
+* Quickly mock-up an interactive experience.
+* Test sensors and simple circuits quickly without code.
+* Read a temperature sensor and control a heater or fan in a garage or attic
+
+building on CAT,
 * Make a publicly controllable art installation.
 * Interactive window displays.
 * Remote monitoring and control for cold/toxic/unpleasant environments.
@@ -33,7 +46,8 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 * One [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
-* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* One half PCI-E [Intel N-135 WiFi] also tested and working with N-6205 and N-6235  ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.  (a rubber band can work in a pinch)
+* antenna for the WiFi card.
 * One external 5V (3A) power supply.
 
 ### Software Installation
@@ -75,7 +89,8 @@ ENJOY...!!!
 * Pins: 3,5,6,9,10,and 11 are enabled as analog outputs.
 
 ### Known Issues
-* Connecting with an iPhone: If you are using an iPhone, make sure to disable your 4G/LTE radio. If the radio is on when attempting to access ConnectAnyThing's hotspot , Apple may block access to it.
+* Connecting with an iPhone: – Apple likes to protect you from Wi-Fi hotspots that are not connected to the internet (such as ConnectAnyThing.)  The first time you connect with an iPhone, go to settings ->WiFi -> choose ConnectAnyThing.  A pop up comes up that says “Log In”, hit “cancel”,  And your phone will disconnect from the network.  Join ConnectAnyThing again.  When you hit “Cancel” the second time, an option will come up that says “Connect without Internet.” Select this and you’re all set.
+
 * Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
 
 ## Developers
