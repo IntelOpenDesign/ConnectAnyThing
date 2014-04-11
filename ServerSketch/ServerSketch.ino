@@ -7,6 +7,9 @@
  
  */
 
+// If debbuging declare
+#define DEBUG_CAT
+
 #include <Dhcp.h>
 #include <Dns.h>
 #include <Ethernet.h>
@@ -34,7 +37,7 @@ int sensor1Pin = A0;    // select the input pin for the potentiometer
 aJsonStream serial_stream(&Serial);
 
 // Web sockets
-#define WEB_SOCKET_BUFFER_SIZE 10000
+#define WEB_SOCKET_BUFFER_SIZE 30000
 
 // HW declaration
 #define TOTAL_NUM_Dx 14 
@@ -57,6 +60,8 @@ int g_aiP[TOTAL_NUM_Px];
 #define MESSAGES_PROCESSED_TOTAL_SIZE 1000
 #define PROCESSED_MESSAGE_ID_MAX_SIZE 100
 #define MAX_N_CLIENTS 100
+
+#define LOCAL_BUFFER_SIZE 1024
 
 class MessageManager
 {
@@ -158,10 +163,10 @@ static struct option options[] = {
     NULL, 0, 0, 0                                           }
 };
 
-/*
-This part of the code is inspired by the stock example coming with libsockets.
- Check it for more details.
- */
+
+//This part of the code is inspired by the stock example coming with libsockets.
+// Check it for more details.
+ 
 
 int force_exit = 0;
 enum lyt_protocols {
@@ -277,34 +282,41 @@ static const struct serveable whitelist[] = {
   { 
     "/templates/play.html", "text/html"                                           }
   ,
-  /* last one is the default served if no match */
+  // last one is the default served if no match
   { 
     "/index.html", "text/html"                                           }
   ,
 };
 
 
-/* this protocol server (always the first one) just knows how to do HTTP */
+// this protocol server (always the first one) just knows how to do HTTP 
 
-/*
-This callback is called when the browser is refreshed (an HTTP call is performed).
- Here we send the files to the browser.
- */
+
+//This callback is called when the browser is refreshed (an HTTP call is performed).
+// Here we send the files to the browser.
 static int callback_http(struct libwebsocket_context *context,
 struct libwebsocket *wsi,
 enum libwebsocket_callback_reasons reason, void *user,
 void *in, size_t len)
 {
+  
   //     Serial.println("callback_http()");
   // WE ARE ALWAYS HITTING THIS POINT
 
-  char buf[256];
+//  char buf[256];
+  char buf[LOCAL_BUFFER_SIZE];
+  memset(buf,'\0',LOCAL_BUFFER_SIZE);
   int n;
 
   switch (reason) {
 
   case LWS_CALLBACK_HTTP:
     lwsl_notice("LWS_CALLBACK_HTTP");
+    
+   
+ //     debug_serial_print("LWS_CALLBACK_HTTP: "); // debug
+//      debug_serial_println(String(reason)); // debug      
+   
 
     for (n = 0; n < (sizeof(whitelist) / sizeof(whitelist[0]) - 1); n++)
       if (in && strcmp((const char *)in, whitelist[n].urlpath) == 0)
@@ -313,23 +325,35 @@ void *in, size_t len)
     sprintf(buf, LOCAL_RESOURCE_PATH"%s", whitelist[n].urlpath);
 
     if (libwebsockets_serve_http_file(context, wsi, buf, whitelist[n].mimetype))
-      return 1; /* through completion or error, close the socket */
+      return 1; // through completion or error, close the socket 
 
-    /*
-     * notice that the sending of the file completes asynchronously,
-     * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
-     * it's done
-     */
+     ///////////
+     // notice that the sending of the file completes asynchronously,
+     // we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
+     // it's done
+     ///////////     
 
     break;
 
   case LWS_CALLBACK_HTTP_FILE_COMPLETION:
 
     lwsl_notice("LWS_FILE_COMPLETION");
+    
+
+      // debug_serial_print("LWS_FILE_COMPLETION: "); // debug
+  //    debug_serial_println(String(reason)); // debug
+
+    
     return 1;
 
 
   default:
+
+
+      // debug_serial_print("LWS_HTTP_CALLBACK_REASON: "); // debug
+ //     debug_serial_println(String(reason)); // debug
+
+ 
     break;
   }
 
@@ -339,7 +363,7 @@ void *in, size_t len)
 // Testing
 //char pcTestBuffer[512] = "{\"status\":OK,\"pins\":{\"14\":{\"label\":\"A0\",\"is_analog\":\"true\",\"is_input\":\"true\",\"value\":\"0.5\"},\"3\":{\"label\":\"PWM3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}},\"connections\":[{\"source\":\"14\",\"target\":\"3\"}]}\"";
 
-/* lyt_protocol*/
+// CAT protocol
 static int
 callback_cat_protocol(struct libwebsocket_context *context,
 struct libwebsocket *wsi,
@@ -357,6 +381,11 @@ void *in, size_t len)
   {
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
+
+
+      // debug_serial_print("LWS_CALLBACK_SERVER_WRITEABLE: "); // debug
+  //    debug_serial_println(reason); // debug
+
 
     // **********************************
     // Send Galileo's HW state to ALL clients
@@ -379,12 +408,22 @@ void *in, size_t len)
     // Process Data Receieved from the Website
     // Update Galileo's HW    
     // **********************************    
-//    procWebMsg((char*) in, len);
     processMessage((char*) in);
+
+
+      // debug_serial_print("LWS_CALLBACK_RECEIVE: "); // debug
+  //    debug_serial_println(reason); // debug
+
 
     break;
 
   default:
+  
+
+      // debug_serial_print("LWS_PROTOCOL_REASON: "); // debug
+  //    debug_serial_println(reason); // debug
+
+    
     break;
   }
 
@@ -395,35 +434,6 @@ void *in, size_t len)
 // Process recieved message from the webpage here.... 
 //------------------------------------------------------------
 void procClientMsg(char* _in, size_t _len) {
-
-  /*
-  {
-     "status": "<OK, ERROR>",  
-     "pins": {
-        "<0,1,…,13,14,…,19>": {
-           "label": "<label text>",
-           "is_analog": <true,false>,
-           "is_input": <true,false>,
-           “input_min”: <0.0,1.0>,
-           "input_max": <0.0,1.0>,
-           “is_inverted”: <true,false>,
-           “is_visible”: <true,false>,
-           "value": <0.0,1.0>,
-           "is_timer_on": <true, false>,
-           "timer_value": <float>,
-           "damping": <0,9>, 
-        }, ..., 
-     },
-     "connections": [
-        {"source": "<0,1,…,13,14,…,19>",
-         "target": "<0,1,…,13,14…,19>"} ,
-          ...,
-     ]
-  }
-  */
-
-  //Serial.print//Serial.println("procClientMsg()");
-  //Serial.println(String(_in));
 
   // Create JSON message
   aJsonObject *pJsonMsg = aJson.parse(_in);
@@ -520,52 +530,17 @@ void procWebMsg(char* _in, size_t _len) {
 // **********************************
 // Send pin status to the Website    
 // **********************************
-/*
-int  sendStatusToWebsite(struct libwebsocket *wsi)
-{
-  int n;
-  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 512 + LWS_SEND_BUFFER_POST_PADDING];
-  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-
-  n = sprintf((char *)p, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f",
-  g_abD[0],
-  g_abD[1],
-  g_abD[2],
-  g_aiP[3],   // Px
-  g_abD[4],
-  g_aiP[5],   // Px
-  g_aiP[6],   // Px
-  g_abD[7],
-  g_abD[8],
-  g_aiP[9],   // Px
-  g_aiP[10],  // Px
-  g_aiP[11],  // Px
-  g_abD[12],
-  g_abD[13],
-  analogRead(A0)/float(ANALOG_IN_MAX_VALUE),
-  analogRead(A1)/float(ANALOG_IN_MAX_VALUE),
-  analogRead(A2)/float(ANALOG_IN_MAX_VALUE),
-  analogRead(A3)/float(ANALOG_IN_MAX_VALUE),
-  analogRead(A4)/float(ANALOG_IN_MAX_VALUE),
-  analogRead(A5)/float(ANALOG_IN_MAX_VALUE)
-    );
-
-  n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT); 
-
-  return n;
-}
-*/
-
 int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
 {
 
   int n = 0;
 
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
+  memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
   
   updateBoardState();
-      
+  
   aJsonObject *msg = getJsonBoardState();  
   
   aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
@@ -582,15 +557,15 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   return n;
 }
 
-/* list of supported protocols and callbacks */
+// list of supported protocols and callbacks 
 static struct libwebsocket_protocols protocols[] = {
-  /* first protocol must always be HTTP handler, to serve webpage */
+  // first protocol must always be HTTP handler, to serve webpage 
 
   {
-    "http-only",		/* name */
-    callback_http,		/* callback */
-    0,			/* per_session_data_size */
-    0,			/* max frame size / rx buffer */
+    "http-only",		// name */
+    callback_http,		// callback */
+    0,			// per_session_data_size */
+    0,			// max frame size / rx buffer */
   }
   , // manages data in and data out from and to the website
   {
@@ -602,7 +577,7 @@ static struct libwebsocket_protocols protocols[] = {
   ,
 
   { 
-    NULL, NULL, 0, 0                                           } /* terminator */
+    NULL, NULL, 0, 0                                           } // terminator */
 };
 
 void sighandler(int sig)
@@ -629,11 +604,11 @@ int initWebsocket()
   signal(SIGINT, sighandler);
   int syslog_options =  LOG_PID | LOG_PERROR;
 
-  /* we will only try to log things according to our debug_level */
+  // we will only try to log things according to our debug_level */
   setlogmask(LOG_UPTO (LOG_DEBUG));
   openlog("lwsts", syslog_options, LOG_DAEMON);
 
-  /* tell the library what debug level to emit and to send it to syslog */
+  // tell the library what debug level to emit and to send it to syslog */
   lws_set_log_level(debug_level, lwsl_emit_syslog);
 
   info.iface = iface;
@@ -684,7 +659,8 @@ void initBoardState()
   // Initialize all pins with no lable and 0.0 value
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
-    memset(g_aPins[i].label, '\0', sizeof(g_aPins[i].label));
+//    memset(g_aPins[i].label, '\0', sizeof(g_aPins[i].label));
+    memset(g_aPins[i].label, '\0', PIN_LABEL_SIZE);  
     strcpy(g_aPins[i].label,"");
 
     g_aPins[i].input_min = 0.0;
@@ -704,7 +680,8 @@ void initBoardState()
     g_aPins[i].prev_damping = 0;
     
     // Set pin connections
-    memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
+//    memset(g_aPins[i].connections, '\0', sizeof(g_aPins[i].connections));
+    memset(g_aPins[i].connections, '\0', TOTAL_NUM_OF_PINS);
     for(int j=0; j<TOTAL_NUM_OF_PINS; j++)
     {
       if( i == j ) // Pins are always connected to themselves
@@ -871,57 +848,8 @@ float getFilteredPinValue(int _iInPinNum)
 //Serial.print("fFiltered: "); //Serial.println(fFiltered);  
 //Serial.print("Value: "); Serial.println(g_aPins[_iInPinNum].value);  
 
-    
-  /*
-  // Check if the damping value has changed
-  if( g_aPins[_iInPinNum].damping != g_aPins[_iInPinNum].prev_damping )
-  {
-    // Clear the history values
-    for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES; i++)
-      g_aPins[_iInPinNum].past_values[i] = 0.0;
-  }
-  
-  g_aPins[_iInPinNum].damping
-  
-  g_aPins[_iInPinNum].value
-  g_aPins[_iInPinNum].prev_value  
- */
   return fFiltered; 
 }
-
-/*
-float getFilteredPinValue(int _iInPinNum)
-{
-  // Check if the damping value has changed
-  if( g_aPins[_iInPinNum].damping != g_aPins[_iInPinNum].prev_damping )
-  {
-    // Clear the history values
-    for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES; i++)
-      g_aPins[_iInPinNum].past_values[i] = 0.0;
-  }
-  
-  // Update 
-  g_aPins[_iInPinNum].prev_damping =   g_aPins[_iInPinNum].damping;
-  
-  // Update tap value
-//  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping+1); // The sampling rate is so slow this filter can see it.
-  float fFilterTab = 1.0/(g_aPins[_iInPinNum].damping*100+1); // The sampling rate is so slow this filter can see it.
-  Serial.print("fFilterTab: "); Serial.println(fFilterTab);
-  // Shift previous values
-  for(int i=0; i<TOTAL_NUM_OF_PAST_VALUES-1; i++)
-      g_aPins[_iInPinNum].past_values[i+1] = g_aPins[_iInPinNum].past_values[i];
-  
-  // Add new data
-  g_aPins[_iInPinNum].past_values[0] = g_aPins[_iInPinNum].value;
-    Serial.print("value: "); Serial.println(g_aPins[_iInPinNum].value);
-  // Multiply and accumulate
-  float fMultAndAccum = 0.0;
-  for(int i=0; i<=g_aPins[_iInPinNum].damping*100; i++)
-      fMultAndAccum += fFilterTab*g_aPins[_iInPinNum].past_values[i];
-  Serial.print("MultAndAccum: "); Serial.println(fMultAndAccum);    
-  return fMultAndAccum;
-}
-*/
 
 ////////////////////////////////////////////////
 // Get the board state and return a JSON object
@@ -933,7 +861,8 @@ aJsonObject* getJsonBoardState()
 
    g_iMsgCount++; // debug
     
-  char buff[100];
+//  char buf[LOCAL_BUFFER_SIZE];
+//  memset(buf,'\0',LOCAL_BUFFER_SIZE);
   
   aJsonObject* poJsonBoardState = aJson.createObject();
 
@@ -959,7 +888,9 @@ aJsonObject* getJsonBoardState()
 
   // Create PINS
   int iaPinConnects[TOTAL_NUM_OF_PINS];
-  char caPinNumBuffer[10];
+  char caPinNumBuffer[LOCAL_BUFFER_SIZE];
+  memset(caPinNumBuffer,'\0',LOCAL_BUFFER_SIZE);
+  
   for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
   {
     aJson.addItemToObject(apoPin[i],"label", aJson.createItem( g_aPins[i].label ) );
@@ -1033,19 +964,7 @@ aJsonObject* getJsonBoardState()
     aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
 
   }
-  
-  /*
-  {"status":<OK,ERROR>,  "pins":{"<0,1,…,13,A0,…,A5>":  {
-  "label":"<label text>",  
-	"is_analog":"<true,false>",  
-	"is_input":"<true,false>", 
-“sensitivity”:”<0.0,1.0>”, 
-“is_inverted”:”<true,false>”, 
-“is_visible”:”<true,false>”,
-"value":"<0.0,1.0>",  },  ...,  }, 
-"connections":[ {"source":"<0,1,…,13,A0,…,A5>","target":"<0,1,…,13,A0,…,A5>",”is_connected”:”<true,false>”},  ...,  ]  }
-  */
-  
+   
   // Create CONNECTIONS
   for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
   {
@@ -1093,6 +1012,17 @@ void processMessage(char *_acMsg)
   
 //  Serial.print("Msg recvd: ");
 //  Serial.println(_acMsg);
+
+  debug_serial_print("Msg received. Size: ");
+//  debug_serial_println(sizeof(_acMsg));
+    #ifdef DEBUG_CAT
+      Serial.println(strlen(_acMsg)); // debug      
+    #endif
+  debug_serial_print(_acMsg);
+  
+  // Ignore messages bigger than we can handle
+  if( sizeof(_acMsg) >= WEB_SOCKET_BUFFER_SIZE )
+    return;
 
   aJsonObject *poMsg = aJson.parse(_acMsg);
 
@@ -1156,12 +1086,12 @@ void procPinsMsg( aJsonObject *_pJsonPins )
   // Iterate all pins and check if we have data available
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
-    char pinstr[3];
+    char pinstr[10];
     snprintf(pinstr, sizeof(pinstr), "%d", i);    
     aJsonObject *poPinVals = aJson.getObjectItem(_pJsonPins, pinstr);
     if (poPinVals)
     {
-      char sPinState[128];
+      char sPinState[LOCAL_BUFFER_SIZE];
 
       aJsonObject *poLabel = aJson.getObjectItem(poPinVals, "label");
       if (poLabel)
@@ -1315,14 +1245,14 @@ void procConnMsg( aJsonObject *_pJsonConnections )
         break;        
       }
     }
-    /*
-    Serial.print("Source: ");        
-    Serial.println(String(uiSourcePin));        
-    Serial.print("Target: "); 
-    Serial.println(String(uiTargetPin));   
-    Serial.print("Connect: "); 
-    Serial.println(String(uiTargetPin));   
-    */
+    
+ //   Serial.print("Source: ");        
+ //   Serial.println(String(uiSourcePin));        
+//    Serial.print("Target: "); 
+//    Serial.println(String(uiTargetPin));   
+//    Serial.print("Connect: "); 
+//    Serial.println(String(uiTargetPin));   
+    
   } 
 }
 
@@ -1333,12 +1263,10 @@ void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  
+  
   //Serial.println("Starting WebServer");
   system("/home/root/startAP");
-
-  // Initilize data structures to control client/server protocol
-  //Serial.println("Initilzie Client/Server protocol");
-  //initCommProtocol();
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
@@ -1348,17 +1276,7 @@ void setup()
   initWebsocket();  
 
 }
-/*
-char g_acMessage[1000];
-int g_ToggleFlag = 0;
-char g_acPin3_On[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.9\"}   }}";
-char g_acPin3_Off[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"2\":{\"label\":\"Pin 2\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"4\":{\"label\":\"Pin 4\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"7\":{\"label\":\"Pin 7\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"8\":{\"label\":\"Pin 8\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"12\":{\"label\":\"Pin 12\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"0\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"5\":{\"label\":\"Pin 5\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"6\":{\"label\":\"Pin 6\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"9\":{\"label\":\"Pin 9\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"10\":{\"label\":\"Pin 10\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}, \"11\":{\"label\":\"Pin 11\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.1\"}   }}";
-//char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"5\"}]}";
 
-char g_acPin13_On_3_Analog[] = "{\"status\":\"OK\",\"pins\":{ \"13\":{\"label\":\"Pin 13\",\"is_analog\":\"false\",\"is_input\":\"false\",\"value\":\"1\"}, \"3\":{\"label\":\"Pin 3\",\"is_analog\":\"true\",\"is_input\":\"false\",\"value\":\"0.0\"}  }}";
-char g_acConnA0_TO_3[] = "{\"status\":\"OK\",\"connections\":[{\"source\":\"14\",\"target\":\"3\"},{\"source\":\"15\",\"target\":\"3\"}]}";
-int g_iDebugState = 0;
-*/
 unsigned long last_print = 0;
 
 void loop()
@@ -1368,38 +1286,10 @@ void loop()
 
     ///////////////////////////////////////
     // Connect/Disconnect
-    /*
-    switch(g_iDebugState)
-    {
-      case 0:
-        snprintf(g_acMessage,sizeof(g_acMessage),g_acPin13_On_3_Analog);  
-        processMessage(g_acMessage);
-        g_iDebugState = 1;
-      break;
-      
-      case 1:
-        snprintf(g_acMessage,sizeof(g_acMessage),g_acConnA0_TO_3);  
-        processMessage(g_acMessage);   
-        g_iDebugState = 2;       
-      break;
-      
-      default:
-      
-      break;
-    }
-   
-    updateBoardState();
-    */
     ///////////////////////////////////////
-
+    Serial.println("LOOP(7)");
     //////////////////////////////////////////
     // Test sending message
-    /*
-    aJsonObject *msg = getJsonBoardState();
-    aJson.print(msg, &serial_stream);
-    Serial.println("");
-    aJson.deleteItem(msg);
-    */
     //////////////////////////////////////////  
 
     last_print = millis();
@@ -1429,4 +1319,21 @@ void getSerialCommand()
       break;
     }
   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Other tools
+/////////////////////////////////////////////////////////////////////////////////
+void debug_serial_print(char* _sString)
+{
+    #ifdef DEBUG_CAT
+      Serial.print(_sString); // debug
+    #endif
+}
+
+void debug_serial_println(char* _sString)
+{
+    #ifdef DEBUG_CAT
+      Serial.println(_sString); // debug      
+    #endif
 }
