@@ -8,7 +8,7 @@
  */
 
 // If debbuging declare
-#define DEBUG_CAT
+//#define DEBUG_CAT
 
 #include <Dhcp.h>
 #include <Dns.h>
@@ -1287,7 +1287,7 @@ void loop()
     ///////////////////////////////////////
     // Connect/Disconnect
     ///////////////////////////////////////
-    Serial.println("LOOP(7)");
+//    Serial.println("LOOP(7)");
     //////////////////////////////////////////
     // Test sending message
     //////////////////////////////////////////  
