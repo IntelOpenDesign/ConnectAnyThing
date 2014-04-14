@@ -193,12 +193,6 @@ static const struct serveable whitelist[] = {
     "/static/css/bootstrap.min.css", "text/css"                                           }
   ,
   { 
-    "/static/css/jquery.mobile-1.4.1.css", "text/css"                                           }
-  ,
-  { 
-    "/static/css/jquery.mobile-1.4.1.min.css", "text/css"                                           }
-  ,
-  { 
     "/static/css/play_mode.css", "text/css"                                           }
   ,
   { 
@@ -250,16 +244,7 @@ static const struct serveable whitelist[] = {
     "/static/js/d3.min.js", "application/javascript"                                           }
   ,
   { 
-    "/static/js/jquery.jsPlumb-1.4.1-all.js", "application/javascript"                                           }
-  ,
-  { 
     "/static/js/jquery.min.js", "application/javascript"                                           }
-  ,
-  { 
-    "/static/js/jquery.mobile-1.4.1.js", "application/javascript"                                           }
-  ,
-  { 
-    "/static/js/jquery-ui.min.js", "application/javascript"                                           }
   ,
   { 
     "/static/js/underscore-min.js", "application/javascript"                                           }
