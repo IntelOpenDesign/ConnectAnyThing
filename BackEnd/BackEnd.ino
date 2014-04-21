@@ -162,6 +162,7 @@ char g_sSsid[SSID_MAX_LENGTH];
 // Configuration file
 #define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
 #define CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
+#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
 
 // Scripts
 #define START_ACCESS_POINT_SCRIPT_FULL_PATH "/home/root/startAP"
@@ -1320,15 +1321,69 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-//  initBoardState();
-  initBoardStateFromFile(CONFIG_FILE_FULL_PATH);
+  initBoardState();
+//  initBoardStateFromFile(CONFIG_FILE_FULL_PATH);
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
 
 }
 
+
+int changeSsidName(char *_sSsidName)
+{
+//    char    sSsidName[LOCAL_BUFFER_SIZE];
+
+  // Truncate Ssid if it too long
+  // SSID_MAX_LENGTH
+
+// We need a buffer to read in data
+  char      Buffer[LOCAL_BUFFER_SIZE];
+
+  // Open the file for reading/write.
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r+"); // Read/write
+
+  // Our find and replace arguments
+  char     *Find = "ssid=";
+  char    sSsidLine[LOCAL_BUFFER_SIZE];
+
+//  Serial.println("Create SSID:    ");
+  // Create file line    
+  sprintf(sSsidLine, "ssid=%s", _sSsidName);
+  
+  if(NULL == Input)
+  {
+      trace_info("%s(): /etc/hostapd/hostapd.conf File not found", __func__);
+      return 1;
+  }
+
+//  Serial.print("Find:    ");     Serial.println(Find);
+
+  // For each line...
+  while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
+  {
+    char *Start = NULL;    // Where 'ssid=' was found in the line
+    char *Line = Buffer; // Start at the beginning of the line, and after each match
+    
+ //   Serial.print("Line: "); Serial.println(Buffer);
+    
+      // Find match
+    Start = strstr(Line, Find);
+    if( Start )
+    {
+ //     Serial.print("Write: "); Serial.println(sSsidLine);
+      fwrite(sSsidLine, 1, strlen(sSsidLine), Input);
+    }
+  }
+
+  // Close our files
+  fclose(Input);
+  
+  return 0;
+}
+
 unsigned long last_print = 0;
+int g_iCatNumber = 0;
 
 void loop()
 {
@@ -1336,11 +1391,14 @@ void loop()
   if (millis() - last_print > 2000) {
 
     ///////////////////////////////////////
-    // Connect/Disconnect
+    // Test code
     ///////////////////////////////////////
-//    Serial.println("LOOP(7)");
-    //////////////////////////////////////////
-    // Test sending message
+
+    g_iCatNumber++;
+    char sSsidName[100];
+    sprintf(sSsidName, "CAT%i", g_iCatNumber);
+    changeSsidName(sSsidName);
+   
     //////////////////////////////////////////  
 
     last_print = millis();
