@@ -3,10 +3,23 @@ ConnectAnyThing
 
 # Overview
 
-ConnectAnyThing is an open platform intended for easy prototyping of connected appliances, devices, and installations using Intel’s Galileo development board.  When you load ConnectAnyThing onto the Galileo’s SD card, Galileo broadcasts a WiFi network and hosts an HTML5 webpage that allows anyone to connect, read inputs and control outputs from their mobile device. The first version of this system was created during an Intel internal hackthon in December of 2013.
+ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
 
-### Potential Uses
+1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
 
+2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
+
+3) Open a web browser on your device, go to http://CAT. Webpage lets you read inputs and control outputs in real-time from your mobile device.
+
+Good for tinkering, classroom activities, testing sensors, etc.
+
+For more information, photos and video links, please visit: https://communities.intel.com/thread/48358
+
+### Uses
+
+* Quickly mock-up an interactive experience.
+* Test sensors and simple circuits quickly without code.
+* Read a temperature sensor and control a heater or fan in a garage or attic 
 * Make a publicly controllable art installation.
 * Interactive window displays.
 * Remote monitoring and control for cold/toxic/unpleasant environments.
@@ -16,14 +29,19 @@ ConnectAnyThing is an open platform intended for easy prototyping of connected a
 
 Carlos Montesinos <carlos.montesinos@intel.com><br />
 Lucas Ainsworth <lucas.b.ainsworth@intel.com><br />
+Victoria Fang <victoria.fang@intel.com><br />
+Noura Howell <noura.howell@gmail.com><br />
+
+### Credits
+
+Adam Jordan <adam.jordan@intel.com><br />
+Seth Hunter <seth.e.hunter@intel.com><br />
+Ana Patricia Rosario <ana.p.rosario@intel.com><br />
 Clayton Hofrock <clayton.a.hofrock@intel.com><br />
 David Shaw <david.shaw@intel.com><br />
 Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com><br />
 Sorin Blebea <sorin.blebea@intel.com><br />
 Sweta Patel <sweta.patel@intel.com><br />
-Seth Hunter <seth.e.hunter@intel.com>
-
-### Credits
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
@@ -38,19 +56,18 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ### Software Installation
 
-1) Download the project's zip file or clone the repository.
+1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
 
-2) Unpack the content and locate the SD_Card directory.
+2) Unpack the file.
 
 3) Make sure the [Micro SD card is FAT32 formatted]( http://www.wikihow.com/Format-an-SD-Card ).
 
-4) Copy the entire content of the SD_Card directory into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
+4) Copy the entire content into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
-5) In the SD_Card directory, unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
+5) In the SD card unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
 
 6) If successful, the Micro SD card's directory tree should look as follows:
 * boot (directory)
-* srv_card (directory)
 * bzImage (file)
 * core-image-minimal-initramfs-claton.cpio.gz (file)
 * image-full-clatong.ext3 (file)
@@ -68,6 +85,10 @@ ENJOY...!!!
 
 ## Release Notes
 
+### Rev 0.2.1
+* ConnectAnyThing now allows the user to connect inputs with outputs in a dynamic fashion.
+* Pins are enabled as described in Rev 0.1.0.
+
 ### Rev 0.1.0
 * The Graphical User Interface enables direct access to the pins listed bellow.
 * Pins: A0,A1,A2,A3,A4,and A5 are enabled as analog inputs.
@@ -82,10 +103,3 @@ ENJOY...!!!
 
 ### Development Work Flow
 We welcome developers to contribute to the project. Please push any contributions against the *develop* branch and request a pull.
-
-### Changing Network Name
-If you wish to change the name of the hotspot network, change the SSID name in the file hostapd.conf located in /etc/hostapd/.
-
-### How To Edit the HTML5 Website
-Copy the file index.html from: ~/srv to /media/mmcblk0p1/srv_card/home/root/srv/ use the following command on the Linux command line:
-cp -r /media/mmcblk0p1/srv_card/home/root/srv/* ./srv/
