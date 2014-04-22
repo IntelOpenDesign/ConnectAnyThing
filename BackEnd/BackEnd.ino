@@ -162,7 +162,9 @@ char g_sSsid[SSID_MAX_LENGTH];
 // Configuration file
 #define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
 #define CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
-#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
+#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_test.conf"
+//#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_tmp.conf"
+#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTest.conf"
 
 // Scripts
 #define START_ACCESS_POINT_SCRIPT_FULL_PATH "/home/root/startAP"
@@ -1332,52 +1334,52 @@ void setup()
 
 int changeSsidName(char *_sSsidName)
 {
-//    char    sSsidName[LOCAL_BUFFER_SIZE];
-
   // Truncate Ssid if it too long
-  // SSID_MAX_LENGTH
+  snprintf(_sSsidName,SSID_MAX_LENGTH,"%s",_sSsidName);
 
 // We need a buffer to read in data
   char      Buffer[LOCAL_BUFFER_SIZE];
+  char      TempBuffer[LOCAL_BUFFER_SIZE];
 
   // Open the file for reading/write.
-  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r+"); // Read/write
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read/write
+  FILE     *Output = fopen(TEMP_CONFIG_FILE_FULL_PATH, "w"); // Read/write
 
   // Our find and replace arguments
   char     *Find = "ssid=";
   char    sSsidLine[LOCAL_BUFFER_SIZE];
 
-//  Serial.println("Create SSID:    ");
   // Create file line    
-  sprintf(sSsidLine, "ssid=%s", _sSsidName);
+  sprintf(sSsidLine,"ssid=%s\n", _sSsidName);
   
   if(NULL == Input)
   {
-      trace_info("%s(): /etc/hostapd/hostapd.conf File not found", __func__);
+      trace_info("%s(): %s file not found", __func__,HOSTAPD_CONFIG_FILE_FULL_PATH);
       return 1;
   }
-
-//  Serial.print("Find:    ");     Serial.println(Find);
 
   // For each line...
   while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
   {
     char *Start = NULL;    // Where 'ssid=' was found in the line
     char *Line = Buffer; // Start at the beginning of the line, and after each match
-    
- //   Serial.print("Line: "); Serial.println(Buffer);
-    
-      // Find match
-    Start = strstr(Line, Find);
-    if( Start )
+     
+    // Find match
+    if( strstr(Line, Find) )
     {
- //     Serial.print("Write: "); Serial.println(sSsidLine);
-      fwrite(sSsidLine, 1, strlen(sSsidLine), Input);
+      fputs(sSsidLine, Output);
+    }
+    else
+    {
+      fputs(Line, Output);      
     }
   }
 
   // Close our files
   fclose(Input);
+  fclose(Output);
+  
+  rename(TEMP_CONFIG_FILE_FULL_PATH,HOSTAPD_CONFIG_FILE_FULL_PATH);
   
   return 0;
 }
@@ -1388,7 +1390,7 @@ int g_iCatNumber = 0;
 void loop()
 {
 
-  if (millis() - last_print > 2000) {
+  if (millis() - last_print > 3000) {
 
     ///////////////////////////////////////
     // Test code
@@ -1396,9 +1398,9 @@ void loop()
 /*
     g_iCatNumber++;
     char sSsidName[100];
-    sprintf(sSsidName, "CAT%i", g_iCatNumber);
+    sprintf(sSsidName, "CA3333333333333333333333333333344444444444444444444444444444444444444444444T%i", g_iCatNumber);
     changeSsidName(sSsidName);
- */ 
+ */
     //////////////////////////////////////////  
 
     last_print = millis();
@@ -1413,7 +1415,6 @@ void getSerialCommand()
   if (Serial.available() > 0) {
     // get incoming byte:
     g_iByte = Serial.read();
-    //Serial.println(g_iByte);
 
     switch (g_iByte)
     {
