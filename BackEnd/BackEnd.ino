@@ -1393,12 +1393,12 @@ void loop()
     ///////////////////////////////////////
     // Test code
     ///////////////////////////////////////
-
+/*
     g_iCatNumber++;
     char sSsidName[100];
     sprintf(sSsidName, "CAT%i", g_iCatNumber);
     changeSsidName(sSsidName);
-   
+ */ 
     //////////////////////////////////////////  
 
     last_print = millis();
