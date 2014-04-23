@@ -641,9 +641,6 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var update_period = 500;
     //(end of settings)
 
-    var ssid; // the most recent ssid we got from the server
-              // TODO this is a bad way to do it
-
     // Callback Functions
     // for certain "events" you can assign exactly one callback function. they
     // are not real events; the strings just describe the situation in which
@@ -808,6 +805,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         var conns = _.object(_.map(data.connections, function(c) {
             return [cat.tokenize_connection_object(c), true];
         }));
+        var ssid = data.ssid;
 
         function update(d) {
             _.each(d.pins, function(pin_updates, pin_id) {
@@ -816,6 +814,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             _.each(d.connections, function(c) {
                 conns[cat.tokenize_connection_object(c)] = c.connect;
             });
+            ssid = d.ssid;
         }
 
         var messages_in_order = _.sortBy(_.values(messages), function(msg) {
@@ -834,8 +833,6 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             if (val)
                 connections.push(cat.detokenize_connection(token));
         });
-
-        ssid = data.ssid;
 
         do_callback('update', {
             pins: pins,
