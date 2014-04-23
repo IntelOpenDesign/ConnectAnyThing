@@ -236,6 +236,7 @@ cat.app.controller('AppCtrl', ['$scope', '$routeParams', '$location', 'Galileo',
             $scope.s.got_data = true;
             $scope.d.update(data);
             if ($scope.s.ssid !== data.ssid) {
+                $scope.s.ssid = data.ssid;
                 $location.path('/ssid_changed');
             }
         }
@@ -740,7 +741,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var send = _.throttle(_send, update_period);
 
     var add_to_batch = function(updates) {
-        batch = _.extend({ pins: {}, connections: [], ssid: ssid }, batch);
+        batch = _.extend({ pins: {}, connections: [] }, batch);
         _.each(updates.pins, function(pin, id) {
             batch.pins[id] = _.extend({}, batch.pins[id], pin);
         });
@@ -814,7 +815,8 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             _.each(d.connections, function(c) {
                 conns[cat.tokenize_connection_object(c)] = c.connect;
             });
-            ssid = d.ssid;
+            if (_.has(d, 'ssid'))
+                ssid = d.ssid;
         }
 
         var messages_in_order = _.sortBy(_.values(messages), function(msg) {
