@@ -3,7 +3,7 @@ var cat = {};
 
 // server connection settings
 cat.on_hardware = true; // to switch to Galileo, just change this to true
-cat.test_server_url = 'ws://192.168.0.195:8001';
+cat.test_server_url = 'ws://localhost:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
 
@@ -123,19 +123,18 @@ cat.d = function() {
     };
 
     that.hide_pins = function(ids) {
-        var conns_to_remove = [];
+        var affected_conns = [];
         _.each(ids, function(id) {
             that.pins[id].is_visible = false;
             var end = that.pins[id].is_input ? 'source' : 'target';
-            var more_to_remove = _.filter(that.connections, function(c) {
+            var more_conns = _.filter(that.connections, function(c) {
                 return c[end] === id;
             });
-            conns_to_remove.push.apply(conns_to_remove, more_to_remove);
+            affected_conns.push.apply(affected_conns, more_conns);
         });
 
-        that.disconnect(conns_to_remove);
         sync();
-        return conns_to_remove;
+        return affected_conns;
     };
 
     return that;
@@ -145,6 +144,8 @@ cat.d = function() {
 cat.app = angular.module('ConnectAnything', ['ngRoute']);
 
 cat.app.config(['$routeProvider', function($routeProvider) {
+    // TODO encode the routes in scope so templates can look at them too
+    // right now they are hardcoded throughout templates
     $routeProvider
         .when('/', {
             templateUrl: 'templates/connect.html',
@@ -152,7 +153,35 @@ cat.app.config(['$routeProvider', function($routeProvider) {
         })
         .when('/play', {
             templateUrl: 'templates/play.html',
-            controller: 'PlayModeCtrl',
+            controller: 'EmptyCtrl',
+        })
+        .when('/app_settings', {
+            templateUrl: 'templates/app_settings.html',
+            controller: 'EmptyCtrl',
+        })
+        .when('/app_settings/reset_dialog', {
+            templateUrl: 'templates/reset_dialog.html',
+            controller: 'EmptyCtrl',
+        })
+        .when('/app_settings/ssid_dialog', {
+            templateUrl: 'templates/ssid_dialog.html',
+            controller: 'EmptyCtrl',
+        })
+        .when('/pin_settings/:id', {
+            templateUrl: 'templates/pin_settings.html',
+            controller: 'EmptyCtrl',
+        })
+        .when('/pin_settings/:id/remove_pin_dialog', {
+            templateUrl: 'templates/remove_pin_dialog.html',
+            controller: 'RemovePinDialogCtrl',
+        })
+        .when('/add_remove_pins/:type', {
+            templateUrl: 'templates/add_remove_pins.html',
+            controller: 'EmptyCtrl',
+        })
+        .when('/ssid_changed', {
+            templateUrl: 'templates/ssid_changed.html',
+            controller: 'EmptyCtrl',
         })
         .otherwise({
             redirectTo: '/',
@@ -160,9 +189,12 @@ cat.app.config(['$routeProvider', function($routeProvider) {
 }]);
 
 // The highest level app controller.
-cat.app.controller('AppCtrl', ['$scope', '$location', 'Galileo', function($scope, $location, Galileo) {
+cat.app.controller('AppCtrl', ['$scope', '$routeParams', '$location', 'Galileo', function($scope, $routeParams, $location, Galileo) {
 
+    // STATE
     $scope.$location = $location;
+
+    $scope.$routeParams = $routeParams;
 
     $scope.parseInt = parseInt;
 
@@ -172,95 +204,68 @@ cat.app.controller('AppCtrl', ['$scope', '$location', 'Galileo', function($scope
     // pins and connections
     $scope.d = cat.d();
 
-    // whether we have yet received any data from the server
-    $scope.got_data = false;
-
     // other app state, shared with child controllers
-    // determines which view to show, not actual data to share with server
+    // - does not need to be synced with server
+    // - needs to be attrs of an object so that primitive values can work with
+    // prototypal inheritance of $scope
     $scope.s = {
-        settings_pin: null, // pin id to show settings for
-        adding_pins: null,  // 'sensors' or 'actuators'
-        show_remove_confirmation: false, // whether to show this dialog box
+        got_data: false, // whether we have received any data from the server
+        ssid: null, // name of wifi network. this does not need to be synced
+                    // with server because, when someone changes it, the wifi
+                    // network changes name and so everyone has to disconnect
+                    // and reconnect, which should reload the whole app.
     };
 
-    // TALKING WITH GALILEO
+    // NAVIGATION
+    $scope.goTo = function(hash) {
+        window.location.hash = '#/' + hash;
+    };
+    $scope.goBack = function(n) {
+        window.history.go(-n);
+    };
 
+    // SYNC WITH SERVER
     Galileo.set_all_pins_getter(function() {
         return $scope.d.pins;
     });
-
     Galileo.on('update', function(data) {
-        if (!$scope.got_data) { // first time initialization
-            $scope.got_data = true;
+        if (!$scope.s.got_data) { // first time initialization
+            $scope.s.got_data = true;
             $scope.d.reset(data);
          } else { // after that just update changes
-            $scope.got_data = true;
+            $scope.s.got_data = true;
             $scope.d.update(data);
+            if ($scope.s.ssid !== data.ssid) {
+                $scope.s.ssid = data.ssid;
+                $location.path('/ssid_changed');
+            }
         }
+        $scope.s.ssid = data.ssid;
     });
-
     Galileo.on('slowness', function() {
-        $scope.got_data = false;
+        $scope.s.got_data = false;
     });
-
     Galileo.on('websocket-closed', function() {
-        $scope.got_data = false;
+        $scope.s.got_data = false;
     });
-
-    $scope.send_pin_update = function(pin_ids, attr) {
-        Galileo.update_pins(pin_ids, attr);
-    };
-
     if (cat.on_hardware) {
         Galileo.connect(cat.hardware_server_url, cat.hardware_server_protocol);
     } else {
         Galileo.connect(cat.test_server_url);
     }
 
-    // HOW THE USER SHOWS/HIDES PINS
-    // Tapping a "+" button at the bottom of the screen opens or closes the add
-    // pins menu. In this menu, tapping a pin selects it. Leaving the menu adds
-    // the selected pins.
-    // In the settings window for each pin, tapping "Remove" removes that pin
-    // and all its connections, after asking the user for confirmation.
-
-    $scope.toggle_add_pins_menu_for = function(type) {
-        var prev_type = $scope.s.adding_pins;
-        // add_pins_menu was closed, so open it
-        if (prev_type === null) {
-            $scope.s.adding_pins = type;
-            window.history.pushState();
-            window.onpopstate = function() {
-                $scope.close_add_pins_menu(true);
-            };
+    // GENERAL PURPOSE PIN UPDATE
+    // NOTE do not use for showing or hiding pins
+    $scope.send_pin_update = function(pin_ids, attr, val) {
+        if (arguments.length >= 3) {
+            _.each(pin_ids, function(id) {
+                $scope.d.pins[id][attr] = val;
+            });
         }
-        // add_pins_menu was already open
-        else {
-            if (prev_type === type) {
-                $scope.close_add_pins_menu();
-            } else {
-                $scope.s.adding_pins = type;
-            }
-        }
-    };
-    $scope.close_add_pins_menu = function(history_state_already_popped) {
-        $scope.s.adding_pins = null;
-        if (!history_state_already_popped) {
-            window.history.back();
-        }
+        Galileo.update_pins(pin_ids, attr);
     };
 
-    $scope.is_pin_stub_clicked = function(id) {
-        return $scope.d.pins[id].is_visible;
-    };
-    $scope.pin_stub_click = function(id) {
-        if ($scope.d.pins[id].is_visible) {
-            $scope.hide_pins([id]);
-        } else {
-            $scope.show_pins([id]);
-        }
-    };
-
+    // SHOW/HIDE PINS
     $scope.show_pins = function(ids) {
         $scope.d.show_pins(ids);
         $scope.send_pin_update(ids, 'is_visible');
@@ -268,7 +273,78 @@ cat.app.controller('AppCtrl', ['$scope', '$location', 'Galileo', function($scope
     $scope.hide_pins = function(ids) {
         var connections_to_remove = $scope.d.hide_pins(ids);
         $scope.send_pin_update(ids, 'is_visible');
-        Galileo.remove_connections(connections_to_remove);
+        $scope.remove_connections(connections_to_remove);
+    };
+
+    // ADD/REMOVE CONNECTIONS
+    $scope.add_connections = function(connections) {
+        $scope.d.connect(connections);
+        Galileo.add_connections(connections);
+    };
+
+    $scope.remove_connections = function(connections) {
+        // when removing connections, actuators that used to be connected, but
+        // then lose all their connections, get their value set to 0
+        var connected_actuators = _.filter($scope.d.pins, function(pin) {
+            return !pin.is_input && pin.is_connected;
+        });
+        $scope.d.disconnect(connections);
+        Galileo.remove_connections(connections);
+        _.each(connected_actuators, function(pin) {
+            if (!pin.is_connected) {
+                pin.value = 0;
+                $scope.send_pin_update([pin.id], 'value');
+            }
+        });
+    };
+
+    // RESET PINS AND CONNECTIONS
+    // TODO I think pin defaults should live on the server not on the client,
+    // because the app initializes itself with server data
+    var pin_defaults = {
+        label: '',
+        input_min: 0,
+        input_max: 100,
+        is_inverted: false,
+        is_visible: false,
+        value: 0,
+        is_timer_on: false,
+        timer_value: 0,
+        damping: 0,
+        is_connected: false,
+    };
+    $scope.reset_app = function() {
+        Galileo.remove_connections($scope.d.connections);
+        var data = {connections: [], pins: {}};
+        _.each($scope.d.pins, function(pin) {
+            data.pins[pin.id] = _.extend({}, pin, pin_defaults);
+        });
+        $scope.d.reset(data);
+        var ids = _.keys(data.pins);
+        var attrs = _.keys(pin_defaults);
+        _.each(attrs, function(attr) {
+            $scope.send_pin_update(ids, attr);
+        });
+    };
+
+    // CHANGE SSID
+    // TODO this is terrible angular form
+    // TODO I would really like to re-use part of what I did from the pin label input stuff, but I was having so much trouble with it
+    $scope.ssid_copy = $scope.s.ssid ? $scope.s.ssid.substring() : '';
+    $scope.$watch(function() { return $scope.s.ssid; },
+        function(new_val, old_val) {
+            if (new_val === old_val) return;
+            $scope.ssid_copy = $scope.s.ssid.substring();
+    });
+    $scope.truncate_ssid_copy = function() {
+        var $input = $('#ssid-dialog').find('input').first();
+        $scope.ssid_copy = $input.val().substring(0, 32);
+        $input.val($scope.ssid_copy);
+    };
+    $scope.change_ssid = function() {
+        $scope.truncate_ssid_copy();
+        $scope.s.ssid = $scope.ssid_copy.substring();
+        Galileo.update_ssid($scope.ssid_copy);
     };
 }]);
 
@@ -279,110 +355,69 @@ cat.app.controller('ConnectModeCtrl', ['$scope', 'Galileo', function($scope, Gal
     window.ConnectModeScope = $scope;
 
     // HOW THE USER ADDS/REMOVES CONNECTIONS
-    // When the user taps a sensor's endpoint, we activate that sensor,
-    // deactivate all other sensors, and activate all actuators. Then if the
-    // user taps an actuator's endpoint, we either form a new connection
-    // between the activated sensor and the tapped actuator, or delete that
-    // connection if it already existed. If the user taps the endpoint of the
-    // sensor that was already activated, then we deactivate that sensor and go
-    // back to having no activated pins.
+    // Starting from all pins being deactivated, it works like this:
+    // Tapping a pin activates that pin and all pins of the other type, where
+    // by type we mean sensors or actuators. So, tapping a sensor activates
+    // that sensor and all actuators, and vice versa.
+    // Then there are three possible things that could happen next:
+    // 1. Tapping that same pin again will deactivate all pins
+    // OR
+    // 2. Tapping another pin of the same type will deactivate the original pin
+    //    and activate the just-tapped pin
+    // OR
+    // 3. Tapping another pin of the opposite type will connect the original
+    //    pin and the just-tapped pin, and deactivate all pins
 
-    $scope.activated_sensor = null;
+    $scope.activated_pin = null;
 
-    // triggered when the user taps a sensor
-    $scope.toggle_activated = function($event, sensor) {
+    $scope.pin_endpoint_click = function($event, pin) {
         $event.stopPropagation();
-        if ($scope.activated_sensor === sensor) {
-            $scope.activated_sensor = null;
-        } else {
-            $scope.activated_sensor = sensor;
-        }
-    };
-
-    // triggered when the user taps an actuator
-    $scope.connect_or_disconnect = function($event, actuator) {
-        $event.stopPropagation();
-        if ($scope.activated_sensor === null) {
+        console.log('pin_endpoint_click', pin);
+        if ($scope.activated_pin === null) {
+            $scope.activated_pin = pin;
             return;
-        }
-        var sensor = $scope.activated_sensor;
-        var connections = [{source: sensor, target: actuator}];
-        if ($scope.d.are_connected(sensor, actuator)) {
-            $scope.d.disconnect(connections);
-            Galileo.remove_connections(connections);
+        } else if ($scope.activated_pin === pin) {
+            $scope.activated_pin = null;
+            return;
+        } else if ($scope.d.pins[$scope.activated_pin].is_input
+                                === $scope.d.pins[pin].is_input) {
+            $scope.activated_pin = pin;
+            return;
         } else {
-            $scope.d.connect(connections);
-            Galileo.add_connections(connections);
+            var sensor  = null, actuator = null;
+            if ($scope.d.pins[$scope.activated_pin].is_input) {
+                // sensor already activated and actuator just tapped
+                sensor = $scope.activated_pin;
+                actuator = pin;
+            } else {
+                // actuatur already activated and sensor just tapped
+                sensor = pin;
+                actuator = $scope.activated_pin;
+            }
+
+            var connections = [{source: sensor, target: actuator}];
+            if ($scope.d.are_connected(sensor, actuator)) {
+                $scope.remove_connections(connections);
+            } else {
+                $scope.add_connections(connections);
+            }
+
+            $scope.activated_pin = null;
         }
-        $scope.activated_sensor = null;
     };
 
-    // HOW THE USER ADJUSTS PIN SETTINGS
-    // When the user taps a pin's box, we deactivate all pins and show the
-    // settings for that pin. Hitting the OK button in the settings window or
-    // hitting the back button in the browser will exit out of pin settings.
-
-    $scope.show_settings_for = function(pin) {
-        $scope.activated_pin = null;
-        $scope.s.settings_pin = pin;
-        window.history.pushState();
-        window.onpopstate = function() {
-            $scope.$apply(function() {
-                $scope.close_settings(true);
-            });
-        };
-    };
-
-    $scope.close_settings = function(history_state_already_popped) {
-        if (!history_state_already_popped) {
-            window.history.back();
-        }
-        $scope.s.settings_pin = null;
-        $scope.s.show_remove_confirmation = false;
-    };
-
-    $scope.open_remove_dialog = function() {
-        $scope.s.show_remove_confirmation = true;
-    };
-    $scope.close_remove_dialog = function() {
-        $scope.s.show_remove_confirmation = false;
-    };
 }]);
 
-// The controller for Play Mode.
-// TODO this is a bad copy of PinsCtrl
-cat.app.controller('PlayModeCtrl', ['$scope', 'Galileo', function($scope, Galileo) {
-
-    // DEBUG
-    window.PlayModeScope = $scope;
-
-    $scope.pin_button_click = function(id) {
-        if ($scope.d.pins[id].value === 100)
-            $scope.d.pins[id].value = 0;
-        else
-            $scope.d.pins[id].value = 100;
-        $scope.send_pin_update([id], 'value');
-    };
+// TODO do I really need this or can I just not specify a controller in ngRoute?
+cat.app.controller('EmptyCtrl', ['$scope', function($scope) {
 }]);
 
-// DRAWING PINS
+cat.app.controller('RemovePinDialogCtrl', ['$scope', function($scope) {
+    $scope.pin = $scope.d.pins[$scope.$routeParams.id];
+}]);
 
-cat.pin_template = 'templates/pin.html';
-
-cat.app.directive('sensor', function($document) {
-    function link($scope, $el, attrs) {
-    }
-    return { templateUrl: cat.pin_template, link: link };
-});
-
-cat.app.directive('actuator', function($document) {
-    function link($scope, $el, attrs) {
-        $scope.already_connected_to_activated_sensor = function() {
-            if ($scope.activated_sensor === null) return false;
-            return $scope.d.are_connected($scope.activated_sensor, $scope.pin.id);
-        };
-    }
-    return { templateUrl: cat.pin_template, link: link };
+cat.app.directive('pinOriginal', function($document) {
+    return { templateUrl: 'templates/pin.html' };
 });
 
 cat.app.directive('pinStub', function($document) {
@@ -393,14 +428,14 @@ cat.app.directive('pinButton', function($document) {
     return { templateUrl: 'templates/pin_button.html' };
 });
 
+cat.app.directive('pinSlider', function($document) {
+    return { templateUrl: 'templates/pin_slider.html' };
+});
+
 // PIN SETTINGS
 cat.app.directive('pinSettings', function($document) {
-    function link($scope, $el, attrs) {
-        // DEBUG
-        if (window.$els === undefined) {
-            window.$els = {};
-        }
-        window.$els[$scope.pin.id] = $el;
+    function when_ready($scope, $el, attrs) {
+        $scope.pin = $scope.d.pins[$scope.$routeParams.id];
 
         // pin label
         // TODO as with timer value, two way data binding seems not to be working.
@@ -446,6 +481,16 @@ cat.app.directive('pinSettings', function($document) {
         $scope.val_in_range = function() {
             return Math.min($scope.pin.value - $scope.pin.input_min, $scope.pin.input_max - $scope.pin.input_min);
         };
+        $scope.scaled_value = function() {
+            var pin = $scope.pin;
+            var res = (pin.value - pin.input_min) / (pin.input_max - pin.input_min);
+            res *= 100;
+            res = Math.min(100, res);
+            res = Math.max(0, res);
+            res = Math.round(res);
+            // TODO does pin.value take into account whether the pin is inverted, or should I do that here?
+            return res;
+        };
 
         // timer value
         // TODO this is very un-angular. data binding not working always. I don't know why it wasn't working where if I just made ng-model="pin_timer_value" in the HTML then pin_timer_value is supposed to (but wasn't) update/ing to reflect the value in the input[type="number"]
@@ -464,8 +509,21 @@ cat.app.directive('pinSettings', function($document) {
             $input.val(val);
             $scope.send_pin_update([$scope.pin.id], 'timer_value');
         };
+
+        $scope.ready = true;
     }
-    return { templateUrl: 'templates/pin_settings.html', link: link };
+
+    function link($scope, $el, attrs) {
+        $scope.ready = false;
+        if ($scope.s.got_data) {
+            when_ready($scope, $el, attrs);
+        } else {
+            setTimeout(function() {
+                link($scope, $el, attrs);
+            }, 10);
+        }
+    }
+    return { templateUrl: 'templates/pin_settings_directive.html', link: link };
 });
 
 // DRAWING CONNECTIONS
@@ -671,9 +729,10 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         // TODO i think i used to just send connections or pins if there were updates for them.
         var msg_for_server = {
             status: 'OK',
-            message_id: message_id,
+            ssid: batch.ssid,
             pins: cat.server_pin_format(get_all_pins(), _.keys(batch.pins)),
             connections: batch.connections,
+            message_id: message_id,
         };
         ws.send(JSON.stringify(msg_for_server));
         batch = null;
@@ -688,7 +747,13 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         });
         // TODO remove redundant add/remove connection updates before sending out batch
         batch.connections.push.apply(batch.connections, updates.connections);
+        if (_.has(updates, 'ssid'))
+            batch.ssid = updates.ssid;
         send();
+    };
+
+    var update_ssid = function(ssid) {
+        add_to_batch({ssid: ssid});
     };
 
     var update_pins = function(ids, attr) {
@@ -721,6 +786,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var onmessage = function(server_msg) {
         stop_waiting();
 
+        // TODO put these back in for deployment
         console.log('websocket message', server_msg);
         var data = JSON.parse(server_msg.data);
         console.log('websocket data', data);
@@ -740,6 +806,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         var conns = _.object(_.map(data.connections, function(c) {
             return [cat.tokenize_connection_object(c), true];
         }));
+        var ssid = data.ssid;
 
         function update(d) {
             _.each(d.pins, function(pin_updates, pin_id) {
@@ -748,6 +815,8 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             _.each(d.connections, function(c) {
                 conns[cat.tokenize_connection_object(c)] = c.connect;
             });
+            if (_.has(d, 'ssid'))
+                ssid = d.ssid;
         }
 
         var messages_in_order = _.sortBy(_.values(messages), function(msg) {
@@ -767,7 +836,11 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
                 connections.push(cat.detokenize_connection(token));
         });
 
-        do_callback('update', {pins: pins, connections: connections});
+        do_callback('update', {
+            pins: pins,
+            connections: connections,
+            ssid: ssid,
+        });
 
         console.log('\n\n');
         start_waiting();
@@ -807,6 +880,7 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         update_pins: update_pins,
         add_connections: add_connections,
         remove_connections: remove_connections,
+        update_ssid: update_ssid,
         set_all_pins_getter: set_all_pins_getter,
     };
 
