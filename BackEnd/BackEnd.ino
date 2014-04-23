@@ -1148,13 +1148,17 @@ void processMessage(char *_acMsg)
 ///////////////////////////////
 void procSsidMsg( aJsonObject *_pJsonSsid )
 {
-  aJsonObject *poSsid = aJson.getObjectItem(_pJsonSsid, "ssid");
-  if ( poSsid && String(poSsid->valuestring).length() <= SSID_MAX_LENGTH )
+ // aJsonObject *poSsid = aJson.getObjectItem(_pJsonSsid, "ssid");
+ // Serial.println("HERE");
+ // Serial.print("here SSID size: ");Serial.println(String(_pJsonSsid->valuestring).length());
+  if ( String(_pJsonSsid->valuestring).length() <= SSID_MAX_LENGTH )
   {
-    if( strcmp(g_sSsid, poSsid->valuestring) )
+   //  Serial.print("SSID size: ");Serial.println(String(_pJsonSsid->valuestring).length());
+    if( strcmp(g_sSsid, _pJsonSsid->valuestring) )
     {
-      sprintf(g_sSsid, "%s", poSsid->valuestring);
-      setSsidName(poSsid->valuestring);
+     //     Serial.print("SSID: ");Serial.println(_pJsonSsid->valuestring);
+      sprintf(g_sSsid, "%s", _pJsonSsid->valuestring);
+      setSsidName(_pJsonSsid->valuestring);
     }
   }
  }
@@ -1396,7 +1400,7 @@ int getSsidName(char *_sSsidName)
       int iSsidLen = strlen(Line)-strlen(Find);
       // Truncate Ssid if it too long
       int n = iSsidLen < SSID_MAX_LENGTH ? iSsidLen : SSID_MAX_LENGTH;
-      strncpy(_sSsidName, SubStr+strlen(Find), n);
+      strncpy(_sSsidName, SubStr+strlen(Find), n-1);
     }
   }
 
@@ -1473,7 +1477,7 @@ void loop()
     // Test code
     ///////////////////////////////////////
     
-    getSerialCommand(); 
+ //   getSerialCommand(); 
    
 /*
     g_iCatNumber++;
