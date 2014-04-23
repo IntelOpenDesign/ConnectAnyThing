@@ -16,7 +16,7 @@ This code is licensed under MIT.
 */
 
 // If debbuging declare
-#define DEBUG_CAT
+//#define DEBUG_CAT
 
 #include <Dhcp.h>
 #include <Dns.h>
@@ -162,9 +162,9 @@ char g_sSsid[SSID_MAX_LENGTH];
 // Configuration file
 #define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
 #define CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
-#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_test.conf"
+#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
 //#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_tmp.conf"
-#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTest.conf"
+#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTemp.conf"
 
 // Scripts
 #define START_ACCESS_POINT_SCRIPT_FULL_PATH "/home/root/startAP"
@@ -207,16 +207,13 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                                           }
+    "/favicon.png", "image/png"                                           }
   ,
   { 
     "/static/css/app.css", "text/css"                                           }
   ,
   { 
     "/static/css/bootstrap.min.css", "text/css"                                           }
-  ,
-  { 
-    "/static/css/play_mode.css", "text/css"                                           }
   ,
   { 
     "/static/fonts/droid-sans/DroidSans.ttf", "application/x-font-ttf"                                           }
@@ -276,6 +273,12 @@ static const struct serveable whitelist[] = {
     "/templates/connect.html", "text/html"                                           }
   ,
   { 
+    "/templates/add_remove_pins.html", "text/html"                                           }
+  ,  
+  { 
+    "/templates/app_settings.html", "text/html"                                           }
+  ,  
+  { 
     "/templates/pin.html", "text/html"                                           }
   ,
   { 
@@ -285,11 +288,29 @@ static const struct serveable whitelist[] = {
     "/templates/pin_settings.html", "text/html"                                           }
   ,
   { 
+    "/templates/pin_slider.html", "text/html"                                           }
+  ,  
+  { 
+    "/templates/pin_settings_directive.html", "text/html"                                           }
+  ,
+  { 
     "/templates/pin_stub.html", "text/html"                                           }
   ,
   { 
     "/templates/play.html", "text/html"                                           }
   ,
+  { 
+    "/templates/remove_pin_dialog.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/reset_dialog.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/ssid_changed.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/ssid_dialog.html", "text/html"                                           }
+  ,   
   // last one is the default served if no match
   { 
     "/index.html", "text/html"                                           }
@@ -688,6 +709,9 @@ void initBoardState()
    
   // Clear SSID string
   memset(g_sSsid, '\0', SSID_MAX_LENGTH);  
+  //sprintf(g_sSsid,"%s","CAT2");
+  getSsidName(g_sSsid);
+  
   
   // Initialize all pins with no lable and 0.0 value
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
@@ -902,6 +926,9 @@ aJsonObject* getJsonBoardState()
   // Creating status JSON object
   aJsonObject* poStatus = aJson.createObject();
 
+  // Create SSID object
+  aJsonObject* poSsid = aJson.createObject();
+
   // Creating pin JSON objects
   aJsonObject* poPins = aJson.createObject();
   aJsonObject* apoPin[TOTAL_NUM_OF_PINS];
@@ -918,6 +945,9 @@ aJsonObject* getJsonBoardState()
 
   // Create STATUS
   poStatus = aJson.createItem("OK");
+  
+  // Create SSID
+  poSsid = aJson.createItem(g_sSsid);
 
   // Create PINS
   int iaPinConnects[TOTAL_NUM_OF_PINS];
@@ -1030,12 +1060,12 @@ aJsonObject* getJsonBoardState()
 
   // Push to JSON object
   aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
+  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
 //  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
   aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
   aJson.addItemToObject(poJsonBoardState,"message_ids_processed",paMsgIds);
   
-
   return poJsonBoardState;
 
 }
@@ -1119,9 +1149,14 @@ void processMessage(char *_acMsg)
 void procSsidMsg( aJsonObject *_pJsonSsid )
 {
   aJsonObject *poSsid = aJson.getObjectItem(_pJsonSsid, "ssid");
-  if (poSsid && String(poSsid->valuestring).length() <= SSID_MAX_LENGTH)
-    sprintf(g_sSsid, "%s", poSsid->valuestring);
-        
+  if ( poSsid && String(poSsid->valuestring).length() <= SSID_MAX_LENGTH )
+  {
+    if( strcmp(g_sSsid, poSsid->valuestring) )
+    {
+      sprintf(g_sSsid, "%s", poSsid->valuestring);
+      setSsidName(poSsid->valuestring);
+    }
+  }
  }
 
 ///////////////////////////////
@@ -1331,8 +1366,47 @@ void setup()
 
 }
 
+int getSsidName(char *_sSsidName)
+{
+  // We need a buffer to read in data
+  char      Buffer[LOCAL_BUFFER_SIZE];
 
-int changeSsidName(char *_sSsidName)
+  // Open the file for reading/write.
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read/write
+
+  // Our find and replace arguments
+  char     *Find = "ssid=";
+ 
+  if(NULL == Input)
+  {
+      trace_info("%s(): %s file not found", __func__,HOSTAPD_CONFIG_FILE_FULL_PATH);
+      return 1;
+  }
+
+  // For each line...
+  while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
+  {
+    char *SubStr = NULL;    // Where 'ssid=' was found in the line
+    char *Line = Buffer; // Start at the beginning of the line, and after each match
+     
+    // Find match
+    SubStr = strstr(Line, Find);
+    if( SubStr )
+    {
+      int iSsidLen = strlen(Line)-strlen(Find);
+      // Truncate Ssid if it too long
+      int n = iSsidLen < SSID_MAX_LENGTH ? iSsidLen : SSID_MAX_LENGTH;
+      strncpy(_sSsidName, SubStr+strlen(Find), n);
+    }
+  }
+
+  // Close our files
+  fclose(Input);
+  
+  return 0;
+}
+
+int setSsidName(char *_sSsidName)
 {
   // Truncate Ssid if it too long
   char sSsidName[LOCAL_BUFFER_SIZE];
@@ -1341,7 +1415,7 @@ int changeSsidName(char *_sSsidName)
 
 // We need a buffer to read in data
   char      Buffer[LOCAL_BUFFER_SIZE];
-  char      TempBuffer[LOCAL_BUFFER_SIZE];
+//  char      TempBuffer[LOCAL_BUFFER_SIZE];
 
   // Open the file for reading/write.
   FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read/write
@@ -1363,7 +1437,7 @@ int changeSsidName(char *_sSsidName)
   // For each line...
   while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
   {
-    char *Start = NULL;    // Where 'ssid=' was found in the line
+ //   char *Start = NULL;    // Where 'ssid=' was found in the line
     char *Line = Buffer; // Start at the beginning of the line, and after each match
      
     // Find match
@@ -1431,7 +1505,7 @@ void getSerialCommand()
     case DOWN:
     
         Serial.println("Changing SSID");
-        changeSsidName("CAT1");
+        setSsidName("CAT1");
     
 //        system("shutdown -r now");
         
