@@ -1335,7 +1335,9 @@ void setup()
 int changeSsidName(char *_sSsidName)
 {
   // Truncate Ssid if it too long
-  snprintf(_sSsidName,SSID_MAX_LENGTH,"%s",_sSsidName);
+  char sSsidName[LOCAL_BUFFER_SIZE];
+//  sprintf(sSsidName,"%s",_sSsidName);
+  snprintf(sSsidName,SSID_MAX_LENGTH,"%s",_sSsidName);
 
 // We need a buffer to read in data
   char      Buffer[LOCAL_BUFFER_SIZE];
@@ -1350,7 +1352,7 @@ int changeSsidName(char *_sSsidName)
   char    sSsidLine[LOCAL_BUFFER_SIZE];
 
   // Create file line    
-  sprintf(sSsidLine,"ssid=%s\n", _sSsidName);
+  sprintf(sSsidLine,"ssid=%s\n", sSsidName);
   
   if(NULL == Input)
   {
@@ -1386,15 +1388,19 @@ int changeSsidName(char *_sSsidName)
 
 unsigned long last_print = 0;
 int g_iCatNumber = 0;
+int g_iChangeSsid = 1;
 
 void loop()
 {
 
-  if (millis() - last_print > 3000) {
+  if (millis() - last_print > 1000) {
 
     ///////////////////////////////////////
     // Test code
     ///////////////////////////////////////
+    
+    getSerialCommand(); 
+   
 /*
     g_iCatNumber++;
     char sSsidName[100];
@@ -1423,6 +1429,13 @@ void getSerialCommand()
       break;
 
     case DOWN:
+    
+        Serial.println("Changing SSID");
+        changeSsidName("CAT1");
+    
+//        system("shutdown -r now");
+        
+    break;
     case LEFT:
     case RIGHT:
       g_iNewCode = 1;            
