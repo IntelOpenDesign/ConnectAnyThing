@@ -1,13 +1,7 @@
-<!-- including CSS here is bad form, refactor CSS so this is not necessary -->
-<link rel="stylesheet" href="static/css/play_mode.css">
-
 <div id="play-pins"
-  class="container-fluid"
-  ng-hide="s.settings_pin !== null || s.adding_pins !== null">
-    <div ng-class="{
-        'actuators': true,
-        'column-title': true,
-        'hide': d.visible_actuators_no_connections.length > 0}">
+  class="container-fluid">
+    <div class="actuators column-title"
+      ng-hide="d.visible_actuators_no_connections.length > 0">
         <div class="col-xs-12">
             actuators with no connections
         </div>
@@ -16,8 +10,13 @@
         <div class="col-xs-6"
           ng-repeat="pin in d.visible_actuators"
           ng-hide="pin.is_connected">
-            <div class="pin-outer"
+            <!-- TODO instead of ng-if for two mutually exclusive cases, there is probably an ng-if and ng-else -->
+            <div ng-if="!pin.is_analog"
+              class="pin-outer"
               pin-button>
+            </div>
+            <div ng-if="pin.is_analog"
+              pin-slider>
             </div>
         </div>
     </div>
