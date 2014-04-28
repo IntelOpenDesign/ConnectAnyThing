@@ -476,7 +476,9 @@ void initBoardStateFromFile(char* _sFullFilePath) {
  
   // Read file
   fp = fopen(_sFullFilePath, "r"); 
+  Serial.println("File Open");
   fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp);
+  Serial.println("File Close");
   fclose(fp);
   
   /*
@@ -484,28 +486,44 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     trace_info("%s() -> Read file", __func__);
   #endif
   */
-  Serial.print("Read File");
+  Serial.println("Read File");
   
   // Parse file
   aJsonObject *poMsg = aJson.parse(sJsonFile);
+  Serial.println("Parse File");
+  
+  if( poMsg )
+  {  
+    // Check if the message has pin data
+    aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
+    if( pJsonPins )  // Check if there is pin info
+      procPinsMsg( pJsonPins );
     
-  // Check if the message has pin data
-  aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
-  if( pJsonPins )  // Check if there is pin info
-    procPinsMsg( pJsonPins );
+    Serial.println("Set Pins");
+    
+    aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
+    if( pJsonConnections )  // Check if there is pin info
+      procConnMsg( pJsonConnections );        
   
-  aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
-  if( pJsonConnections )  // Check if there is pin info
-    procConnMsg( pJsonConnections );        
+    Serial.println("Set Connections");
+    
+    aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
+    if( pJsonSsid )  // Check if there is connection info
+      procSsidMsg( pJsonSsid );  
   
-  aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
-  if( pJsonSsid )  // Check if there is connection info
-    procSsidMsg( pJsonSsid );  
-
+    Serial.println("System updated from file.");
+  }  
+  else
+  {
+    Serial.println("sJsonFile");
+    Serial.println(sJsonFile);
+    Serial.println("Couln't update system from file.");    
+  }
+  
   // Set the HW state
   updateBoardState();
 
-  Serial.print("Done updating code");
+  Serial.print("Done updating system");
 
 /*
   #ifdef DEBUG_CAT
@@ -1362,8 +1380,8 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-  initBoardState();
-//  initBoardStateFromFile(CONFIG_FILE_FULL_PATH);
+//  initBoardState();
+  initBoardStateFromFile(CONFIG_FILE_FULL_PATH);
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
