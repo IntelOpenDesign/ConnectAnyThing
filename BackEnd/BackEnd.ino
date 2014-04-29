@@ -478,6 +478,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   fp = fopen(_sFullFilePath, "r"); 
 //  Serial.println("File Open");
   fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp);
+  Serial.println(sJsonFile);
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -516,7 +517,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   else
   {
    // Serial.println("sJsonFile");
-   // Serial.println(sJsonFile);
+//    Serial.println(sJsonFile);
     Serial.println("Couln't update system from file.");    
   }
   
@@ -1376,7 +1377,7 @@ void procConnMsg( aJsonObject *_pJsonConnections )
 
 void writeBoardStateToFile(char* _sFileFullPath)
 {
-  Serial.println("Write state to file");
+//  Serial.println("Write state to file");
   unsigned char buf[WEB_SOCKET_BUFFER_SIZE];
   
   // Get the state of the board 
@@ -1393,13 +1394,13 @@ void writeBoardStateToFile(char* _sFileFullPath)
     if( Output )
     {
       // Write the state
-      Serial.println("Board State:");  
-      Serial.println(sTempString);
+//      Serial.println("Board State:");  
+ //     Serial.println(sTempString);
       fputs((char *)buf, Output);      
     }
     else
     {
-      Serial.println("Nothing found in the board state file."); 
+     Serial.println("Nothing found in the board state file."); 
     }
     
     fclose(Output);
@@ -1547,6 +1548,9 @@ void loop()
   {
     // Save board state every ~1 sec
     writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+      
+    // Flush serial buffer
+    Serial.flush();  
       
     last_print = millis();
   }
