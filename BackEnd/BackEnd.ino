@@ -161,7 +161,7 @@ char g_sSsid[SSID_MAX_LENGTH];
 
 // Configuration file
 #define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
-#define CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
+#define BOARD_CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
 #define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
 //#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_tmp.conf"
 #define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTemp.conf"
@@ -476,9 +476,9 @@ void initBoardStateFromFile(char* _sFullFilePath) {
  
   // Read file
   fp = fopen(_sFullFilePath, "r"); 
-  Serial.println("File Open");
+//  Serial.println("File Open");
   fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp);
-  Serial.println("File Close");
+//  Serial.println("File Close");
   fclose(fp);
   
   /*
@@ -486,11 +486,11 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     trace_info("%s() -> Read file", __func__);
   #endif
   */
-  Serial.println("Read File");
+//  Serial.println("Read File");
   
   // Parse file
   aJsonObject *poMsg = aJson.parse(sJsonFile);
-  Serial.println("Parse File");
+//  Serial.println("Parse File");
   
   if( poMsg )
   {  
@@ -499,31 +499,31 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     if( pJsonPins )  // Check if there is pin info
       procPinsMsg( pJsonPins );
     
-    Serial.println("Set Pins");
+  //  Serial.println("Set Pins");
     
     aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
     if( pJsonConnections )  // Check if there is pin info
       procConnMsg( pJsonConnections );        
   
-    Serial.println("Set Connections");
+   // Serial.println("Set Connections");
     
     aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
     if( pJsonSsid )  // Check if there is connection info
       procSsidMsg( pJsonSsid );  
   
-    Serial.println("System updated from file.");
+  //  Serial.println("System updated from file.");
   }  
   else
   {
-    Serial.println("sJsonFile");
-    Serial.println(sJsonFile);
+   // Serial.println("sJsonFile");
+   // Serial.println(sJsonFile);
     Serial.println("Couln't update system from file.");    
   }
   
   // Set the HW state
   updateBoardState();
 
-  Serial.print("Done updating system");
+ // Serial.print("Done updating system");
 
 /*
   #ifdef DEBUG_CAT
@@ -621,7 +621,6 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   g_oMessageManager.sent(); // Updating Message Manager
    
   aJson.deleteItem(msg);
-
 
   return n;
 }
@@ -1361,31 +1360,56 @@ void procConnMsg( aJsonObject *_pJsonConnections )
   } 
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-// Arduino standard funtions
-/////////////////////////////////////////////////////////////////////////////////
-void setup()
-{
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-
-  #ifdef DEBUG_CAT
-    trace_info("-----------------------------------------------------------");  
-    trace_info("%s(): Starting Backend", __func__);
-  #endif
+/*
+  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
+  memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
+  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
   
-  //Serial.println("Starting WebServer");
-//  system("/home/root/startAP");
-  system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
+  updateBoardState();
+  
+  aJsonObject *msg = getJsonBoardState();  
+  
+  aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
+  aJson.print(msg, &stringStream);
+  String sTempString((char *)p);
+*/
 
-  // Initialize HW and JSON protocol code
-  //Serial.println("Initilize Hardware");
-//  initBoardState();
-  initBoardStateFromFile(CONFIG_FILE_FULL_PATH);
-
-  //Serial.println("Starting WebSocket");
-  initWebsocket();  
-
+void writeBoardStateToFile(char* _sFileFullPath)
+{
+  Serial.println("Write state to file");
+  unsigned char buf[WEB_SOCKET_BUFFER_SIZE];
+  
+  // Get the state of the board 
+  aJsonObject *msg = getJsonBoardState();  
+  aJsonStringStream stringStream(NULL, (char *)buf, WEB_SOCKET_BUFFER_SIZE);
+  aJson.print(msg, &stringStream);
+  String sTempString((char *)buf);
+  
+  if( msg )
+  {
+    // Open the system file
+    FILE* Output = fopen(_sFileFullPath, "w"); // Write
+    
+    if( Output )
+    {
+      // Write the state
+      Serial.println("Board State:");  
+      Serial.println(sTempString);
+      fputs((char *)buf, Output);      
+    }
+    else
+    {
+      Serial.println("Nothing found in the board state file."); 
+    }
+    
+    fclose(Output);
+  }
+  else
+  {
+    Serial.println("Nothing to write to board state file."); 
+  }
+  
+  aJson.deleteItem(msg);
 }
 
 int getSsidName(char *_sSsidName)
@@ -1440,8 +1464,8 @@ int setSsidName(char *_sSsidName)
 //  char      TempBuffer[LOCAL_BUFFER_SIZE];
 
   // Open the file for reading/write.
-  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read/write
-  FILE     *Output = fopen(TEMP_CONFIG_FILE_FULL_PATH, "w"); // Read/write
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read
+  FILE     *Output = fopen(TEMP_CONFIG_FILE_FULL_PATH, "w"); // Write
 
   // Our find and replace arguments
   char     *Find = "ssid=";
@@ -1482,6 +1506,33 @@ int setSsidName(char *_sSsidName)
   return 0;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Arduino standard funtions
+/////////////////////////////////////////////////////////////////////////////////
+void setup()
+{
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  #ifdef DEBUG_CAT
+    trace_info("-----------------------------------------------------------");  
+    trace_info("%s(): Starting Backend", __func__);
+  #endif
+  
+  // Start Web Server
+  //Serial.println("Starting WebServer");
+  system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
+
+  // Initialize HW and JSON protocol code
+  //Serial.println("Initilize Hardware");
+//  initBoardState();
+  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+
+  //Serial.println("Starting WebSocket");
+  initWebsocket();  
+
+}
+
 unsigned long last_print = 0;
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
@@ -1489,24 +1540,17 @@ int g_iChangeSsid = 1;
 void loop()
 {
 
-  if (millis() - last_print > 1000) {
-
-    ///////////////////////////////////////
-    // Test code
-    ///////////////////////////////////////
-    
- //   getSerialCommand(); 
-   
-/*
-    g_iCatNumber++;
-    char sSsidName[100];
-    sprintf(sSsidName, "CA3333333333333333333333333333344444444444444444444444444444444444444444444T%i", g_iCatNumber);
-    changeSsidName(sSsidName);
- */
-    //////////////////////////////////////////  
-
+// TESTING
+//  getSerialCommand(); 
+  
+  if (millis() - last_print > 1000)
+  {
+    // Save board state every ~1 sec
+    writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+      
     last_print = millis();
   }
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1521,13 +1565,14 @@ void getSerialCommand()
     switch (g_iByte)
     {
     case UP:
-      g_iNewCode = 0;      
+//      g_iNewCode = 0;      
+      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
       break;
 
     case DOWN:
     
-        Serial.println("Changing SSID");
-        setSsidName("CAT1");
+        Serial.println("Writing board state to file");
+        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
     
 //        system("shutdown -r now");
         
