@@ -161,9 +161,8 @@ char g_sSsid[SSID_MAX_LENGTH];
 
 // Configuration file
 #define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
-#define BOARD_CONFIG_FILE_FULL_PATH "/home/root/hardware.conf"
+#define BOARD_CONFIG_FILE_FULL_PATH "/home/root/boardstate.conf"
 #define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
-//#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd_tmp.conf"
 #define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTemp.conf"
 
 // Scripts
@@ -469,7 +468,8 @@ void *in, size_t len)
 // Init hardware using the configuration file
 //------------------------------------------------------------
 void initBoardStateFromFile(char* _sFullFilePath) {
-  
+
+  Serial.println("Init from board file");  
   // Open File
   FILE *fp;
   char sJsonFile[CONFIG_FILE_MAX_SIZE];
@@ -478,7 +478,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   fp = fopen(_sFullFilePath, "r"); 
 //  Serial.println("File Open");
   fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp);
-  Serial.println(sJsonFile);
+//  Serial.println(sJsonFile);
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -518,7 +518,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   {
    // Serial.println("sJsonFile");
 //    Serial.println(sJsonFile);
-    Serial.println("Couln't update system from file.");    
+    Serial.println("Couln't update board state from file.");    
   }
   
   // Set the HW state
@@ -1377,7 +1377,7 @@ void procConnMsg( aJsonObject *_pJsonConnections )
 
 void writeBoardStateToFile(char* _sFileFullPath)
 {
-//  Serial.println("Write state to file");
+  Serial.println("Write state to file");
   unsigned char buf[WEB_SOCKET_BUFFER_SIZE];
   
   // Get the state of the board 
@@ -1526,8 +1526,8 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-//  initBoardState();
-  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+  initBoardState(); // Assure a state
+//  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
@@ -1537,6 +1537,7 @@ void setup()
 unsigned long last_print = 0;
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
+//int g_iWriteToFile = 0;
 
 void loop()
 {
@@ -1547,10 +1548,11 @@ void loop()
   if (millis() - last_print > 1000)
   {
     // Save board state every ~1 sec
-    writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+  //  if(g_iWriteToFile)
+  //    writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       
     // Flush serial buffer
-    Serial.flush();  
+    //Serial.flush();  
       
     last_print = millis();
   }
@@ -1571,12 +1573,14 @@ void getSerialCommand()
     case UP:
 //      g_iNewCode = 0;      
       initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+       //      g_iWriteToFile=0;
       break;
 
     case DOWN:
     
-        Serial.println("Writing board state to file");
+      //  Serial.println("Writing board state to file");
         writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+      // g_iWriteToFile=1;
     
 //        system("shutdown -r now");
         
