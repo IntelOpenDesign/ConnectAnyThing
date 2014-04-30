@@ -477,8 +477,15 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   // Read file
   fp = fopen(_sFullFilePath, "r"); 
 //  Serial.println("File Open");
-  fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp);
-//  Serial.println(sJsonFile);
+  if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
+  {
+    Serial.print("Empty file: ");
+    Serial.println(_sFullFilePath);
+  }
+  else
+  {
+    Serial.println(sJsonFile); 
+  }
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -504,7 +511,14 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     
     aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
     if( pJsonConnections )  // Check if there is pin info
+    {
+       Serial.println("Processing Connections");
       procConnMsg( pJsonConnections );        
+    }
+    else
+    {
+       Serial.println("NO Connections :("); 
+    }
   
    // Serial.println("Set Connections");
     
@@ -1088,6 +1102,130 @@ aJsonObject* getJsonBoardState()
 
 }
 
+aJsonObject* getJsonSsidPinsConns()
+{
+
+   g_iMsgCount++; // debug
+     
+  aJsonObject* poJsonBoardState = aJson.createObject();
+
+  // Create SSID object
+  aJsonObject* poSsid = aJson.createObject();
+
+  // Creating pin JSON objects
+  aJsonObject* poPins = aJson.createObject();
+  aJsonObject* apoPin[TOTAL_NUM_OF_PINS];
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    apoPin[i] = aJson.createObject();
+  }
+
+  // Creating connection JSON object
+  aJsonObject* paConnections = aJson.createArray();
+ 
+  // Create SSID
+  poSsid = aJson.createItem(g_sSsid);
+
+  // Create PINS
+  int iaPinConnects[TOTAL_NUM_OF_PINS];
+  char caPinNumBuffer[LOCAL_BUFFER_SIZE];
+  memset(caPinNumBuffer,'\0',LOCAL_BUFFER_SIZE);
+  
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    aJson.addItemToObject(apoPin[i],"label", aJson.createItem( g_aPins[i].label ) );
+
+    // Populate the pin's type    
+    if( g_aPins[i].is_analog )
+    {
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+    }
+
+    // Populate the pin's direction
+    if( g_aPins[i].is_input )
+    {
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+    }
+
+    aJson.addItemToObject(apoPin[i],"input_min", aJson.createItem( g_aPins[i].input_min ) );
+    
+    aJson.addItemToObject(apoPin[i],"input_max", aJson.createItem( g_aPins[i].input_max ) );
+    
+    // Populate pin's inversion
+    if( g_aPins[i].is_inverted )
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createFalse() );
+    }
+    
+    // Populate pin's visibility
+    if( g_aPins[i].is_visible )
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createFalse() );
+    }
+    
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
+
+    // Populate pin's timer state
+    if( g_aPins[i].is_timer_on )
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createFalse() );
+    }
+
+    aJson.addItemToObject(apoPin[i],"timer_value", aJson.createItem( g_aPins[i].timer_value ) );
+    
+    aJson.addItemToObject(apoPin[i],"damping", aJson.createItem( g_aPins[i].damping ) );
+
+    // Push to JSON structure
+    sprintf(caPinNumBuffer,"%d",i);
+    aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
+
+  }
+   
+  // Create CONNECTIONS
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    for(int j=0; j<TOTAL_NUM_OF_PINS ;j++)
+    {
+      if(g_aPins[i].connections[j] && i !=j )
+      {
+        aJsonObject* poConnObject = aJson.createObject();
+        sprintf(caPinNumBuffer,"%d",j);      
+        aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
+        sprintf(caPinNumBuffer,"%d",i);        
+        aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+        aJson.addItemToArray(paConnections,poConnObject);
+      }
+    }
+  }
+  
+  // Push to JSON object
+  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
+  aJson.addItemToObject(poJsonBoardState,"pins",poPins);
+  aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
+  
+  return poJsonBoardState;
+}
+
 void processMessage(char *_acMsg)
 {
   
@@ -1377,11 +1515,12 @@ void procConnMsg( aJsonObject *_pJsonConnections )
 
 void writeBoardStateToFile(char* _sFileFullPath)
 {
-  Serial.println("Write state to file");
+
   unsigned char buf[WEB_SOCKET_BUFFER_SIZE];
   
   // Get the state of the board 
-  aJsonObject *msg = getJsonBoardState();  
+//  aJsonObject *msg = getJsonBoardState();  
+  aJsonObject *msg = getJsonSsidPinsConns();  
   aJsonStringStream stringStream(NULL, (char *)buf, WEB_SOCKET_BUFFER_SIZE);
   aJson.print(msg, &stringStream);
   String sTempString((char *)buf);
@@ -1394,9 +1533,17 @@ void writeBoardStateToFile(char* _sFileFullPath)
     if( Output )
     {
       // Write the state
-//      Serial.println("Board State:");  
- //     Serial.println(sTempString);
-      fputs((char *)buf, Output);      
+      Serial.println("Board State:");  
+      Serial.println(sTempString);
+
+      if( fputs((char *)buf, Output) )
+      {      
+        Serial.println("Write success to file. ");
+      }
+      else
+      {
+        Serial.println("ERROR printing to file");
+      }
     }
     else
     {
@@ -1526,8 +1673,9 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-  initBoardState(); // Assure a state
-//  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
+//  initBoardState(); // Assure a state
+  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
+  //delay(1000);
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
@@ -1537,19 +1685,18 @@ void setup()
 unsigned long last_print = 0;
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
-//int g_iWriteToFile = 0;
+int g_iWriteToFile = 1;
 
 void loop()
 {
 
 // TESTING
-//  getSerialCommand(); 
+  getSerialCommand(); 
   
   if (millis() - last_print > 1000)
   {
     // Save board state every ~1 sec
-  //  if(g_iWriteToFile)
-  //    writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+//   writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       
     // Flush serial buffer
     //Serial.flush();  
