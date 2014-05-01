@@ -486,12 +486,11 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     initBoardState();
     return;
   }
-  /*
   else
   {
     Serial.println(sJsonFile); 
   }
-  */
+  
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -542,7 +541,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   }
   
   // Set the HW state
-  updateBoardState();
+//  updateBoardState();
 
  // Serial.print("Done updating system");
 
@@ -805,7 +804,7 @@ void initBoardState()
   }
 
   // Set the HW state
-  updateBoardState();
+//  updateBoardState();
 
 }
 
@@ -1078,6 +1077,7 @@ aJsonObject* getJsonBoardState()
         aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
         sprintf(caPinNumBuffer,"%d",i);        
         aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+//        aJson.addItemToObject(poConnObject,"connect",aJson.createTrue());        
         aJson.addItemToArray(paConnections,poConnObject);
       }
     }
@@ -1219,6 +1219,7 @@ aJsonObject* getJsonSsidPinsConns()
         aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
         sprintf(caPinNumBuffer,"%d",i);        
         aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+        aJson.addItemToObject(poConnObject,"connect",aJson.createTrue());
         aJson.addItemToArray(paConnections,poConnObject);
       }
     }
@@ -1524,6 +1525,10 @@ void writeBoardStateToFile(char* _sFileFullPath)
   aJson.print(msg, &stringStream);
   String sTempString((char *)buf);
   
+  // Write the state
+  Serial.print("Board State:");  
+  Serial.println(sTempString);
+
   if( msg )
   {
     // Open the system file
@@ -1531,12 +1536,6 @@ void writeBoardStateToFile(char* _sFileFullPath)
     
     if( Output )
     {
-      // Write the state
-//      Serial.println("Board State:");  
- //     Serial.println(sTempString);
-
-      fputs((char *)buf, Output);
-/*
       if( fputs((char *)buf, Output) )
       {      
         Serial.println("Write success to file. ");
@@ -1545,18 +1544,17 @@ void writeBoardStateToFile(char* _sFileFullPath)
       {
         Serial.println("ERROR printing to file");
       }
-      */
     }
     else
     {
-     Serial.println("Nothing found in the board state file."); 
+     Serial.println("Error opening the file to write to."); 
     }
     
     fclose(Output);
   }
   else
   {
-    Serial.println("Nothing to write to board state file."); 
+    Serial.println("Error getting board's state in JSON format."); 
   }
   
   aJson.deleteItem(msg);
@@ -1697,7 +1695,7 @@ void loop()
     updateBoardState();
   
 // TESTING
-//  getSerialCommand(); 
+  getSerialCommand(); 
   
   if (millis() - last_print > 5000)
   {
@@ -1735,7 +1733,7 @@ void getSerialCommand()
 
     case DOWN:
     
-      //  Serial.println("Writing board state to file");
+      // Serial.println("Writing board state to file");
         writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       // g_iWriteToFile=1;
     
