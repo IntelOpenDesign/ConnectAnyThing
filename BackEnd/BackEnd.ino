@@ -479,18 +479,19 @@ void initBoardStateFromFile(char* _sFullFilePath) {
 //  Serial.println("File Open");
   if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
   {
-    Serial.print("Empty file: ");
-    Serial.println(_sFullFilePath);
+//    Serial.print("Empty file: ");
+//    Serial.println(_sFullFilePath);
     
     // The file is empty for some reason. Let's use the standard init function
     initBoardState();
     return;
   }
+  /*
   else
   {
     Serial.println(sJsonFile); 
   }
-  
+  */
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -1525,10 +1526,11 @@ void writeBoardStateToFile(char* _sFileFullPath)
   aJson.print(msg, &stringStream);
   String sTempString((char *)buf);
   
-  // Write the state
-  Serial.print("Board State:");  
-  Serial.println(sTempString);
-
+  //// Write the state ///
+//  Serial.print("Board State:");  
+//  Serial.println(sTempString);
+  //////
+  
   if( msg )
   {
     // Open the system file
@@ -1536,6 +1538,8 @@ void writeBoardStateToFile(char* _sFileFullPath)
     
     if( Output )
     {
+      fputs((char *)buf, Output);
+      /*
       if( fputs((char *)buf, Output) )
       {      
         Serial.println("Write success to file. ");
@@ -1544,11 +1548,14 @@ void writeBoardStateToFile(char* _sFileFullPath)
       {
         Serial.println("ERROR printing to file");
       }
+      */
     }
+    /*
     else
     {
      Serial.println("Error opening the file to write to."); 
     }
+    */
     
     fclose(Output);
   }
@@ -1685,7 +1692,7 @@ void setup()
 unsigned long last_print = 0;
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
-int g_iWriteToFile = 1;
+int g_iWriteToFile = 0;
 int g_iSkipFirstWrite = 0;
 
 void loop()
@@ -1697,8 +1704,24 @@ void loop()
 // TESTING
   getSerialCommand(); 
   
-  if (millis() - last_print > 5000)
+  if (millis() - last_print > 1000)
   {
+    if(g_iWriteToFile)
+    {
+       writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+    }
+    else
+    {
+       initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+       g_iWriteToFile=1;
+    }
+    
+          
+
+    
+    // Flush serial buffer to prevent crashes
+    //Serial.flush();  
+    
     /*
     // Save board state every ~1 sec
     if(g_iSkipFirstWrite)
