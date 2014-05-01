@@ -469,7 +469,7 @@ void *in, size_t len)
 //------------------------------------------------------------
 void initBoardStateFromFile(char* _sFullFilePath) {
 
-  Serial.println("Init from board file");  
+//  Serial.println("Init from board file");  
   // Open File
   FILE *fp;
   char sJsonFile[CONFIG_FILE_MAX_SIZE];
@@ -481,11 +481,17 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   {
     Serial.print("Empty file: ");
     Serial.println(_sFullFilePath);
+    
+    // The file is empty for some reason. Let's use the standard init function
+    initBoardState();
+    return;
   }
+  /*
   else
   {
     Serial.println(sJsonFile); 
   }
+  */
 //  Serial.println("File Close");
   fclose(fp);
   
@@ -512,7 +518,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
     if( pJsonConnections )  // Check if there is pin info
     {
-       Serial.println("Processing Connections");
+//       Serial.println("Processing Connections");
       procConnMsg( pJsonConnections );        
     }
     else
@@ -1533,9 +1539,11 @@ void writeBoardStateToFile(char* _sFileFullPath)
     if( Output )
     {
       // Write the state
-      Serial.println("Board State:");  
-      Serial.println(sTempString);
+//      Serial.println("Board State:");  
+ //     Serial.println(sTempString);
 
+      fputs((char *)buf, Output);
+/*
       if( fputs((char *)buf, Output) )
       {      
         Serial.println("Write success to file. ");
@@ -1544,6 +1552,7 @@ void writeBoardStateToFile(char* _sFileFullPath)
       {
         Serial.println("ERROR printing to file");
       }
+      */
     }
     else
     {
@@ -1673,8 +1682,8 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-//  initBoardState(); // Assure a state
-  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
+  initBoardState(); // Assure a state
+//  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
   //delay(1000);
 
   //Serial.println("Starting WebSocket");
@@ -1686,21 +1695,26 @@ unsigned long last_print = 0;
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
 int g_iWriteToFile = 1;
+int g_iSkipFirstWrite = 0;
 
 void loop()
 {
 
 // TESTING
-  getSerialCommand(); 
+//  getSerialCommand(); 
   
-  if (millis() - last_print > 1000)
+  if (millis() - last_print > 5000)
   {
+    /*
     // Save board state every ~1 sec
-//   writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+    if(g_iSkipFirstWrite)
+      writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       
-    // Flush serial buffer
-    //Serial.flush();  
-      
+    // Flush serial buffer to prevent crashes
+    Serial.flush();  
+    
+    g_iSkipFirstWrite = 1;
+    */
     last_print = millis();
   }
 
