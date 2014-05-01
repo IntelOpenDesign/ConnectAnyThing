@@ -629,7 +629,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
   
-  updateBoardState();
+//  updateBoardState();
   
   aJsonObject *msg = getJsonBoardState();  
   
@@ -1237,13 +1237,6 @@ void processMessage(char *_acMsg)
   
 //  Serial.print("Msg recvd: ");
 //  Serial.println(_acMsg);
-
-  debug_serial_print("Msg received. Size: ");
-//  debug_serial_println(sizeof(_acMsg));
-    #ifdef DEBUG_CAT
-      Serial.println(strlen(_acMsg)); // debug      
-    #endif
-  debug_serial_print(_acMsg);
   
   // Ignore messages bigger than we can handle
   if( sizeof(_acMsg) >= WEB_SOCKET_BUFFER_SIZE )
@@ -1700,6 +1693,9 @@ int g_iSkipFirstWrite = 0;
 void loop()
 {
 
+    // Update HW
+    updateBoardState();
+  
 // TESTING
 //  getSerialCommand(); 
   
