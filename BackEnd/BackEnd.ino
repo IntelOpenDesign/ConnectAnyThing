@@ -469,7 +469,7 @@ void *in, size_t len)
 //------------------------------------------------------------
 void initBoardStateFromFile(char* _sFullFilePath) {
 
-//  Serial.println("Init from board file");  
+  Serial.println("Init from board file");  
   // Open File
   FILE *fp;
   char sJsonFile[CONFIG_FILE_MAX_SIZE];
@@ -477,22 +477,34 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   // Read file
   fp = fopen(_sFullFilePath, "r"); 
 //  Serial.println("File Open");
-  if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
+  if( fp )
   {
-//    Serial.print("Empty file: ");
-//    Serial.println(_sFullFilePath);
-    
-    // The file is empty for some reason. Let's use the standard init function
-    initBoardState();
-    return;
+    if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
+    {
+ //     Serial.print("ERROR empty file: ");
+ //     Serial.println(_sFullFilePath);
+      
+      // The file is empty for some reason. Let's use the standard init function
+      //initBoardState();
+      return;
+    }
+    /*
+    else
+    {
+      Serial.println(sJsonFile); 
+    }
+    */
   }
-  /*
   else
   {
-    Serial.println(sJsonFile); 
+ //    Serial.print("ERROR opening file: ");
+//     Serial.println(_sFullFilePath);
+     return;     
   }
+  /*
+
   */
-//  Serial.println("File Close");
+ // Serial.println("File Close");
   fclose(fp);
   
   /*
@@ -1664,6 +1676,8 @@ int setSsidName(char *_sSsidName)
 /////////////////////////////////////////////////////////////////////////////////
 // Arduino standard funtions
 /////////////////////////////////////////////////////////////////////////////////
+unsigned long g_last_print = 0;
+
 void setup()
 {
   // put your setup code here, to run once:
@@ -1674,14 +1688,17 @@ void setup()
     trace_info("%s(): Starting Backend", __func__);
   #endif
   
+  // Initi some global variables
+  g_last_print = millis();
+  
   // Start Web Server
   //Serial.println("Starting WebServer");
   system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-  initBoardState(); // Assure a state
-//  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
+//  initBoardState(); // Assure a state
+  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
   //delay(1000);
 
   //Serial.println("Starting WebSocket");
@@ -1689,7 +1706,7 @@ void setup()
 
 }
 
-unsigned long last_print = 0;
+
 int g_iCatNumber = 0;
 int g_iChangeSsid = 1;
 int g_iWriteToFile = 0;
@@ -1704,8 +1721,10 @@ void loop()
 // TESTING
   getSerialCommand(); 
   
-  if (millis() - last_print > 1000)
+  if (millis() - g_last_print > 1000)
   {
+     writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+    /*
     if(g_iWriteToFile)
     {
        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
@@ -1715,10 +1734,8 @@ void loop()
        initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
        g_iWriteToFile=1;
     }
-    
-          
-
-    
+    */
+        
     // Flush serial buffer to prevent crashes
     //Serial.flush();  
     
@@ -1732,7 +1749,7 @@ void loop()
     
     g_iSkipFirstWrite = 1;
     */
-    last_print = millis();
+    g_last_print = millis();
   }
 
 }
