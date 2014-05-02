@@ -469,7 +469,7 @@ void *in, size_t len)
 //------------------------------------------------------------
 void initBoardStateFromFile(char* _sFullFilePath) {
 
-  Serial.println("Init from board file");  
+//  Serial.println("Init from board file");  
   // Open File
   FILE *fp;
   char sJsonFile[CONFIG_FILE_MAX_SIZE];
@@ -1723,7 +1723,7 @@ void loop()
   
   if (millis() - g_last_print > 1000)
   {
-     writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+     //writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
     /*
     if(g_iWriteToFile)
     {
