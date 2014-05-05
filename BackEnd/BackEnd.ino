@@ -539,10 +539,12 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     }
   
    // Serial.println("Set Connections");
-    
-    aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
-    if( pJsonSsid )  // Check if there is connection info
-      procSsidMsg( pJsonSsid );  
+
+/////////////////////    
+//    aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
+ //   if( pJsonSsid )  // Check if there is connection info
+//      procSsidMsg( pJsonSsid );  
+/////////////////////
   
   //  Serial.println("System updated from file.");
   }  
@@ -1129,7 +1131,7 @@ aJsonObject* getJsonSsidPinsConns()
   aJsonObject* poJsonBoardState = aJson.createObject();
 
   // Create SSID object
-  aJsonObject* poSsid = aJson.createObject();
+//  aJsonObject* poSsid = aJson.createObject();
 
   // Creating pin JSON objects
   aJsonObject* poPins = aJson.createObject();
@@ -1143,7 +1145,7 @@ aJsonObject* getJsonSsidPinsConns()
   aJsonObject* paConnections = aJson.createArray();
  
   // Create SSID
-  poSsid = aJson.createItem(g_sSsid);
+//  poSsid = aJson.createItem(g_sSsid);
 
   // Create PINS
   int iaPinConnects[TOTAL_NUM_OF_PINS];
@@ -1239,7 +1241,7 @@ aJsonObject* getJsonSsidPinsConns()
   }
   
   // Push to JSON object
-  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
+//  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
   aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
   
