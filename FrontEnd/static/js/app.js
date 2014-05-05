@@ -2,7 +2,7 @@
 var cat = {};
 
 // server connection settings
-cat.on_hardware = true; // to switch to Galileo, just change this to true
+cat.on_hardware = false; // to switch to Galileo, just change this to true
 cat.test_server_url = 'ws://localhost:8001';
 cat.hardware_server_url = 'ws://cat/';
 cat.hardware_server_protocol = 'hardware-state-protocol';
@@ -236,7 +236,6 @@ cat.app.controller('AppCtrl', ['$scope', '$routeParams', '$location', 'Galileo',
             $scope.s.got_data = true;
             $scope.d.update(data);
             if ($scope.s.ssid !== data.ssid) {
-                $scope.s.ssid = data.ssid;
                 $location.path('/ssid_changed');
             }
         }
@@ -747,8 +746,9 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
         });
         // TODO remove redundant add/remove connection updates before sending out batch
         batch.connections.push.apply(batch.connections, updates.connections);
-        if (_.has(updates, 'ssid'))
+        if (_.has(updates, 'ssid')) {
             batch.ssid = updates.ssid;
+        }
         send();
     };
 
