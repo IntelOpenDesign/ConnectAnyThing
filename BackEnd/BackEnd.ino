@@ -469,6 +469,10 @@ void *in, size_t len)
 //------------------------------------------------------------
 void initBoardStateFromFile(char* _sFullFilePath) {
 
+  // Initialize the HW to a known state
+  initBoardState();
+  
+  // Read HW state in from the file  
 //  Serial.println("Init from board file");  
   // Open File
   FILE *fp;
@@ -855,10 +859,19 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins      
+      if( g_aPins[i].is_analog ) // Process analog pins     
         analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
       else // Process digital pins     
         digitalWrite(i, getTotalPinValue(i) );
+
+      /*
+      if(i==13)
+      {
+        Serial.print("Value:");        
+        Serial.println(getTotalPinValue(i));
+      }
+      */
+              
     }
   }
   
@@ -1769,14 +1782,16 @@ void getSerialCommand()
     {
     case UP:
 //      g_iNewCode = 0;      
-      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+//      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
        //      g_iWriteToFile=0;
+       digitalWrite(13, HIGH );
       break;
 
     case DOWN:
     
+           digitalWrite(13, LOW );
       // Serial.println("Writing board state to file");
-        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+//        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       // g_iWriteToFile=1;
     
 //        system("shutdown -r now");
