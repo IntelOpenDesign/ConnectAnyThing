@@ -907,7 +907,10 @@ float getTotalPinValue(int _iOutPinNum)
    
   // Run timer when a timer_on command has been received and a positive edge is detected
   if( g_aPins[_iOutPinNum].is_timer_on && g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
+  {
     g_aPins[_iOutPinNum].timer_running = true;
+    g_aPins[_iOutPinNum].timer_start_time = millis();
+  }
   
   // IF timer_is_on && Timer_Running
     // IF timer expired
@@ -929,6 +932,7 @@ float getTotalPinValue(int _iOutPinNum)
     else // Timer expired
     {
       g_aPins[_iOutPinNum].timer_running = false;
+//      g_aPins[_iOutPinNum].timer_start_time = millis();
     }
   }
   
@@ -1421,8 +1425,10 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       if (poIsTimerOn)
       {
         g_aPins[i].is_timer_on = poIsTimerOn->valuebool; 
+        /*
         if(g_aPins[i].is_timer_on)
           g_aPins[i].timer_start_time = millis();
+          */
       } 
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
@@ -1729,7 +1735,7 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-//  initBoardState(); // Assure a state
+  initBoardState(); // Assure a state
   initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
   //delay(1000);
 
