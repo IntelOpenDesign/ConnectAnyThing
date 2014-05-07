@@ -1748,7 +1748,7 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-  initBoardState(); // Assure a state
+//  initBoardState(); // Assure a state
   initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
   //delay(1000);
 
@@ -1770,7 +1770,7 @@ void loop()
     updateBoardState();
   
 // TESTING
-  getSerialCommand(); 
+//  getSerialCommand(); 
   
   if (millis() - g_last_print > 1000)
   {
@@ -1820,13 +1820,13 @@ void getSerialCommand()
 //      g_iNewCode = 0;      
 //      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
        //      g_iWriteToFile=0;
-       digitalWrite(13, HIGH );
+  //     digitalWrite(13, HIGH );
       break;
 
     case DOWN:
     
-           digitalWrite(13, LOW );
-      // Serial.println("Writing board state to file");
+  //         digitalWrite(13, LOW );
+     // Serial.println("Writing board state to file");
 //        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       // g_iWriteToFile=1;
     
