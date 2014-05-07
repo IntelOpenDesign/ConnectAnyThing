@@ -147,11 +147,12 @@ typedef struct Pin {
   int is_timer_on;
   float timer_value;
   unsigned long timer_start_time;
+  boolean timer_running;
   int damping;
   int prev_damping;
   boolean connections[TOTAL_NUM_OF_PINS];
 //  float past_values[TOTAL_NUM_OF_PAST_VALUES];
-  float prev_values;
+  float prev_value;
 } 
 Pin;
 
@@ -784,11 +785,12 @@ void initBoardState()
     
  //   for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)
   //    g_aPins[i].past_values[j] = 0.0;
-    g_aPins[i].prev_values = 0.0;
+    g_aPins[i].prev_value = 0.0;
     
     g_aPins[i].is_timer_on = false;
     g_aPins[i].timer_value = 0.0;
     g_aPins[i].timer_start_time = 0;
+    g_aPins[i].timer_running = false;
     g_aPins[i].damping = 0;
     g_aPins[i].prev_damping = 0;
     
@@ -915,21 +917,53 @@ float getTotalPinValue(int _iOutPinNum)
     fPinValSum = g_aPins[_iOutPinNum].value;
   else
     g_aPins[_iOutPinNum].value = fPinValSum;
+   
+  // Run timer when a timer_on command has been received and a positive edge is detected
+  if( g_aPins[_iOutPinNum].is_timer_on && g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
+  {
+    g_aPins[_iOutPinNum].timer_running = true;
+    g_aPins[_iOutPinNum].timer_start_time = millis();
+  }
   
-  //Serial.print("Analog Pin #: "); Serial.print(_iOutPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  // IF timer_is_on && Timer_Running
+    // IF timer expired
+      // Set timer_is_on == false
+      // 
+   // ELSE
+     // Set pin to HIGH (Over write the output)
+ // ELSE
+   // Set pin to VALUE
 
+  // Set pin value to zero if timer expired
+  if( g_aPins[_iOutPinNum].timer_running ) 
+  {
+    if( !((millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000) ) // Not expired
+    {
+      fPinValSum = 1.0;
+      g_aPins[_iOutPinNum].value = fPinValSum;            
+    }
+    else // Timer expired
+    {
+      g_aPins[_iOutPinNum].timer_running = false;
+//      g_aPins[_iOutPinNum].timer_start_time = millis();
+    }
+  }
+  
+ /*
   // Set pin value to zero if timer expired
   if( g_aPins[_iOutPinNum].is_timer_on ) 
   {
-//    Serial.print("Pin ");Serial.print(_iOutPinNum);Serial.print(" timer ON");
-//    Serial.print(" Start Time: ");Serial.println(g_aPins[_iOutPinNum].timer_start_time);
     if( (millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000 ) // Timer expired
-    {
+    { 
 //      Serial.println("EXPIRED...!!!");
       fPinValSum = 0.0;
       g_aPins[_iOutPinNum].value = fPinValSum;      
     }
   }
+  */
+  
+  // Updating prev value 
+  g_aPins[_iOutPinNum].prev_value = g_aPins[_iOutPinNum].value;
   
   return fPinValSum;
 }
@@ -1404,8 +1438,10 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       if (poIsTimerOn)
       {
         g_aPins[i].is_timer_on = poIsTimerOn->valuebool; 
+        /*
         if(g_aPins[i].is_timer_on)
           g_aPins[i].timer_start_time = millis();
+          */
       } 
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
@@ -1712,7 +1748,7 @@ void setup()
 
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-//  initBoardState(); // Assure a state
+  initBoardState(); // Assure a state
   initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
   //delay(1000);
 
