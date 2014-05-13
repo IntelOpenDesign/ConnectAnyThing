@@ -478,32 +478,48 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   // Open File
   FILE *fp;
   char sJsonFile[CONFIG_FILE_MAX_SIZE];
+  memset(sJsonFile,'\0',CONFIG_FILE_MAX_SIZE);
  
   // Read file
   fp = fopen(_sFullFilePath, "r"); 
 //  Serial.println("File Open");
+
+  #ifdef DEBUG_CAT
+    trace_info("%s(): File: %s\n", __func__, _sFullFilePath);   
+  #endif     
+
   if( fp )
   {
     if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
     {
- //     Serial.print("ERROR empty file: ");
- //     Serial.println(_sFullFilePath);
+      /*
+      #ifdef DEBUG_CAT
+        trace_info("%s(): ERROR reading file. Content: %s\n", __func__, sJsonFile);   
+      #endif
+      */
+      
+      Serial.print("ERROR reading file. Content: ");  
+//      Serial.println(sJsonFile);  
       
       // The file is empty for some reason. Let's use the standard init function
       //initBoardState();
       return;
     }
-    /*
     else
     {
-      Serial.println(sJsonFile); 
+      /*
+      #ifdef DEBUG_CAT
+        trace_info("%s(): SUCCESS reading file. Content: %s\n", __func__, sJsonFile);   
+      #endif
+      */
+      Serial.print("SUCCESS reading file. Content: ");  
+//      Serial.println(sJsonFile);  
     }
-    */
   }
   else
   {
- //    Serial.print("ERROR opening file: ");
-//     Serial.println(_sFullFilePath);
+     Serial.print("ERROR opening file: ");
+     Serial.println(_sFullFilePath);
      return;     
   }
   /*
@@ -521,7 +537,8 @@ void initBoardStateFromFile(char* _sFullFilePath) {
   
   // Parse file
   aJsonObject *poMsg = aJson.parse(sJsonFile);
-//  Serial.println("Parse File");
+  Serial.println("Parse File");
+  Serial.println(sJsonFile);
   
   if( poMsg )
   {  
@@ -970,8 +987,28 @@ float getTotalPinValue(int _iOutPinNum)
 
 float getScaledPinValue(int _iInPinNum)
 {
-  //return (g_aPins[_iInPinNum].value - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
-  return (getFilteredPinValue(_iInPinNum) - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+  
+  // No damping
+  if( g_aPins[_iInPinNum].input_max != g_aPins[_iInPinNum].input_min )
+  {
+    if( g_aPins[_iInPinNum].value >=  g_aPins[_iInPinNum].input_max)
+    { 
+      return 1.0;
+    }
+    else if( g_aPins[_iInPinNum].value <= g_aPins[_iInPinNum].input_min )
+    { 
+      return 0.0;
+    }
+    else
+    {
+      // No Damping
+      return (g_aPins[_iInPinNum].value - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+      // Damping Enabled
+      //  return (getFilteredPinValue(_iInPinNum) - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);  
+    }
+  }
+  
+  return 0.0;
 }
 
 float getFilteredPinValue(int _iInPinNum)
@@ -1742,15 +1779,16 @@ void setup()
   // Initi some global variables
   g_last_print = millis();
   
-  // Start Web Server
-  //Serial.println("Starting WebServer");
-  system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
-
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
 //  initBoardState(); // Assure a state
   initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
-  //delay(1000);
+  delay(1000);
+
+  // Start Web Server
+  //Serial.println("Starting WebServer");
+  system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
+  delay(1000);
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
@@ -1770,7 +1808,7 @@ void loop()
     updateBoardState();
   
 // TESTING
-//  getSerialCommand(); 
+  getSerialCommand(); 
   
   if (millis() - g_last_print > 1000)
   {
@@ -1818,7 +1856,8 @@ void getSerialCommand()
     {
     case UP:
 //      g_iNewCode = 0;      
-//      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+      Serial.println("Init from File.");
+      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
        //      g_iWriteToFile=0;
   //     digitalWrite(13, HIGH );
       break;
@@ -1827,7 +1866,7 @@ void getSerialCommand()
     
   //         digitalWrite(13, LOW );
      // Serial.println("Writing board state to file");
-//        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
       // g_iWriteToFile=1;
     
 //        system("shutdown -r now");
