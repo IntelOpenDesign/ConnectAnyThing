@@ -5,11 +5,9 @@ ConnectAnyThing
 
 ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
 
-https://github.com/IntelOpenDesign/ConnectAnyThing/releases
+0) Download ConnectAnyThing [here](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
 
-0) Download [ConnectAnyThing](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
-
-1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on by connecting the power supply.
+1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
 
 2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
 
@@ -17,7 +15,7 @@ https://github.com/IntelOpenDesign/ConnectAnyThing/releases
 
 Good for tinkering, classroom activities, testing sensors, etc.
 
-For more information, photos and video links, please visit: https://communities.intel.com/thread/48358
+For more information, photos and video links, please visit [Intel's Maker Community]( https://communities.intel.com/thread/48358 ).
 
 ### Uses
 
@@ -56,7 +54,7 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 * One [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
 * One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
-* One WiFi antenna.(http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card)
+* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
 * One external 5V (>2A) power supply.
 
 ### Software Installation
