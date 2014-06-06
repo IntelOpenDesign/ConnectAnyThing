@@ -1,11 +1,19 @@
 /*
 
- Copyright (c) 2013 - Philippe Laulheret, Second Story [http://www.secondstory.com]
+*** ConnectAnyThing ***
+
+Intel - Intel Labs / User eXperience Research
+
+Carlos Montesinos <carlos.montesinos@intel.com>
+Lucas Ainsworth <lucas.b.ainsworth@intel.com>
+
+-------
+
+This code was based on the LYT project: https://github.com/secondstory/LYT
+Copyright (c) 2013 - Philippe Laulheret, Second Story [http://www.secondstory.com]
  
- This code is licensed under MIT. 
- For more information visit  : https://github.com/secondstory/LYT
- 
- */
+This code is licensed under MIT.
+*/
 
 // If debbuging declare
 //#define DEBUG_CAT
@@ -27,6 +35,9 @@
 #include <assert.h>
 #include <syslog.h>
 #include <signal.h>
+
+#include <trace.h>
+#define MY_TRACE_PREFIX "cat"
 
 int led = 13; 
 boolean currentLED = false;
@@ -136,15 +147,27 @@ typedef struct Pin {
   int is_timer_on;
   float timer_value;
   unsigned long timer_start_time;
+  boolean timer_running;
   int damping;
   int prev_damping;
   boolean connections[TOTAL_NUM_OF_PINS];
 //  float past_values[TOTAL_NUM_OF_PAST_VALUES];
-  float prev_values;
+  float prev_value;
 } 
 Pin;
 
 Pin g_aPins[TOTAL_NUM_OF_PINS];
+#define SSID_MAX_LENGTH 32
+char g_sSsid[SSID_MAX_LENGTH];
+
+// Configuration file
+#define CONFIG_FILE_MAX_SIZE WEB_SOCKET_BUFFER_SIZE
+#define BOARD_CONFIG_FILE_FULL_PATH "/home/root/boardstate.conf"
+#define HOSTAPD_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapd.conf"
+#define TEMP_CONFIG_FILE_FULL_PATH "/etc/hostapd/hostapdTemp.conf"
+
+// Scripts
+#define START_ACCESS_POINT_SCRIPT_FULL_PATH "/home/root/startAP"
 
 // Serial Interface
 int g_iByte = 0;
@@ -184,16 +207,13 @@ struct serveable {
 
 static const struct serveable whitelist[] = {
   { 
-    "/favicon.ico", "image/x-icon"                                           }
+    "/favicon.png", "image/png"                                           }
   ,
   { 
     "/static/css/app.css", "text/css"                                           }
   ,
   { 
     "/static/css/bootstrap.min.css", "text/css"                                           }
-  ,
-  { 
-    "/static/css/play_mode.css", "text/css"                                           }
   ,
   { 
     "/static/fonts/droid-sans/DroidSans.ttf", "application/x-font-ttf"                                           }
@@ -253,6 +273,12 @@ static const struct serveable whitelist[] = {
     "/templates/connect.html", "text/html"                                           }
   ,
   { 
+    "/templates/add_remove_pins.html", "text/html"                                           }
+  ,  
+  { 
+    "/templates/app_settings.html", "text/html"                                           }
+  ,  
+  { 
     "/templates/pin.html", "text/html"                                           }
   ,
   { 
@@ -262,11 +288,29 @@ static const struct serveable whitelist[] = {
     "/templates/pin_settings.html", "text/html"                                           }
   ,
   { 
+    "/templates/pin_slider.html", "text/html"                                           }
+  ,  
+  { 
+    "/templates/pin_settings_directive.html", "text/html"                                           }
+  ,
+  { 
     "/templates/pin_stub.html", "text/html"                                           }
   ,
   { 
     "/templates/play.html", "text/html"                                           }
   ,
+  { 
+    "/templates/remove_pin_dialog.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/reset_dialog.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/ssid_changed.html", "text/html"                                           }
+  , 
+  { 
+    "/templates/ssid_dialog.html", "text/html"                                           }
+  ,   
   // last one is the default served if no match
   { 
     "/index.html", "text/html"                                           }
@@ -296,13 +340,12 @@ void *in, size_t len)
   switch (reason) {
 
   case LWS_CALLBACK_HTTP:
-    lwsl_notice("LWS_CALLBACK_HTTP");
-    
+//    lwsl_notice("LWS_CALLBACK_HTTP");
+       
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_HTTP: IN", __func__);
+    #endif     
    
- //     debug_serial_print("LWS_CALLBACK_HTTP: "); // debug
-//      debug_serial_println(String(reason)); // debug      
-   
-
     for (n = 0; n < (sizeof(whitelist) / sizeof(whitelist[0]) - 1); n++)
       if (in && strcmp((const char *)in, whitelist[n].urlpath) == 0)
         break;
@@ -318,26 +361,28 @@ void *in, size_t len)
      // it's done
      ///////////     
 
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_HTTP: OUT", __func__);
+    #endif     
+
     break;
 
   case LWS_CALLBACK_HTTP_FILE_COMPLETION:
 
-    lwsl_notice("LWS_FILE_COMPLETION");
-    
+//    lwsl_notice("LWS_FILE_COMPLETION");
 
-      // debug_serial_print("LWS_FILE_COMPLETION: "); // debug
-  //    debug_serial_println(String(reason)); // debug
-
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_FILE_COMPLETION", __func__);
+    #endif     
     
     return 1;
 
 
   default:
 
-
-      // debug_serial_print("LWS_HTTP_CALLBACK_REASON: "); // debug
- //     debug_serial_println(String(reason)); // debug
-
+    #ifdef DEBUG_CAT
+      trace_info("%s(): default", __func__);
+    #endif     
  
     break;
   }
@@ -367,10 +412,9 @@ void *in, size_t len)
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
 
-
-      // debug_serial_print("LWS_CALLBACK_SERVER_WRITEABLE: "); // debug
-  //    debug_serial_println(reason); // debug
-
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_SERVER_WRITEABLE: IN", __func__);
+    #endif     
 
     // **********************************
     // Send Galileo's HW state to ALL clients
@@ -383,11 +427,17 @@ void *in, size_t len)
       return 1;
     }
 
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_SERVER_WRITEABLE: OUT", __func__);
+    #endif     
+
     break;
 
   case LWS_CALLBACK_RECEIVE:
 
-    //Serial.println("Process Incomming Messag");
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_RECEIVE: IN", __func__);
+    #endif     
 
     // **********************************
     // Process Data Receieved from the Website
@@ -396,18 +446,18 @@ void *in, size_t len)
     processMessage((char*) in);
 
 
-      // debug_serial_print("LWS_CALLBACK_RECEIVE: "); // debug
-  //    debug_serial_println(reason); // debug
+    #ifdef DEBUG_CAT
+      trace_info("%s(): LWS_CALLBACK_RECEIVE: OUT", __func__);
+    #endif     
 
 
     break;
 
   default:
   
-
-      // debug_serial_print("LWS_PROTOCOL_REASON: "); // debug
-  //    debug_serial_println(reason); // debug
-
+    #ifdef DEBUG_CAT
+      trace_info("%s(): default", __func__);
+    #endif     
     
     break;
   }
@@ -416,36 +466,127 @@ void *in, size_t len)
 }
 
 //-----------------------------------------------------------
-// Process recieved message from the webpage here.... 
+// Init hardware using the configuration file
 //------------------------------------------------------------
-void procClientMsg(char* _in, size_t _len) {
+void initBoardStateFromFile(char* _sFullFilePath) {
 
-  // Create JSON message
-  aJsonObject *pJsonMsg = aJson.parse(_in);
-  if( pJsonMsg == NULL )
-  {
-    //Serial.println("ERROR: No JSON message to process");
-    return;
-  }
+  // Initialize the HW to a known state
+  initBoardState();
+  
+  // Read HW state in from the file  
+//  Serial.println("Init from board file");  
+  // Open File
+  FILE *fp;
+  char sJsonFile[CONFIG_FILE_MAX_SIZE];
+  memset(sJsonFile,'\0',CONFIG_FILE_MAX_SIZE);
+ 
+  // Read file
+  fp = fopen(_sFullFilePath, "r"); 
+//  Serial.println("File Open");
 
-//  Serial.print("pJsonMsg is of type: ");
-//  Serial.print(pJsonMsg->type);
-  aJsonObject *pJsonStatus = aJson.getObjectItem(pJsonMsg, "status");
-  aJsonObject *pJsonPins = aJson.getObjectItem(pJsonMsg, "pins");
-  aJsonObject *pJsonConnections = aJson.getObjectItem(pJsonMsg, "connections");
+  #ifdef DEBUG_CAT
+    trace_info("%s(): File: %s\n", __func__, _sFullFilePath);   
+  #endif     
 
-  if( pJsonPins )  // Check if there is pin info
+  if( fp )
   {
-    procPinsMsg( pJsonPins );
-  }
-  else if( pJsonConnections )  // Check if there is connection info
-  {
-    procConnMsg( pJsonConnections );  
+    if( !fgets(sJsonFile, CONFIG_FILE_MAX_SIZE, fp) )
+    {
+      /*
+      #ifdef DEBUG_CAT
+        trace_info("%s(): ERROR reading file. Content: %s\n", __func__, sJsonFile);   
+      #endif
+      */
+      
+//      Serial.print("ERROR reading file. Content: ");  
+//      Serial.println(sJsonFile);  
+      
+      // The file is empty for some reason. Let's use the standard init function
+      //initBoardState();
+      return;
+    }
+    else
+    {
+      /*
+      #ifdef DEBUG_CAT
+        trace_info("%s(): SUCCESS reading file. Content: %s\n", __func__, sJsonFile);   
+      #endif
+      */
+ //     Serial.print("SUCCESS reading file. Content: ");  
+//      Serial.println(sJsonFile);  
+    }
   }
   else
   {
-    //Serial.println("No JSON message to process");
+  //   Serial.print("ERROR opening file: ");
+  //   Serial.println(_sFullFilePath);
+     return;     
   }
+  /*
+
+  */
+ // Serial.println("File Close");
+  fclose(fp);
+  
+  /*
+  #ifdef DEBUG_CAT
+    trace_info("%s() -> Read file", __func__);
+  #endif
+  */
+//  Serial.println("Read File");
+  
+  // Parse file
+  aJsonObject *poMsg = aJson.parse(sJsonFile);
+//  Serial.println("Parse File");
+//  Serial.println(sJsonFile);
+  
+  if( poMsg )
+  {  
+    // Check if the message has pin data
+    aJsonObject *pJsonPins = aJson.getObjectItem(poMsg, "pins");
+    if( pJsonPins )  // Check if there is pin info
+      procPinsMsg( pJsonPins );
+    
+  //  Serial.println("Set Pins");
+    
+    aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
+    if( pJsonConnections )  // Check if there is pin info
+    {
+//       Serial.println("Processing Connections");
+      procConnMsg( pJsonConnections );        
+    }
+    else
+    {
+       Serial.println("NO Connections :("); 
+    }
+  
+   // Serial.println("Set Connections");
+
+/////////////////////    
+//    aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
+ //   if( pJsonSsid )  // Check if there is connection info
+//      procSsidMsg( pJsonSsid );  
+/////////////////////
+  
+  //  Serial.println("System updated from file.");
+  }  
+  else
+  {
+   // Serial.println("sJsonFile");
+//    Serial.println(sJsonFile);
+    Serial.println("Couln't update board state from file.");    
+  }
+  
+  // Set the HW state
+//  updateBoardState();
+
+ // Serial.print("Done updating system");
+
+/*
+  #ifdef DEBUG_CAT
+    trace_info("%s() -> Set HW from file", __func__);
+  #endif
+*/
 
 }
 
@@ -524,7 +665,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
   
-  updateBoardState();
+//  updateBoardState();
   
   aJsonObject *msg = getJsonBoardState();  
   
@@ -537,7 +678,6 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   g_oMessageManager.sent(); // Updating Message Manager
    
   aJson.deleteItem(msg);
-
 
   return n;
 }
@@ -641,6 +781,12 @@ int initWebsocket()
 void initBoardState()
 {
    
+  // Clear SSID string
+  memset(g_sSsid, '\0', SSID_MAX_LENGTH);  
+  //sprintf(g_sSsid,"%s","CAT2");
+  getSsidName(g_sSsid);
+  
+  
   // Initialize all pins with no lable and 0.0 value
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
@@ -656,11 +802,12 @@ void initBoardState()
     
  //   for(int j=0; j<TOTAL_NUM_OF_PAST_VALUES; j++)
   //    g_aPins[i].past_values[j] = 0.0;
-    g_aPins[i].prev_values = 0.0;
+    g_aPins[i].prev_value = 0.0;
     
     g_aPins[i].is_timer_on = false;
     g_aPins[i].timer_value = 0.0;
     g_aPins[i].timer_start_time = 0;
+    g_aPins[i].timer_running = false;
     g_aPins[i].damping = 0;
     g_aPins[i].prev_damping = 0;
     
@@ -695,7 +842,7 @@ void initBoardState()
   }
 
   // Set the HW state
-  updateBoardState();
+//  updateBoardState();
 
 }
 
@@ -731,10 +878,19 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins      
+      if( g_aPins[i].is_analog ) // Process analog pins     
         analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
       else // Process digital pins     
         digitalWrite(i, getTotalPinValue(i) );
+
+      /*
+      if(i==13)
+      {
+        Serial.print("Value:");        
+        Serial.println(getTotalPinValue(i));
+      }
+      */
+              
     }
   }
   
@@ -778,29 +934,81 @@ float getTotalPinValue(int _iOutPinNum)
     fPinValSum = g_aPins[_iOutPinNum].value;
   else
     g_aPins[_iOutPinNum].value = fPinValSum;
+   
+  // Run timer when a timer_on command has been received and a positive edge is detected
+  if( g_aPins[_iOutPinNum].is_timer_on && g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
+  {
+    g_aPins[_iOutPinNum].timer_running = true;
+    g_aPins[_iOutPinNum].timer_start_time = millis();
+  }
   
-  //Serial.print("Analog Pin #: "); Serial.print(_iOutPinNum); Serial.print(" Total Value: "); Serial.println(fPinValSum);
+  // IF timer_is_on && Timer_Running
+    // IF timer expired
+      // Set timer_is_on == false
+      // 
+   // ELSE
+     // Set pin to HIGH (Over write the output)
+ // ELSE
+   // Set pin to VALUE
 
+  // Set pin value to zero if timer expired
+  if( g_aPins[_iOutPinNum].timer_running ) 
+  {
+    if( !((millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000) ) // Not expired
+    {
+      fPinValSum = 1.0;
+      g_aPins[_iOutPinNum].value = fPinValSum;            
+    }
+    else // Timer expired
+    {
+      g_aPins[_iOutPinNum].timer_running = false;
+//      g_aPins[_iOutPinNum].timer_start_time = millis();
+    }
+  }
+  
+ /*
   // Set pin value to zero if timer expired
   if( g_aPins[_iOutPinNum].is_timer_on ) 
   {
-//    Serial.print("Pin ");Serial.print(_iOutPinNum);Serial.print(" timer ON");
-//    Serial.print(" Start Time: ");Serial.println(g_aPins[_iOutPinNum].timer_start_time);
     if( (millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000 ) // Timer expired
-    {
+    { 
 //      Serial.println("EXPIRED...!!!");
       fPinValSum = 0.0;
       g_aPins[_iOutPinNum].value = fPinValSum;      
     }
   }
+  */
+  
+  // Updating prev value 
+  g_aPins[_iOutPinNum].prev_value = g_aPins[_iOutPinNum].value;
   
   return fPinValSum;
 }
 
 float getScaledPinValue(int _iInPinNum)
 {
-  //return (g_aPins[_iInPinNum].value - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
-  return (getFilteredPinValue(_iInPinNum) - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+  
+  // No damping
+  if( g_aPins[_iInPinNum].input_max != g_aPins[_iInPinNum].input_min )
+  {
+    if( g_aPins[_iInPinNum].value >=  g_aPins[_iInPinNum].input_max)
+    { 
+      return 1.0;
+    }
+    else if( g_aPins[_iInPinNum].value <= g_aPins[_iInPinNum].input_min )
+    { 
+      return 0.0;
+    }
+    else
+    {
+      // No Damping
+      return (g_aPins[_iInPinNum].value - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);   
+      // Damping Enabled
+      //  return (getFilteredPinValue(_iInPinNum) - g_aPins[_iInPinNum].input_min)/(g_aPins[_iInPinNum].input_max - g_aPins[_iInPinNum].input_min);  
+    }
+  }
+  
+  return 0.0;
 }
 
 float getFilteredPinValue(int _iInPinNum)
@@ -854,6 +1062,9 @@ aJsonObject* getJsonBoardState()
   // Creating status JSON object
   aJsonObject* poStatus = aJson.createObject();
 
+  // Create SSID object
+  aJsonObject* poSsid = aJson.createObject();
+
   // Creating pin JSON objects
   aJsonObject* poPins = aJson.createObject();
   aJsonObject* apoPin[TOTAL_NUM_OF_PINS];
@@ -870,6 +1081,9 @@ aJsonObject* getJsonBoardState()
 
   // Create STATUS
   poStatus = aJson.createItem("OK");
+  
+  // Create SSID
+  poSsid = aJson.createItem(g_sSsid);
 
   // Create PINS
   int iaPinConnects[TOTAL_NUM_OF_PINS];
@@ -962,6 +1176,7 @@ aJsonObject* getJsonBoardState()
         aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
         sprintf(caPinNumBuffer,"%d",i);        
         aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+//        aJson.addItemToObject(poConnObject,"connect",aJson.createTrue());        
         aJson.addItemToArray(paConnections,poConnObject);
       }
     }
@@ -982,14 +1197,139 @@ aJsonObject* getJsonBoardState()
 
   // Push to JSON object
   aJson.addItemToObject(poJsonBoardState,"status",poStatus);  
+  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
   aJson.addItemToObject(poJsonBoardState,"pins",poPins);
 //  aJson.addItemToObject(poJsonBoardState,"connections",poConnections);
   aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
   aJson.addItemToObject(poJsonBoardState,"message_ids_processed",paMsgIds);
   
-
   return poJsonBoardState;
 
+}
+
+aJsonObject* getJsonSsidPinsConns()
+{
+
+   g_iMsgCount++; // debug
+     
+  aJsonObject* poJsonBoardState = aJson.createObject();
+
+  // Create SSID object
+//  aJsonObject* poSsid = aJson.createObject();
+
+  // Creating pin JSON objects
+  aJsonObject* poPins = aJson.createObject();
+  aJsonObject* apoPin[TOTAL_NUM_OF_PINS];
+  for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
+  {
+    apoPin[i] = aJson.createObject();
+  }
+
+  // Creating connection JSON object
+  aJsonObject* paConnections = aJson.createArray();
+ 
+  // Create SSID
+//  poSsid = aJson.createItem(g_sSsid);
+
+  // Create PINS
+  int iaPinConnects[TOTAL_NUM_OF_PINS];
+  char caPinNumBuffer[LOCAL_BUFFER_SIZE];
+  memset(caPinNumBuffer,'\0',LOCAL_BUFFER_SIZE);
+  
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    aJson.addItemToObject(apoPin[i],"label", aJson.createItem( g_aPins[i].label ) );
+
+    // Populate the pin's type    
+    if( g_aPins[i].is_analog )
+    {
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+    }
+
+    // Populate the pin's direction
+    if( g_aPins[i].is_input )
+    {
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_input", aJson.createFalse() );
+    }
+
+    aJson.addItemToObject(apoPin[i],"input_min", aJson.createItem( g_aPins[i].input_min ) );
+    
+    aJson.addItemToObject(apoPin[i],"input_max", aJson.createItem( g_aPins[i].input_max ) );
+    
+    // Populate pin's inversion
+    if( g_aPins[i].is_inverted )
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_inverted", aJson.createFalse() );
+    }
+    
+    // Populate pin's visibility
+    if( g_aPins[i].is_visible )
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_visible", aJson.createFalse() );
+    }
+    
+    aJson.addItemToObject(apoPin[i],"value", aJson.createItem( g_aPins[i].value ) );
+
+    // Populate pin's timer state
+    if( g_aPins[i].is_timer_on )
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_timer_on", aJson.createFalse() );
+    }
+
+    aJson.addItemToObject(apoPin[i],"timer_value", aJson.createItem( g_aPins[i].timer_value ) );
+    
+    aJson.addItemToObject(apoPin[i],"damping", aJson.createItem( g_aPins[i].damping ) );
+
+    // Push to JSON structure
+    sprintf(caPinNumBuffer,"%d",i);
+    aJson.addItemToObject(poPins,caPinNumBuffer,apoPin[i]);
+
+  }
+   
+  // Create CONNECTIONS
+  for(int i=0; i<TOTAL_NUM_OF_PINS ;i++)
+  {
+    for(int j=0; j<TOTAL_NUM_OF_PINS ;j++)
+    {
+      if(g_aPins[i].connections[j] && i !=j )
+      {
+        aJsonObject* poConnObject = aJson.createObject();
+        sprintf(caPinNumBuffer,"%d",j);      
+        aJson.addItemToObject(poConnObject,"source",aJson.createItem(caPinNumBuffer));
+        sprintf(caPinNumBuffer,"%d",i);        
+        aJson.addItemToObject(poConnObject,"target",aJson.createItem(caPinNumBuffer));
+        aJson.addItemToObject(poConnObject,"connect",aJson.createTrue());
+        aJson.addItemToArray(paConnections,poConnObject);
+      }
+    }
+  }
+  
+  // Push to JSON object
+//  aJson.addItemToObject(poJsonBoardState,"ssid",poSsid);  
+  aJson.addItemToObject(poJsonBoardState,"pins",poPins);
+  aJson.addItemToObject(poJsonBoardState,"connections",paConnections);
+  
+  return poJsonBoardState;
 }
 
 void processMessage(char *_acMsg)
@@ -997,13 +1337,6 @@ void processMessage(char *_acMsg)
   
 //  Serial.print("Msg recvd: ");
 //  Serial.println(_acMsg);
-
-  debug_serial_print("Msg received. Size: ");
-//  debug_serial_println(sizeof(_acMsg));
-    #ifdef DEBUG_CAT
-      Serial.println(strlen(_acMsg)); // debug      
-    #endif
-  debug_serial_print(_acMsg);
   
   // Ignore messages bigger than we can handle
   if( sizeof(_acMsg) >= WEB_SOCKET_BUFFER_SIZE )
@@ -1023,7 +1356,6 @@ void processMessage(char *_acMsg)
       g_oMessageManager.newProcessedMsg(poMsgId->valuestring);
     }
     
-    
     aJsonObject *poStatus = aJson.getObjectItem(poMsg, "status");
     if (!poStatus) {
       //Serial.println("ERROR: No Status data.");
@@ -1042,6 +1374,11 @@ void processMessage(char *_acMsg)
       aJsonObject *pJsonConnections = aJson.getObjectItem(poMsg, "connections");
       if( pJsonConnections )  // Check if there is pin info
         procConnMsg( pJsonConnections );        
+
+      aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
+      if( pJsonSsid )  // Check if there is connection info
+        procSsidMsg( pJsonSsid );  
+         
     }
     else if ( strncmp(poStatus->valuestring,"ERROR",5) == 0 )
     {
@@ -1060,6 +1397,26 @@ void processMessage(char *_acMsg)
 
   aJson.deleteItem(poMsg);
 }
+
+///////////////////////////////
+// Process SSID messages
+///////////////////////////////
+void procSsidMsg( aJsonObject *_pJsonSsid )
+{
+ // aJsonObject *poSsid = aJson.getObjectItem(_pJsonSsid, "ssid");
+ // Serial.println("HERE");
+ // Serial.print("here SSID size: ");Serial.println(String(_pJsonSsid->valuestring).length());
+  if ( String(_pJsonSsid->valuestring).length() <= SSID_MAX_LENGTH )
+  {
+   //  Serial.print("SSID size: ");Serial.println(String(_pJsonSsid->valuestring).length());
+    if( strcmp(g_sSsid, _pJsonSsid->valuestring) )
+    {
+     //     Serial.print("SSID: ");Serial.println(_pJsonSsid->valuestring);
+      sprintf(g_sSsid, "%s", _pJsonSsid->valuestring);
+      setSsidName(_pJsonSsid->valuestring);
+    }
+  }
+ }
 
 ///////////////////////////////
 // Process pin value messages
@@ -1118,8 +1475,10 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       if (poIsTimerOn)
       {
         g_aPins[i].is_timer_on = poIsTimerOn->valuebool; 
+        /*
         if(g_aPins[i].is_timer_on)
           g_aPins[i].timer_start_time = millis();
+          */
       } 
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
@@ -1241,44 +1600,248 @@ void procConnMsg( aJsonObject *_pJsonConnections )
   } 
 }
 
+/*
+  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
+  memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
+  unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
+  
+  updateBoardState();
+  
+  aJsonObject *msg = getJsonBoardState();  
+  
+  aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
+  aJson.print(msg, &stringStream);
+  String sTempString((char *)p);
+*/
+
+void writeBoardStateToFile(char* _sFileFullPath)
+{
+
+  unsigned char buf[WEB_SOCKET_BUFFER_SIZE];
+  
+  // Get the state of the board 
+//  aJsonObject *msg = getJsonBoardState();  
+  aJsonObject *msg = getJsonSsidPinsConns();  
+  aJsonStringStream stringStream(NULL, (char *)buf, WEB_SOCKET_BUFFER_SIZE);
+  aJson.print(msg, &stringStream);
+  String sTempString((char *)buf);
+  
+  //// Write the state ///
+//  Serial.print("Board State:");  
+//  Serial.println(sTempString);
+  //////
+  
+  if( msg )
+  {
+    // Open the system file
+    FILE* Output = fopen(_sFileFullPath, "w"); // Write
+    
+    if( Output )
+    {
+      fputs((char *)buf, Output);
+      /*
+      if( fputs((char *)buf, Output) )
+      {      
+        Serial.println("Write success to file. ");
+      }
+      else
+      {
+        Serial.println("ERROR printing to file");
+      }
+      */
+    }
+    /*
+    else
+    {
+     Serial.println("Error opening the file to write to."); 
+    }
+    */
+    
+    fclose(Output);
+  }
+  else
+  {
+    Serial.println("Error getting board's state in JSON format."); 
+  }
+  
+  aJson.deleteItem(msg);
+}
+
+int getSsidName(char *_sSsidName)
+{
+  // We need a buffer to read in data
+  char      Buffer[LOCAL_BUFFER_SIZE];
+
+  // Open the file for reading/write.
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read/write
+
+  // Our find and replace arguments
+  char     *Find = "ssid=";
+ 
+  if(NULL == Input)
+  {
+      trace_info("%s(): %s file not found", __func__,HOSTAPD_CONFIG_FILE_FULL_PATH);
+      return 1;
+  }
+
+  // For each line...
+  while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
+  {
+    char *SubStr = NULL;    // Where 'ssid=' was found in the line
+    char *Line = Buffer; // Start at the beginning of the line, and after each match
+     
+    // Find match
+    SubStr = strstr(Line, Find);
+    if( SubStr )
+    {
+      int iSsidLen = strlen(Line)-strlen(Find);
+      // Truncate Ssid if it too long
+      int n = iSsidLen < SSID_MAX_LENGTH ? iSsidLen : SSID_MAX_LENGTH;
+      strncpy(_sSsidName, SubStr+strlen(Find), n-1);
+    }
+  }
+
+  // Close our files
+  fclose(Input);
+  
+  return 0;
+}
+
+int setSsidName(char *_sSsidName)
+{
+  // Truncate Ssid if it too long
+  char sSsidName[LOCAL_BUFFER_SIZE];
+//  sprintf(sSsidName,"%s",_sSsidName);
+  snprintf(sSsidName,SSID_MAX_LENGTH,"%s",_sSsidName);
+
+// We need a buffer to read in data
+  char      Buffer[LOCAL_BUFFER_SIZE];
+//  char      TempBuffer[LOCAL_BUFFER_SIZE];
+
+  // Open the file for reading/write.
+  FILE     *Input = fopen(HOSTAPD_CONFIG_FILE_FULL_PATH, "r"); // Read
+  FILE     *Output = fopen(TEMP_CONFIG_FILE_FULL_PATH, "w"); // Write
+
+  // Our find and replace arguments
+  char     *Find = "ssid=";
+  char    sSsidLine[LOCAL_BUFFER_SIZE];
+
+  // Create file line    
+  sprintf(sSsidLine,"ssid=%s\n", sSsidName);
+  
+  if(NULL == Input)
+  {
+      trace_info("%s(): %s file not found", __func__,HOSTAPD_CONFIG_FILE_FULL_PATH);
+      return 1;
+  }
+
+  // For each line...
+  while(NULL != fgets(Buffer, LOCAL_BUFFER_SIZE, Input))
+  {
+ //   char *Start = NULL;    // Where 'ssid=' was found in the line
+    char *Line = Buffer; // Start at the beginning of the line, and after each match
+     
+    // Find match
+    if( strstr(Line, Find) )
+    {
+      fputs(sSsidLine, Output);
+    }
+    else
+    {
+      fputs(Line, Output);      
+    }
+  }
+
+  // Close our files
+  fclose(Input);
+  fclose(Output);
+  
+  rename(TEMP_CONFIG_FILE_FULL_PATH,HOSTAPD_CONFIG_FILE_FULL_PATH);
+  
+  return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 // Arduino standard funtions
 /////////////////////////////////////////////////////////////////////////////////
+unsigned long g_last_print = 0;
+
 void setup()
 {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  
-  
-  //Serial.println("Starting WebServer");
-  system("/home/root/startAP");
 
+  #ifdef DEBUG_CAT
+    trace_info("-----------------------------------------------------------");  
+    trace_info("%s(): Starting Backend", __func__);
+  #endif
+  
+  // Initi some global variables
+  g_last_print = millis();
+  
   // Initialize HW and JSON protocol code
   //Serial.println("Initilize Hardware");
-  initBoardState();
+//  initBoardState(); // Assure a state
+  initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH); // Replace the state with the file, if available
+  delay(1000);
+
+  // Start Web Server
+  //Serial.println("Starting WebServer");
+  system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
+  delay(1000);
 
   //Serial.println("Starting WebSocket");
   initWebsocket();  
 
 }
 
-unsigned long last_print = 0;
+
+int g_iCatNumber = 0;
+int g_iChangeSsid = 1;
+int g_iWriteToFile = 0;
+int g_iSkipFirstWrite = 0;
 
 void loop()
 {
 
-  if (millis() - last_print > 2000) {
-
-    ///////////////////////////////////////
-    // Connect/Disconnect
-    ///////////////////////////////////////
-//    Serial.println("LOOP(7)");
-    //////////////////////////////////////////
-    // Test sending message
-    //////////////////////////////////////////  
-
-    last_print = millis();
+    // Update HW
+    updateBoardState();
+  
+// TESTING
+//  getSerialCommand(); 
+  
+  if (millis() - g_last_print > 10000)
+  {
+//    Serial.println("Write board state:");  
+     writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+    /*
+    if(g_iWriteToFile)
+    {
+       writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+    }
+    else
+    {
+       initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+       g_iWriteToFile=1;
+    }
+    */
+        
+    // Flush serial buffer to prevent crashes
+    //Serial.flush();  
+    
+    /*
+    // Save board state every ~1 sec
+    if(g_iSkipFirstWrite)
+      writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+      
+    // Flush serial buffer to prevent crashes
+    Serial.flush();  
+    
+    g_iSkipFirstWrite = 1;
+    */
+    g_last_print = millis();
   }
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -1289,15 +1852,27 @@ void getSerialCommand()
   if (Serial.available() > 0) {
     // get incoming byte:
     g_iByte = Serial.read();
-    //Serial.println(g_iByte);
 
     switch (g_iByte)
     {
     case UP:
-      g_iNewCode = 0;      
+//      g_iNewCode = 0;      
+      Serial.println("Init from File.");
+      initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
+       //      g_iWriteToFile=0;
+  //     digitalWrite(13, HIGH );
       break;
 
     case DOWN:
+    
+  //         digitalWrite(13, LOW );
+     // Serial.println("Writing board state to file");
+        writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
+      // g_iWriteToFile=1;
+    
+//        system("shutdown -r now");
+        
+    break;
     case LEFT:
     case RIGHT:
       g_iNewCode = 1;            
