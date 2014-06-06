@@ -110,7 +110,8 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 * Pins: 3,5,6,9,10,and 11 are enabled as analog outputs.
 
 ### Known Issues
-* Connecting with an iPhone: If you are using an iPhone, make sure to disable your 4G/LTE radio. If the radio is on when attempting to access ConnectAnyThing's hotspot , Apple may block access to it.
+* Connecting with an iPhone: Apple likes to protect you from Wi-Fi hotspots that are not connected to the internet (such as ConnectAnyThing.)  The first time you connect with an iPhone, go to settings ->WiFi -> choose ConnectAnyThing.  A pop up comes up that says “Log In”, hit “cancel.”  And your phone will disconnect from the network.  Join ConnectAnyThing again.  When you hit “Cancel” the second time, an option will come up that says “Connect without Internet.” Select this and you’re all set.
+
 * Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
 
 ## Developers
