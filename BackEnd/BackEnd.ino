@@ -498,7 +498,7 @@ void initBoardStateFromFile(char* _sFullFilePath) {
       #endif
       */
       
-      Serial.print("ERROR reading file. Content: ");  
+//      Serial.print("ERROR reading file. Content: ");  
 //      Serial.println(sJsonFile);  
       
       // The file is empty for some reason. Let's use the standard init function
@@ -512,14 +512,14 @@ void initBoardStateFromFile(char* _sFullFilePath) {
         trace_info("%s(): SUCCESS reading file. Content: %s\n", __func__, sJsonFile);   
       #endif
       */
-      Serial.print("SUCCESS reading file. Content: ");  
+ //     Serial.print("SUCCESS reading file. Content: ");  
 //      Serial.println(sJsonFile);  
     }
   }
   else
   {
-     Serial.print("ERROR opening file: ");
-     Serial.println(_sFullFilePath);
+  //   Serial.print("ERROR opening file: ");
+  //   Serial.println(_sFullFilePath);
      return;     
   }
   /*
@@ -1808,7 +1808,7 @@ void loop()
     updateBoardState();
   
 // TESTING
-  getSerialCommand(); 
+//  getSerialCommand(); 
   
   if (millis() - g_last_print > 10000)
   {
