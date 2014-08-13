@@ -329,7 +329,7 @@ enum libwebsocket_callback_reasons reason, void *user,
 void *in, size_t len)
 {
   
-  //     Serial.println("callback_http()");
+       Serial.println("callback_http()");
   // WE ARE ALWAYS HITTING THIS POINT
 
 //  char buf[256];
@@ -341,7 +341,8 @@ void *in, size_t len)
 
   case LWS_CALLBACK_HTTP:
 //    lwsl_notice("LWS_CALLBACK_HTTP");
-       
+    
+    Serial.println("LWS_CALLBACK_HTTP");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_HTTP: IN", __func__);
     #endif     
@@ -371,6 +372,7 @@ void *in, size_t len)
 
 //    lwsl_notice("LWS_FILE_COMPLETION");
 
+    Serial.println("LWS_FILE_COMPLETION");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_FILE_COMPLETION", __func__);
     #endif     
@@ -380,6 +382,7 @@ void *in, size_t len)
 
   default:
 
+       Serial.println("callback_http() - default");
     #ifdef DEBUG_CAT
       trace_info("%s(): default", __func__);
     #endif     
@@ -402,7 +405,7 @@ void *user,
 void *in, size_t len)
 {
 
-  //Serial.println("callback_cat_protocol()");
+  Serial.println("callback_cat_protocol()");
   // WE ARE ALWAYS HITTING THIS POINT
 
   int iNumBytes = -1;
@@ -412,6 +415,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
 
+    Serial.println("LWS_CALLBACK_SERVER_WRITEABLE");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_SERVER_WRITEABLE: IN", __func__);
     #endif     
@@ -435,6 +439,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_RECEIVE:
 
+    Serial.println("LWS_CALLBACK_RECEIVE");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_RECEIVE: IN", __func__);
     #endif     
@@ -455,6 +460,7 @@ void *in, size_t len)
 
   default:
   
+    Serial.println("callback_cat_protocol() - default()");
     #ifdef DEBUG_CAT
       trace_info("%s(): default", __func__);
     #endif     
@@ -1790,7 +1796,7 @@ void setup()
   system(START_ACCESS_POINT_SCRIPT_FULL_PATH);
   delay(1000);
 
-  //Serial.println("Starting WebSocket");
+  Serial.println("Starting WebSocket");
   initWebsocket();  
 
 }
@@ -1803,7 +1809,8 @@ int g_iSkipFirstWrite = 0;
 
 void loop()
 {
-
+  Serial.println("Loop()");
+  
     // Update HW
     updateBoardState();
   
