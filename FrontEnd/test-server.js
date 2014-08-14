@@ -34,6 +34,7 @@ function pin_setter(is_analog, is_input) {
             //is_visible: true,
             is_analog: is_analog,
             is_input: is_input,
+            is_servo: false,
             input_min: 0.0,
             input_max: 1.0,
             damping: 0,
@@ -135,12 +136,15 @@ var server = ws.createServer(function(conn){
                     msg.connections.splice(index, 1);
                 }
             });
+            // TODO do this dynamically for all attributes? (make sure not to
+            // send over "type" attribute that client side makes up)
             _und.each(d.pins, function(pin, id) {
                 msg.pins[id].value = pin.value;
                 msg.pins[id].label = pin.label;
                 msg.pins[id].is_visible = pin.is_visible;
                 msg.pins[id].is_analog = pin.is_analog;
                 msg.pins[id].is_input = pin.is_input;
+                msg.pins[id].is_servo = pin.is_servo;
                 msg.pins[id].is_inverted = pin.is_inverted;
                 msg.pins[id].input_min = pin.input_min;
                 msg.pins[id].input_max = pin.input_max;

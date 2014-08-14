@@ -1,8 +1,14 @@
+/*
+ * Author: Noura Howell
+ * Date:   July 2014
+ *
+ */
+
 // Contain everything within the cat object
 var cat = {};
 
 // server connection settings
-cat.on_hardware = false; // to switch to Galileo, just change this to true
+cat.on_hardware = true; // to switch to Galileo, just change this to true
 cat.test_server_url = 'ws://localhost:8001';
 cat.hardware_server_url = 'ws://192.168.0.10';
 cat.hardware_server_protocol = 'hardware-state-protocol';
@@ -236,7 +242,7 @@ cat.app.controller('AppCtrl', ['$scope', '$routeParams', '$location', 'Galileo',
             $scope.s.got_data = true;
             $scope.d.update(data);
             if ($scope.s.ssid !== data.ssid) {
-                $location.path('/ssid_changed');
+                $location.path('/ssid_changed'); // TODO what's the difference between $location.path and window.location.hash? why use one sometimes or the other? or should I just stick with one all the time?
             }
         }
         $scope.s.ssid = data.ssid;
@@ -725,7 +731,6 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
             message_id: message_id,
             stringified_updates: JSON.stringify(batch),
         };
-        // TODO i think i used to just send connections or pins if there were updates for them.
         var msg_for_server = {
             status: 'OK',
             ssid: batch.ssid,
@@ -759,6 +764,9 @@ cat.app.factory('Galileo', ['$rootScope', function($rootScope) {
     var update_pins = function(ids, attr) {
         var all_pins = get_all_pins();
         var updates = { pins: {} };
+        // TODO if the backend could check for the existence of an attribute,
+        // then we could be more efficient and only send over the CHANGED attrs
+        // instead of ALL attrs
         _.each(ids, function(id) {
             updates.pins[id] = {};
             updates.pins[id][attr] = all_pins[id][attr];
@@ -926,6 +934,7 @@ cat.my_pin_format = function(server_pins, server_connections) {
             is_visible: pin.is_visible,
             is_analog: pin.is_analog,
             is_input: pin.is_input,
+            is_servo: pin.is_servo,
             input_min: Math.round(pin.input_min * 100),
             input_max: Math.round(pin.input_max * 100),
             damping: pin.damping,
@@ -955,6 +964,7 @@ cat.server_pin_format = function(my_pins, my_pin_ids) {
             is_visible: pin.is_visible,
             is_analog: pin.is_analog,
             is_input: pin.is_input,
+            is_servo: pin.is_servo,
             input_min: parseInt(pin.input_min) / 100,
             input_max: parseInt(pin.input_max) / 100,
             damping: parseInt(pin.damping),

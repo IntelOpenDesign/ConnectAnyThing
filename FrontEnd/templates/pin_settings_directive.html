@@ -133,7 +133,7 @@
                             {{scaled_value()}}%
                         </div>
                     </div>
-                    <div ng-if="!pin.is_input">
+                    <div ng-if="!pin.is_input && !pin.is_analog">
                         <input type="checkbox"
                           ng-model="pin.is_timer_on"
                           ng-change="send_pin_update([pin.id], 'is_timer_on')">
@@ -152,6 +152,12 @@
                           ng-class="{'gray-text': !pin.is_timer_on}">
                             seconds
                         </label>
+                    </div>
+                    <div ng-if="!pin.is_input && pin.is_analog">
+                        <input type="checkbox"
+                          ng-model="pin.is_servo"
+                          ng-change="send_pin_update([pin.id], 'is_servo')">
+                        <label for="checkbox">Servo</label>
                     </div>
                 </div>
             </div>
