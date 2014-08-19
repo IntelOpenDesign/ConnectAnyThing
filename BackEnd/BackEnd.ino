@@ -147,7 +147,8 @@ typedef struct Pin {
   int is_input;
   int is_servo;
   int is_servo_prev;
-  Servo* poServo;
+//  Servo* poServo;
+  Servo oServo;
   float input_min;
   float input_max;
 //  float sensitivity;
@@ -849,10 +850,12 @@ void initBoardState()
       g_aPins[i].is_analog = false;   
 
     // Setting Servos to ~ pins. We only have 8 servos in the Servo lib.
+    /*
     if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 )
       g_aPins[i].poServo = new Servo();
     else
       g_aPins[i].poServo = NULL;
+      */
        
     // Initialize digital pins as outputs
     if( i < NUM_OF_DIGITAL_PINS ) 
@@ -910,20 +913,15 @@ void updateBoardState()
         {
           if( !g_aPins[i].is_servo ) // Process servo output pins
           {
-    //        g_aPins[i].oServo.detach(); 
      //       Serial.print("Pin #");Serial.print(i);Serial.print(": ");
             analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
-            delay(15);                       // waits 15ms for the servo to reach the position 
+     //       delay(15);                       // waits 15ms for the servo to reach the position 
           }
           else
           {
-    //        g_aPins[i].oServo.attach(i,SERVO_MIN,SERVO_MAX); 
-            g_aPins[i].poServo->write(int(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE));
-           // g_aPins[i].oServo.write(50);
+//            g_aPins[i].poServo->write(int(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE));
+            g_aPins[i].oServo.write(int(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE));
             delay(15);                       // waits 15ms for the servo to reach the position 
-    //        delay(15);
-            //servo(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE); 
-     //       Serial.print("Servo #");
           }
     //      Serial.print(i);Serial.print(": ");
     //      Serial.println(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE);
@@ -1518,20 +1516,22 @@ void procPinsMsg( aJsonObject *_pJsonPins )
         g_aPins[i].is_servo = poIsServo->valuebool;
 
         ////////////////////////// Changing Analog Pin to Servo //////////////////////////
-        if(i == 3) // DEBUGGING
-        {
+       if(i == 3) // DEBUGGING
+       {
           if( g_aPins[i].is_servo_prev != g_aPins[i].is_servo )
           {
             if(!g_aPins[i].is_servo)
             {
-              g_aPins[i].poServo->detach();
-              g_aPins[i].poServo->setFreqInSysFs(SYSFS_PWM_PERIOD_NS);
+//              g_aPins[i].poServo->detach();
+//              g_aPins[i].poServo->setFreqInSysFs(SYSFS_PWM_PERIOD_NS);
+              g_aPins[i].oServo.detach();
+              g_aPins[i].oServo.setFreqInSysFs(SYSFS_PWM_PERIOD_NS);
               Serial.print("Pin ");Serial.print(i);Serial.println(" detached.");
             }
             else
             {
-              g_aPins[i].poServo->attach(i,SERVO_MIN,SERVO_MAX); 
-              //g_aPins[i].oServo.attach(i); 
+             // g_aPins[i].poServo->attach(i); 
+              g_aPins[i].oServo.attach(i); 
               Serial.print("Pin ");Serial.print(i);Serial.println(" attached.");
             }
           }
