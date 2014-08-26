@@ -11,7 +11,7 @@ ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo us
 
 2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
 
-3) Open a web browser on your device, go to http://CAT. Webpage lets you read inputs and control outputs in real-time from your mobile device.
+3) Open a web browser on your device, go to http://CAT. The webpage lets you read inputs and control outputs in real-time from your mobile device.
 
 Good for tinkering, classroom activities, testing sensors, etc.
 
@@ -44,6 +44,7 @@ David Shaw <david.shaw@intel.com><br />
 Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com><br />
 Sorin Blebea <sorin.blebea@intel.com><br />
 Sweta Patel <sweta.patel@intel.com><br />
+Adam Pasztory <adampasz@gmail.com><br />
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
@@ -51,15 +52,25 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ### Hardware Required
 
-* One [Intel Galileo](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
+#### Intel Galileo GEN1
+
+* One [Intel Galileo GEN2](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
 * One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
 * One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
 * One external 5V (>2A) power supply.
 
-### Software Installation
+#### Intel Galileo GEN2
 
-1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
+* One [Intel Galileo GEN2](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 1.0.2 or above]( https://communities.intel.com/docs/DOC-21838 ).
+* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
+* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
+* One external 12V (>1.5A) power supply.
+
+### Software Installation for GEN1 & GEN2
+
+1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases). **NOTE:** For Galileo GEN1 use v0.2.2 and below. For GEN2 use v0.2.3 and above.
 
 2) Unpack the file.
 
@@ -91,7 +102,12 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 ## Release Notes
 
+### Rev 0.2.3
+* Compatible only with Galileo GEN2.
+* Servo control is enabled.
+
 ### Rev 0.2.2
+* Compatible only with Galileo GEN1.
 * Customize the network name on your CAT system.
 * Added a 'reset' feature to clear your visual program.
 * You can now control analog values from 'Controller Mode'.
@@ -100,10 +116,12 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 * Input invert fixes.
 
 ### Rev 0.2.1
+* Compatible only with Galileo GEN1.
 * ConnectAnyThing now allows the user to connect inputs with outputs in a dynamic fashion.
 * Pins are enabled as described in Rev 0.1.0.
 
 ### Rev 0.1.0
+* Compatible only with Galileo GEN1.
 * The Graphical User Interface enables direct access to the pins listed bellow.
 * Pins: A0,A1,A2,A3,A4,and A5 are enabled as analog inputs.
 * Pins: 2,4,7,8,12,and 13 are enabled as digital outputs.
@@ -113,6 +131,8 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 * Connecting with an iPhone: Apple likes to protect you from Wi-Fi hotspots that are not connected to the internet (such as ConnectAnyThing.)  The first time you connect with an iPhone, go to settings ->WiFi -> choose ConnectAnyThing.  A pop up comes up that says “Log In”, hit “cancel.”  And your phone will disconnect from the network.  Join ConnectAnyThing again.  When you hit “Cancel” the second time, an option will come up that says “Connect without Internet.” Select this and you’re all set.
 
 * Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
+
+* Any short circuits on the Galileo board will cause it to reboot. This will break the websockets connection. Avoid placing the board on any conductive materials to prevent any short circuits.
 
 ## Developers
 
