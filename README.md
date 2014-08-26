@@ -11,7 +11,7 @@ ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo us
 
 2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
 
-3) Open a web browser on your device, go to http://CAT. The webpage lets you read inputs and control outputs in real-time from your mobile device.
+3) Open a web browser on your device, go to "cat.com". The webpage lets you read inputs and control outputs in real-time from your mobile device.
 
 Good for tinkering, classroom activities, testing sensors, etc.
 
@@ -45,6 +45,7 @@ Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com><br />
 Sorin Blebea <sorin.blebea@intel.com><br />
 Sweta Patel <sweta.patel@intel.com><br />
 Adam Pasztory <adampasz@gmail.com><br />
+Alex T <alext.mkrs@gmail.com><br />
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
@@ -54,7 +55,7 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 #### Intel Galileo GEN1
 
-* One [Intel Galileo GEN2](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
+* One [Intel Galileo GEN1](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
 * One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
 * One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
