@@ -36,6 +36,9 @@ This code is licensed under MIT.
 #include <syslog.h>
 #include <signal.h>
 
+//#include <Wire.h>
+#include <Servo.h>
+
 #include <trace.h>
 #define MY_TRACE_PREFIX "cat"
 
@@ -73,6 +76,10 @@ int g_aiP[TOTAL_NUM_Px];
 #define MAX_N_CLIENTS 100
 
 #define LOCAL_BUFFER_SIZE 1024
+
+// Servo control
+#define SERVO_MIN 0
+#define SERVO_MAX 180
 
 class MessageManager
 {
@@ -138,6 +145,10 @@ typedef struct Pin {
   char label[PIN_LABEL_SIZE];
   int is_analog;
   int is_input;
+  int is_servo;
+  int is_servo_prev;
+  Servo* poServo;
+ // Servo oServo;
   float input_min;
   float input_max;
 //  float sensitivity;
@@ -329,7 +340,7 @@ enum libwebsocket_callback_reasons reason, void *user,
 void *in, size_t len)
 {
   
-  //     Serial.println("callback_http()");
+//       Serial.println("callback_http()");
   // WE ARE ALWAYS HITTING THIS POINT
 
 //  char buf[256];
@@ -341,7 +352,8 @@ void *in, size_t len)
 
   case LWS_CALLBACK_HTTP:
 //    lwsl_notice("LWS_CALLBACK_HTTP");
-       
+    
+ //   Serial.println("LWS_CALLBACK_HTTP");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_HTTP: IN", __func__);
     #endif     
@@ -371,6 +383,7 @@ void *in, size_t len)
 
 //    lwsl_notice("LWS_FILE_COMPLETION");
 
+ //   Serial.println("LWS_FILE_COMPLETION");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_FILE_COMPLETION", __func__);
     #endif     
@@ -380,6 +393,7 @@ void *in, size_t len)
 
   default:
 
+   //    Serial.println("callback_http() - default");
     #ifdef DEBUG_CAT
       trace_info("%s(): default", __func__);
     #endif     
@@ -402,7 +416,7 @@ void *user,
 void *in, size_t len)
 {
 
-  //Serial.println("callback_cat_protocol()");
+//  Serial.println("callback_cat_protocol()");
   // WE ARE ALWAYS HITTING THIS POINT
 
   int iNumBytes = -1;
@@ -412,6 +426,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_SERVER_WRITEABLE:
 
+  //  Serial.println("LWS_CALLBACK_SERVER_WRITEABLE");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_SERVER_WRITEABLE: IN", __func__);
     #endif     
@@ -435,6 +450,7 @@ void *in, size_t len)
 
   case LWS_CALLBACK_RECEIVE:
 
+ //   Serial.println("LWS_CALLBACK_RECEIVE");
     #ifdef DEBUG_CAT
       trace_info("%s(): LWS_CALLBACK_RECEIVE: IN", __func__);
     #endif     
@@ -455,6 +471,7 @@ void *in, size_t len)
 
   default:
   
+    // Serial.println("callback_cat_protocol() - default()");
     #ifdef DEBUG_CAT
       trace_info("%s(): default", __func__);
     #endif     
@@ -822,11 +839,22 @@ void initBoardState()
         g_aPins[i].connections[j] = false;
     }
 
-    // Initialize analog pins 3,5,6,9,10,11,A0,A1,A2,A3,A4,A5
+    // Servo feature dissabled
+    g_aPins[i].is_servo = false;
+    g_aPins[i].is_servo_prev = false; // Keep track of state changes
+    
+    // Initialize analog pins 3,5,6,9,10,11,A0,A1,A2,A3,A4,A5    
     if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 || i==14 || i==15 || i==16 || i==17 || i==18 || i==19 )
       g_aPins[i].is_analog = true;
     else  
       g_aPins[i].is_analog = false;   
+
+    // Setting Servos to ~ pins. We only have 8 servos in the Servo lib.   
+    if( i==3 || i==5 || i==6 || i==9 || i==10 || i==11 )
+      g_aPins[i].poServo = new Servo();
+    else
+      g_aPins[i].poServo = NULL;
+      
        
     // Initialize digital pins as outputs
     if( i < NUM_OF_DIGITAL_PINS ) 
@@ -878,8 +906,20 @@ void updateBoardState()
   {
     if( !g_aPins[i].is_input ) // Process output pins
     {
-      if( g_aPins[i].is_analog ) // Process analog pins     
-        analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+      if( g_aPins[i].is_analog ) // Process analog pins
+      {
+          if( !g_aPins[i].is_servo ) // Process servo output pins
+          {
+     //       Serial.print("Pin #");Serial.print(i);Serial.print(": ");
+            analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
+          }
+          else
+          {
+            g_aPins[i].poServo->write(int(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE));
+          }
+    //      Serial.print(i);Serial.print(": ");
+    //      Serial.println(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE);
+      }
       else // Process digital pins     
         digitalWrite(i, getTotalPinValue(i) );
 
@@ -1104,6 +1144,16 @@ aJsonObject* getJsonBoardState()
       aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
     }
 
+    // Populate the pin's type    
+    if( g_aPins[i].is_servo )
+    {
+      aJson.addItemToObject(apoPin[i],"is_servo", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_servo", aJson.createFalse() );
+    }
+
     // Populate the pin's direction
     if( g_aPins[i].is_input )
     {
@@ -1248,6 +1298,16 @@ aJsonObject* getJsonSsidPinsConns()
     else
     {
       aJson.addItemToObject(apoPin[i],"is_analog", aJson.createFalse() );
+    }
+    
+    // Populate the pin's servo state    
+    if( g_aPins[i].is_servo )
+    {
+      aJson.addItemToObject(apoPin[i],"is_servo", aJson.createTrue() );
+    }
+    else
+    {
+      aJson.addItemToObject(apoPin[i],"is_servo", aJson.createFalse() );
     }
 
     // Populate the pin's direction
@@ -1442,7 +1502,36 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       aJsonObject *poIsAnalog = aJson.getObjectItem(poPinVals, "is_analog");
       if (poIsAnalog)
         g_aPins[i].is_analog = poIsAnalog->valuebool;        
+      
+      aJsonObject *poIsServo = aJson.getObjectItem(poPinVals, "is_servo");
+      if (poIsServo)
+      {
+        g_aPins[i].is_servo = poIsServo->valuebool;
 
+        ////////////////////////// Changing Analog Pin to Servo //////////////////////////
+        if( g_aPins[i].is_servo_prev != g_aPins[i].is_servo )
+        {
+          if(!g_aPins[i].is_servo)
+          {
+            g_aPins[i].poServo->detach();
+            g_aPins[i].poServo->setFreqInSysFs(SYSFS_PWM_PERIOD_NS);
+//              Serial.print("Pin ");Serial.print(i);Serial.println(" detached.");
+          }
+          else
+          {
+            g_aPins[i].poServo->attach(i); 
+ //           Serial.print("Pin ");Serial.print(i);Serial.println(" attached.");
+          }
+        }
+        
+        g_aPins[i].is_servo_prev = g_aPins[i].is_servo;
+        ////////////////////////////////////////////////////
+      }
+      else
+      {
+        Serial.println("is_servo flag not working");
+      }
+  
       aJsonObject *poIsInput = aJson.getObjectItem(poPinVals, "is_input");
       if (poIsInput)
         g_aPins[i].is_input = poIsInput->valuebool;
