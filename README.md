@@ -79,14 +79,23 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 4) Copy the entire content into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
+GEN1:
 5) In the SD card unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
 
 6) If successful, the Micro SD card's directory tree should look as follows:
 * boot (directory)
 * bzImage (file)
 * core-image-minimal-initramfs-claton.cpio.gz (file)
-* image-full-clatong.ext3 (file)
-* image-full-clatong.zip (file) <- This file can be removed to free up space.
+* image-full-clanton.ext3 (file)
+* image-full-clanton.zip (file) <- This file can be removed to free up space.
+
+GEN2:
+5,6) If successful, the Micro SD card's directory tree should look as follows:
+* boot (directory)
+* bzImage (file)
+* core-image-minimal-initramfs-claton.cpio.gz (file)
+* image-full-galileo-clanton.ext3 (file)
+* image-full-galileo-clanton.zip (file) <- This file can be removed to free up space.
 
 7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
 
