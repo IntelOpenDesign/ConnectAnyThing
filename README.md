@@ -11,11 +11,7 @@ ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo us
 
 2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
 
-<<<<<<< HEAD
-3) Open a web browser on your device, go to http://CAT. Webpage lets you read inputs and control outputs in real-time from your mobile device.
-=======
 3) Open a web browser on your device, go to "cat.com". The webpage lets you read inputs and control outputs in real-time from your mobile device.
->>>>>>> develop
 
 Good for tinkering, classroom activities, testing sensors, etc.
 
@@ -48,11 +44,8 @@ David Shaw <david.shaw@intel.com><br />
 Gowri Chitloor Parthasarathy <gowri.chitloor.parthasarathy@intel.com><br />
 Sorin Blebea <sorin.blebea@intel.com><br />
 Sweta Patel <sweta.patel@intel.com><br />
-<<<<<<< HEAD
-=======
 Adam Pasztory <adampasz@gmail.com><br />
 Alex T <alext.mkrs@gmail.com><br />
->>>>>>> develop
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
@@ -74,19 +67,11 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
 * One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
 * One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
-<<<<<<< HEAD
-* One external 5V (>2A) power supply.
-=======
 * One external 12V (>1.5A) power supply.
->>>>>>> develop
 
 ### Software Installation for GEN1 & GEN2
 
-<<<<<<< HEAD
-1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
-=======
 1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases). **NOTE:** For Galileo GEN1 use v0.2.2 and below. For GEN2 use v0.2.3 and above.
->>>>>>> develop
 
 2) Unpack the file.
 
@@ -94,10 +79,7 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 4) Copy the entire content into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
-<<<<<<< HEAD
-=======
 GEN1:
->>>>>>> develop
 5) In the SD card unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
 
 6) If successful, the Micro SD card's directory tree should look as follows:
@@ -130,16 +112,12 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 ## Release Notes
 
-<<<<<<< HEAD
-### Rev 0.2.2
-=======
 ### Rev 0.2.3
 * Compatible only with Galileo GEN2.
 * Servo control is enabled.
 
 ### Rev 0.2.2
 * Compatible only with Galileo GEN1.
->>>>>>> develop
 * Customize the network name on your CAT system.
 * Added a 'reset' feature to clear your visual program.
 * You can now control analog values from 'Controller Mode'.
@@ -148,10 +126,7 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 * Input invert fixes.
 
 ### Rev 0.2.1
-<<<<<<< HEAD
-=======
 * Compatible only with Galileo GEN1.
->>>>>>> develop
 * ConnectAnyThing now allows the user to connect inputs with outputs in a dynamic fashion.
 * Pins are enabled as described in Rev 0.1.0.
 
@@ -172,8 +147,4 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 ## Developers
 
 ### Development Work Flow
-<<<<<<< HEAD
 We welcome developers to contribute to the project. Please push any contributions against the *develop* branch and request a pull.
-=======
-We welcome developers to contribute to the project. Please push any contributions against the *develop* branch and request a pull.
->>>>>>> develop
