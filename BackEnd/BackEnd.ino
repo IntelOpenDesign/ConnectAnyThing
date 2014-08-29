@@ -942,22 +942,13 @@ float getTotalPinValue(int _iOutPinNum)
   { // Overwrite fPinValSum based on timer
    
    // Check for a positive edge is detected
-    if( g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
+    if( !g_aPins[_iOutPinNum].timer_running && g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
     {
       g_aPins[_iOutPinNum].timer_running = true;
       g_aPins[_iOutPinNum].timer_start_time = millis();
       Serial.println("timer_running = true");
     }
      
-    // IF timer_is_on && Timer_Running
-      // IF timer expired
-        // Set timer_is_on == false
-        // 
-     // ELSE
-       // Set pin to HIGH (Over write the output)
-   // ELSE
-     // Set pin to VALUE
-  
     // Set pin value to zero if timer expired
     if( g_aPins[_iOutPinNum].timer_running ) 
     {
@@ -976,14 +967,6 @@ float getTotalPinValue(int _iOutPinNum)
        fPinValSum = 0.0;
     }
   }
-  
-  // KEEP value LOW until we hit the back to normal condition
-
-// BACK to normal?
-//      g_aPins[_iOutPinNum].value = fPinValSum;   
-// ELSE
-//       g_aPins[_iOutPinNum].value = 0.0; // Keep the output value off     
-  
   
   // Updating values 
   g_aPins[_iOutPinNum].prev_value = g_aPins[_iOutPinNum].value;
