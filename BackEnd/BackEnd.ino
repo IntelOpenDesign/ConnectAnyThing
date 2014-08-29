@@ -576,34 +576,11 @@ void initBoardStateFromFile(char* _sFullFilePath) {
     {
        Serial.println("NO Connections :("); 
     }
-  
-   // Serial.println("Set Connections");
-
-/////////////////////    
-//    aJsonObject *pJsonSsid = aJson.getObjectItem(poMsg, "ssid");      
- //   if( pJsonSsid )  // Check if there is connection info
-//      procSsidMsg( pJsonSsid );  
-/////////////////////
-  
-  //  Serial.println("System updated from file.");
   }  
   else
   {
-   // Serial.println("sJsonFile");
-//    Serial.println(sJsonFile);
     Serial.println("Couln't update board state from file.");    
   }
-  
-  // Set the HW state
-//  updateBoardState();
-
- // Serial.print("Done updating system");
-
-/*
-  #ifdef DEBUG_CAT
-    trace_info("%s() -> Set HW from file", __func__);
-  #endif
-*/
 
 }
 
@@ -681,9 +658,7 @@ int  sendStatusToWebsiteNew(struct libwebsocket *wsi)
   unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING];
   memset(buf,'\0',LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING);
   unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
-  
-//  updateBoardState();
-  
+   
   aJsonObject *msg = getJsonBoardState();  
   
   aJsonStringStream stringStream(NULL, (char *)p, WEB_SOCKET_BUFFER_SIZE);
@@ -869,9 +844,6 @@ void initBoardState()
     }        
   }
 
-  // Set the HW state
-//  updateBoardState();
-
 }
 
 //////////////////////////////////////////////////////
@@ -908,29 +880,17 @@ void updateBoardState()
     {
       if( g_aPins[i].is_analog ) // Process analog pins
       {
-          if( !g_aPins[i].is_servo ) // Process servo output pins
+          if( !g_aPins[i].is_servo ) // Process non-servo output pins
           {
-     //       Serial.print("Pin #");Serial.print(i);Serial.print(": ");
             analogWrite(i, getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE );
           }
-          else
+          else // Process servo output pins
           {
             g_aPins[i].poServo->write(int(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE));
           }
-    //      Serial.print(i);Serial.print(": ");
-    //      Serial.println(getTotalPinValue(i)*ANALOG_OUT_MAX_VALUE);
       }
       else // Process digital pins     
-        digitalWrite(i, getTotalPinValue(i) );
-
-      /*
-      if(i==13)
-      {
-        Serial.print("Value:");        
-        Serial.println(getTotalPinValue(i));
-      }
-      */
-              
+        digitalWrite(i, getTotalPinValue(i) );              
     }
   }
   
@@ -944,6 +904,7 @@ float getTotalPinValue(int _iOutPinNum)
   float fPinValSum = 0;
   int iConnCount = 1; // Pins are always connected to themselves
 
+  // Process pin connections
   for(int i=0; i<TOTAL_NUM_OF_PINS; i++)
   {
     // Checking what pins are connected to iPinNum
@@ -952,8 +913,6 @@ float getTotalPinValue(int _iOutPinNum)
       if(g_aPins[_iOutPinNum].connections[i])
       {
         iConnCount++;
-
-        //fPinValSum += (g_aPins[i].value - g_aPins[i].input_min)/(g_aPins[i].input_max - g_aPins[i].input_min);  // Adding the Max/Min formula
         fPinValSum += getScaledPinValue(i);  // Adding the Max/Min formula
 
        if( !g_aPins[_iOutPinNum].is_analog )
@@ -967,62 +926,70 @@ float getTotalPinValue(int _iOutPinNum)
     } 
   }
    
+  // Truncate pin sum value 
   if(fPinValSum > 1.0)
     fPinValSum = 1.0;
   
-  if( 1 == iConnCount ) // No other connections found besides itself
-    fPinValSum = g_aPins[_iOutPinNum].value;
-  else
-    g_aPins[_iOutPinNum].value = fPinValSum;
+  // Set pin value to sum or itself
+  if( 1 == iConnCount ) 
+    fPinValSum = g_aPins[_iOutPinNum].value; // No other connections found besides itself, so overwrite the sum with the input value, so output = input.
+  else // Don't overwrite the sum. Output = sum.
+    // Since there is a sum, update the output value for the UI
+    g_aPins[_iOutPinNum].value = fPinValSum; 
+     
+  // Run timer when a timer_on command has been received
+  if( g_aPins[_iOutPinNum].is_timer_on )
+  { // Overwrite fPinValSum based on timer
    
-  // Run timer when a timer_on command has been received and a positive edge is detected
-  if( g_aPins[_iOutPinNum].is_timer_on && g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
-  {
-    g_aPins[_iOutPinNum].timer_running = true;
-    g_aPins[_iOutPinNum].timer_start_time = millis();
-  }
-  
-  // IF timer_is_on && Timer_Running
-    // IF timer expired
-      // Set timer_is_on == false
-      // 
+   // Check for a positive edge is detected
+    if( g_aPins[_iOutPinNum].prev_value < DIGITAL_VOLTAGE_THRESHOLD && g_aPins[_iOutPinNum].value >= DIGITAL_VOLTAGE_THRESHOLD )
+    {
+      g_aPins[_iOutPinNum].timer_running = true;
+      g_aPins[_iOutPinNum].timer_start_time = millis();
+      Serial.println("timer_running = true");
+    }
+     
+    // IF timer_is_on && Timer_Running
+      // IF timer expired
+        // Set timer_is_on == false
+        // 
+     // ELSE
+       // Set pin to HIGH (Over write the output)
    // ELSE
-     // Set pin to HIGH (Over write the output)
- // ELSE
-   // Set pin to VALUE
+     // Set pin to VALUE
+  
+    // Set pin value to zero if timer expired
+    if( g_aPins[_iOutPinNum].timer_running ) 
+    {
+      if( !((millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000) ) // Not expired
+      {
+        // Keep output value HIGH until timer expires
+        fPinValSum = 1.0;
+      }
+      else // Timer expired
+      {
+        g_aPins[_iOutPinNum].timer_running = false;
+      }
+    }
+    else
+    {
+       fPinValSum = 0.0;
+    }
+  }
+  
+  // KEEP value LOW until we hit the back to normal condition
 
-  // Set pin value to zero if timer expired
-  if( g_aPins[_iOutPinNum].timer_running ) 
-  {
-    if( !((millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000) ) // Not expired
-    {
-      fPinValSum = 1.0;
-      g_aPins[_iOutPinNum].value = fPinValSum;            
-    }
-    else // Timer expired
-    {
-      g_aPins[_iOutPinNum].timer_running = false;
-//      g_aPins[_iOutPinNum].timer_start_time = millis();
-    }
-  }
+// BACK to normal?
+//      g_aPins[_iOutPinNum].value = fPinValSum;   
+// ELSE
+//       g_aPins[_iOutPinNum].value = 0.0; // Keep the output value off     
   
- /*
-  // Set pin value to zero if timer expired
-  if( g_aPins[_iOutPinNum].is_timer_on ) 
-  {
-    if( (millis() - g_aPins[_iOutPinNum].timer_start_time) >= (g_aPins[_iOutPinNum].timer_value-1)*1000 ) // Timer expired
-    { 
-//      Serial.println("EXPIRED...!!!");
-      fPinValSum = 0.0;
-      g_aPins[_iOutPinNum].value = fPinValSum;      
-    }
-  }
-  */
   
-  // Updating prev value 
+  // Updating values 
   g_aPins[_iOutPinNum].prev_value = g_aPins[_iOutPinNum].value;
+  g_aPins[_iOutPinNum].value = fPinValSum;
   
-  return fPinValSum;
+  return g_aPins[_iOutPinNum].value; // Return the HW state variable's value to set the hardware.
 }
 
 float getScaledPinValue(int _iInPinNum)
@@ -1564,10 +1531,12 @@ void procPinsMsg( aJsonObject *_pJsonPins )
       if (poIsTimerOn)
       {
         g_aPins[i].is_timer_on = poIsTimerOn->valuebool; 
-        /*
-        if(g_aPins[i].is_timer_on)
-          g_aPins[i].timer_start_time = millis();
-          */
+        
+        // Initialize other relevant variables
+        g_aPins[i].timer_value = 0.0; // This value will be set immediatly after
+        g_aPins[i].timer_start_time = 0;
+        g_aPins[i].timer_running = false;       
+          
       } 
 
       aJsonObject *poTimerValue = aJson.getObjectItem(poPinVals, "timer_value");
@@ -1892,45 +1861,15 @@ int g_iSkipFirstWrite = 0;
 
 void loop()
 {
-
     // Update HW
     updateBoardState();
-  
-// TESTING
-//  getSerialCommand(); 
-  
-  if (millis() - g_last_print > 10000)
-  {
-//    Serial.println("Write board state:");  
-     writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
-    /*
-    if(g_iWriteToFile)
+   
+    if (millis() - g_last_print > 10000)
     {
-       writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
-    }
-    else
-    {
-       initBoardStateFromFile(BOARD_CONFIG_FILE_FULL_PATH);
-       g_iWriteToFile=1;
-    }
-    */
-        
-    // Flush serial buffer to prevent crashes
-    //Serial.flush();  
-    
-    /*
-    // Save board state every ~1 sec
-    if(g_iSkipFirstWrite)
+      //  Serial.println("Write board state:");  
       writeBoardStateToFile(BOARD_CONFIG_FILE_FULL_PATH);
-      
-    // Flush serial buffer to prevent crashes
-    Serial.flush();  
-    
-    g_iSkipFirstWrite = 1;
-    */
-    g_last_print = millis();
+      g_last_print = millis();
   }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////
