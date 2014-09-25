@@ -5,6 +5,8 @@ ConnectAnyThing
 
 ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
 
+You will need a Galileo GEN1 or GEN2 (preferred) with a wifi (details below).
+
 0) Download ConnectAnyThing [here](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
 
 1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
@@ -20,7 +22,7 @@ For more information, photos and video links, please visit [Intel's Maker Commun
 ### Uses
 
 * Quickly mock-up an interactive experience.
-* Test sensors and simple circuits quickly without code.
+* Test sensors and simple circuits quickly without a computer or code.
 * Read a temperature sensor and control a heater or fan in a garage or attic.
 * Make a publicly controllable art installation.
 * Interactive window displays.
@@ -53,21 +55,22 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ### Hardware Required
 
-#### Intel Galileo GEN1
-
-* One [Intel Galileo GEN1](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
-* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
-* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
-* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
-* One external 5V (>2A) power supply.
-
 #### Intel Galileo GEN2
 
 * One [Intel Galileo GEN2](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 1.0.2 or above]( https://communities.intel.com/docs/DOC-21838 ).
 * One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
-* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* One half PCI-E Centrino WiFi card. We've tested with [Intel N-135, N-6205, N-6235] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
 * One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
 * One external 12V (>1.5A) power supply.
+
+#### Intel Galileo GEN1
+
+* One [Intel Galileo GEN1](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
+* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
+* One half PCI-E Centrino WiFi card. We've tested with [Intel N-135, N-6205, N-6235] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
+* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
+* One  5V (>2A) power supply.
+
 
 ### Software Installation for GEN1 & GEN2
 
@@ -79,6 +82,14 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 4) Copy the entire content into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
 
+GEN2:
+5,6) If successful, the Micro SD card's directory tree should look as follows:
+* boot (directory)
+* bzImage (file)
+* core-image-minimal-initramfs-claton.cpio.gz (file)
+* image-full-galileo-clanton.ext3 (file)
+* image-full-galileo-clanton.zip (file) <- This file can be removed to free up space.
+
 GEN1:
 5) In the SD card unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
 
@@ -89,17 +100,9 @@ GEN1:
 * image-full-clanton.ext3 (file)
 * image-full-clanton.zip (file) <- This file can be removed to free up space.
 
-GEN2:
-5,6) If successful, the Micro SD card's directory tree should look as follows:
-* boot (directory)
-* bzImage (file)
-* core-image-minimal-initramfs-claton.cpio.gz (file)
-* image-full-galileo-clanton.ext3 (file)
-* image-full-galileo-clanton.zip (file) <- This file can be removed to free up space.
+7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It takes about 1 minute and 10 seconds for the Galileo to boot-up.
 
-7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
-
-8) On your mobile device or computer, connect to the "ConnectAnyThing" network. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
+8) On your mobile device or computer, connect to the network- default named "ConnectAnyThing". **NOTE:** If you're using a Galileo GEN1 and you don't see the network, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
 
 9) Start Chrome (34+) on your device, and in the address bar, type either: "cat", "cat.com", or "192.168.0.10".
 
