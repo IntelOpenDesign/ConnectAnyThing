@@ -5,7 +5,7 @@ ConnectAnyThing
 
 ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
 
-You will need a Galileo GEN1 or GEN2 (preferred) with a wifi (details below).
+You will need a Galileo GEN1 or GEN2 (preferred) with a wifi card (details below).
 
 0) Download ConnectAnyThing [here](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
 
@@ -106,7 +106,7 @@ GEN1:
 
 9) Start Chrome (34+) on your device, and in the address bar, type either: "cat", "cat.com", or "192.168.0.10".
 
-10) If successful, you should see a Galileo board image and pin controls.
+10) If successful, you should see the ConnectAnyThing page come up.
 
 ENJOY...!!!
 
