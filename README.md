@@ -117,7 +117,7 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 ### Rev 0.2.3
 * Compatible only with Galileo GEN2.
-* Servo control is enabled.
+* Servo control is enabled!
 
 ### Rev 0.2.2
 * Compatible only with Galileo GEN1.
@@ -145,7 +145,9 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 * Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
 
-* Any short circuits on the Galileo board will cause it to reboot. This will break the websockets connection. Avoid placing the board on any conductive materials to prevent any short circuits.
+* Any short circuits on the Galileo board will cause it to reboot. This will break the websockets connection. Avoid placing the board on any conductive materials to prevent any short circuits.  (especially watch out for Wi-Fi antennas with foil backing!)
+
+* GEN 2: Servo control doesn't work on pin 11 for some reason.  Inputs are floating and can be influenced by signals on other input pins.  Doesn't drastically affect function but it's not ideal.  Working to track this down.
 
 ## Developers
 
