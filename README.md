@@ -1,33 +1,28 @@
 ConnectAnyThing
 ============
 
-# Overview
+## Overview ##
 
-ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
+**Connect AnyThing allows remote-control and real-time simple programming of your Galileo development board from a phone, tablet or laptop.**  
 
-You will need a Galileo GEN1 or GEN2 (preferred) with a wifi card ([details](https://github.com/IntelOpenDesign/ConnectAnyThing/wiki/How-To-Set-Up-Connect-AnyThing)).
+![Connect AnyThing](http://s26.postimg.org/ekqtsrbp5/CAT_Small.jpg)
 
-0) Download ConnectAnyThing [here](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
+**Connect AnyThing is software that makes your Galileo broadcast a WiFi hotspot and webpage.** Through the webpage, you can see sensor values in real-time, and directly control the output pins, or use the sensor values to automatically control the outputs.
 
-1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
+Connect AnyThing uses the Galileo board's 6 Analog Input pins (labeled A0 – A5) to read incoming sensor values, and 12 Output pins (labeled 2 - 13) to turn things on and off, or send variable signals that can control the brightness of a light, the position of a servo, or the speed of a motor. 
 
-2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
-
-3) Open a web browser on your device, go to "cat.com". The webpage lets you read inputs and control outputs in real-time from your mobile device.
-
-Good for tinkering, classroom activities, testing sensors, etc.
-
-For more information, photos and video links, please visit [Intel's Maker Community]( https://communities.intel.com/thread/48358 ).
 
 ### Uses
 
-* Quickly mock-up an interactive experience.
-* Test sensors and simple circuits quickly without a computer or code.
+* Rapid prototyping! Quickly mock-up a project before digging in.
+* Test sensors and simple circuits quickly without writing code.
 * Read a temperature sensor and control a heater or fan in a garage or attic.
-* Make a publicly controllable art installation.
-* Interactive window displays.
-* Remote monitoring and control for cold/toxic/unpleasant environments.
-* Build a mobile-controlled door lock or lights for a shed or outbuilding.
+* Make a publicly controllable game or art project.
+* Make an interactive exhibit.
+* Great in classrooms or offices- doesn't need internet access.
+* Allows novices to quickly build and understand basic concepts of hardware and logic.
+
+For more information, photos and video links, please visit [Intel's Maker Community]( https://communities.intel.com/thread/48358 ).
 
 ### The Team
 
@@ -58,7 +53,7 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 
 ### ConnectAnyThing Tinkering Kit
-We have created a Tinkering Kit with sensors, actuators, and other accessories perfect for CAT. Visit [Intel's Maker Community]( https://communities.intel.com/message/238121#238121 ) to learn more.
+Our experinece taking ConnectAnyThing into classrooms and after-school programs has led us to a preferred set of easy-to-use sensors, actuators, and other accessories perfect for rapid prototyping with CAT. Visit [Intel's Maker Community]( https://communities.intel.com/message/238121#238121 ) to learn more.
 
 ## Release Notes
 
