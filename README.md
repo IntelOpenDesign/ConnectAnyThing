@@ -48,12 +48,12 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ## How To Set Up ConnectAnyThing
 
-### Check out the Wiki page for [detailed setup instructions](https://github.com/IntelOpenDesign/ConnectAnyThing/wiki/How-To-Set-Up-Connect-AnyThing).
+### Check out the [Wiki page](https://github.com/IntelOpenDesign/ConnectAnyThing/wiki/How-To-Set-Up-Connect-AnyThing) for detailed setup instructions.
 
 
 
 ### ConnectAnyThing Tinkering Kit
-Our experinece taking ConnectAnyThing into classrooms and after-school programs has led us to a preferred set of easy-to-use sensors, actuators, and other accessories perfect for rapid prototyping with CAT. Visit [Intel's Maker Community]( https://communities.intel.com/message/238121#238121 ) to learn more.
+Our experinece taking ConnectAnyThing into classrooms and after-school programs has led us to a preferred set of easy-to-use sensors, actuators, and other accessories perfect for rapid prototyping with CAT. More info coming soon.
 
 ## Release Notes
 
