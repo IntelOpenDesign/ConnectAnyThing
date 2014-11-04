@@ -689,7 +689,7 @@ static struct libwebsocket_protocols protocols[] = {
     "hardware-state-protocol",
     callback_cat_protocol,
     0,
-    128,
+    0,
   }
   ,
 
