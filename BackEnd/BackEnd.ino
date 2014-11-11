@@ -322,6 +322,12 @@ static const struct serveable whitelist[] = {
   { 
     "/templates/ssid_dialog.html", "text/html"                                           }
   ,   
+  { 
+    "/success.html", "text/html"                                           }
+  ,
+  { 
+    "/cat.html", "text/html"                                           }
+  ,
   // last one is the default served if no match
   { 
     "/index.html", "text/html"                                           }
@@ -689,7 +695,7 @@ static struct libwebsocket_protocols protocols[] = {
     "hardware-state-protocol",
     callback_cat_protocol,
     0,
-    0,
+    LWS_SEND_BUFFER_PRE_PADDING + WEB_SOCKET_BUFFER_SIZE + LWS_SEND_BUFFER_POST_PADDING + 10, // 0 fixes the Chrome problem
   }
   ,
 
