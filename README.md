@@ -46,6 +46,7 @@ Sorin Blebea <sorin.blebea@intel.com><br />
 Sweta Patel <sweta.patel@intel.com><br />
 Adam Pasztory <adampasz@gmail.com><br />
 Alex T <alext.mkrs@gmail.com><br />
+Steve Sutton <steve_s1@ntlworld.com><br />
 
 Our platform is a simplified version of the [LYT project]( https://github.com/secondstory/LYT ) developed by [Second Story] ( http://www.secondstory.com/ ).
 
@@ -99,7 +100,7 @@ GEN2:
 
 7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
 
-8) On your mobile device or computer, connect to the "ConnectAnyThing" network. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
+8) On your mobile device or computer, connect to the "ConnectAnyThing_XXXXX" network, where XXXXX = last 5 MAC address digits of the physical board. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
 
 9) Start Chrome (34+) on your device, and in the address bar, type either: "cat", "cat.com", or "192.168.0.10".
 
@@ -111,6 +112,11 @@ ENJOY...!!!
 We have created a Tinkering Kit with sensors, actuators, and other accessories perfect for CAT. Visit [Intel's Maker Community]( https://communities.intel.com/message/238121#238121 ) to learn more.
 
 ## Release Notes
+
+### Rev 0.2.4
+* Fixed iPhone connectivity issue.
+* Fixed Chrome 37+ compatibility issue.
+* Added automatic SSID generator, i.e. SSID = ConnectAnyThing_XXXXX, where XXXXX = last 5 MAC address digits.
 
 ### Rev 0.2.3
 * Compatible only with Galileo GEN2.
