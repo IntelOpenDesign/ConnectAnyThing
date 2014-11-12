@@ -9,7 +9,7 @@ ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo us
 
 1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
 
-2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing.” Join with your mobile device.
+2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing_<last 5 digits of MAC address>, ex: ConnectAnyThing_16afb.” Join with your mobile device.
 
 3) Open a web browser on your device, go to "cat.com". The webpage lets you read inputs and control outputs in real-time from your mobile device.
 
@@ -116,7 +116,7 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 ### Rev 0.2.4
 * Fixed iPhone connectivity issue.
 * Fixed Chrome 37+ compatibility issue.
-* Added automatic SSID generator, i.e. SSID = ConnectAnyThing_XXXXX, where XXXXX = last 5 MAC address digits.
+* Added automatic unique SSID generator (SSID = ConnectAnyThing_XXXXX, where XXXXX = last 5 MAC address digits).
 
 ### Rev 0.2.3
 * Compatible only with Galileo GEN2.
