@@ -1,31 +1,28 @@
 ConnectAnyThing
 ============
 
-# Overview
+## Overview ##
 
-ConnectAnyThing is an easy tool for real-time electronic tinkering on Galileo using a mobile device.
+**Connect AnyThing allows remote-control and real-time simple programming of your Galileo development board from a phone, tablet or laptop.**  
 
-0) Download ConnectAnyThing [here](https://github.com/IntelOpenDesign/ConnectAnyThing/releases).
+![Connect AnyThing](http://s26.postimg.org/ekqtsrbp5/CAT_Small.jpg)
 
-1) Put the ConnectAnyThing software onto a Galileo’s SD card, and power on.
+**Connect AnyThing is software that makes your Galileo broadcast a WiFi hotspot and webpage.** Through the webpage, you can see sensor values in real-time, and directly control the output pins, or use the sensor values to automatically control the outputs.
 
-2) Galileo broadcasts a Wi-Fi network called “ConnectAnyThing_\<last 5 digits of MAC address\>, ex: ConnectAnyThing_16afb.” Join with your mobile device.
+Connect AnyThing uses the Galileo board's 6 Analog Input pins (labeled A0 – A5) to read incoming sensor values, and 12 Output pins (labeled 2 - 13) to turn things on and off, or send variable signals that can control the brightness of a light, the position of a servo, or the speed of a motor. 
 
-3) Open a web browser on your device, go to "cat.com". The webpage lets you read inputs and control outputs in real-time from your mobile device.
-
-Good for tinkering, classroom activities, testing sensors, etc.
-
-For more information, photos and video links, please visit [Intel's Maker Community]( https://communities.intel.com/thread/48358 ).
 
 ### Uses
 
-* Quickly mock-up an interactive experience.
-* Test sensors and simple circuits quickly without code.
+* Rapid prototyping! Quickly mock-up a project before digging in.
+* Test sensors and simple circuits quickly without writing code.
 * Read a temperature sensor and control a heater or fan in a garage or attic.
-* Make a publicly controllable art installation.
-* Interactive window displays.
-* Remote monitoring and control for cold/toxic/unpleasant environments.
-* Build a mobile-controlled door lock or lights for a shed or outbuilding.
+* Make a publicly controllable game or art project.
+* Make an interactive exhibit.
+* Great in classrooms or offices- doesn't need internet access.
+* Allows novices to quickly build and understand basic concepts of hardware and logic.
+
+For more information, photos and video links, please visit [Intel's Maker Community]( https://communities.intel.com/thread/48358 ).
 
 ### The Team
 
@@ -52,64 +49,12 @@ Our platform is a simplified version of the [LYT project]( https://github.com/se
 
 ## How To Set Up ConnectAnyThing
 
-### Hardware Required
+### Check out the [Wiki page](https://github.com/IntelOpenDesign/ConnectAnyThing/wiki/How-To-Set-Up-Connect-AnyThing) for detailed setup instructions.
 
-#### Intel Galileo GEN1
 
-* One [Intel Galileo GEN1](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 782 or above]( https://communities.intel.com/docs/DOC-21838 ).
-* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
-* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
-* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
-* One external 5V (>2A) power supply.
-
-#### Intel Galileo GEN2
-
-* One [Intel Galileo GEN2](http://www.intel.com/content/www/us/en/do-it-yourself/galileo-maker-quark-board.html) board with [firmware version 1.0.2 or above]( https://communities.intel.com/docs/DOC-21838 ).
-* One Micro SD card. **NOTE:** We've tested the system with a [4 GB SanDisk Micro SDHC card] (http://www.sandisk.com/products/memory-cards/microsd/class4/) .
-* One half PCI-E [Intel N-135 WiFi] ( http://www.intel.com/content/www/us/en/wireless-products/centrino-wireless-n-135.html ) card and a half-to-full height Mini PCI Express(PCI-E) Card Bracket Adapter to connect it to the board.
-* One [WiFi antenna](http://www.amazon.com/Laptop-Wireless-PCI-E-Internal-Antenna/dp/B004ZHT2JE/ref=sr_1_7?s=electronics&ie=UTF8&qid=1389662898&sr=1-7&keywords=wireless+antenna+for+mini+pcie+wifi+card).
-* One external 12V (>1.5A) power supply.
-
-### Software Installation for GEN1 & GEN2
-
-1) Download the project's zip file from the [release page](https://github.com/IntelOpenDesign/ConnectAnyThing/releases). **NOTE:** For Galileo GEN1 use v0.2.2 and below. For GEN2 use v0.2.3 and above.
-
-2) Unpack the file.
-
-3) Make sure the [Micro SD card is FAT32 formatted]( http://www.wikihow.com/Format-an-SD-Card ).
-
-4) Copy the entire content into the root directory of the Micro SD card. **NOTE:** Keep the file structure intact.
-
-GEN1:
-5) In the SD card unzip the image-full-clanton.zip file. **NOTE:** it should contain the image-full-clanton.ext3 file.
-
-6) If successful, the Micro SD card's directory tree should look as follows:
-* boot (directory)
-* bzImage (file)
-* core-image-minimal-initramfs-claton.cpio.gz (file)
-* image-full-clanton.ext3 (file)
-* image-full-clanton.zip (file) <- This file can be removed to free up space.
-
-GEN2:
-5,6) If successful, the Micro SD card's directory tree should look as follows:
-* boot (directory)
-* bzImage (file)
-* core-image-minimal-initramfs-claton.cpio.gz (file)
-* image-full-galileo-clanton.ext3 (file)
-* image-full-galileo-clanton.zip (file) <- This file can be removed to free up space.
-
-7) Put the Micro SD card in the Galileo board and power it up. **NOTE:** It could take up to 3 minutes for the board to boot-up.
-
-8) On your mobile device or computer, connect to the "ConnectAnyThing_XXXXX" network, where XXXXX = last 5 MAC address digits of the physical board. **NOTE:** If you don't see the network on your device, make sure your Galileo board has [firmware version 782 or above] ( https://communities.intel.com/docs/DOC-21838 ).
-
-9) Start Chrome (34+) on your device, and in the address bar, type either: "cat", "cat.com", or "192.168.0.10".
-
-10) If successful, you should see a Galileo board image and pin controls.
-
-ENJOY...!!!
 
 ### ConnectAnyThing Tinkering Kit
-We have created a Tinkering Kit with sensors, actuators, and other accessories perfect for CAT. Visit [Intel's Maker Community]( https://communities.intel.com/message/238121#238121 ) to learn more.
+Our experinece taking ConnectAnyThing into classrooms and after-school programs has led us to a preferred set of easy-to-use sensors, actuators, and other accessories perfect for rapid prototyping with CAT. More info coming soon.
 
 ## Release Notes
 
@@ -120,7 +65,7 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 ### Rev 0.2.3
 * Compatible only with Galileo GEN2.
-* Servo control is enabled.
+* Servo control is enabled!
 
 ### Rev 0.2.2
 * Compatible only with Galileo GEN1.
@@ -148,7 +93,9 @@ We have created a Tinkering Kit with sensors, actuators, and other accessories p
 
 * Digital pins 0 (RX) and 1 (TX) are currently disabled to avoid RS-232 conflicts.
 
-* Any short circuits on the Galileo board will cause it to reboot. This will break the websockets connection. Avoid placing the board on any conductive materials to prevent any short circuits.
+* Any short circuits on the Galileo board will cause it to reboot. This will break the websockets connection. Avoid placing the board on any conductive materials to prevent any short circuits.  (especially watch out for Wi-Fi antennas with foil backing!)
+
+* GEN 2: Servo control doesn't work on pin 11 for some reason.  Inputs are floating and can be influenced by signals on other input pins.  Doesn't drastically affect function but it's not ideal.  Working to track this down.
 
 ## Developers
 
